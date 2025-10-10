@@ -1,5 +1,20 @@
 
 services:
+  duplicati:
+    image: duplicati/duplicati:latest
+    container_name: duplicati
+    volumes:
+      - ./duplicati/config:/config
+      - ./duplicati/destination:/backups
+      - your_host_path_to_project_data:/source
+    env_file:
+      - ./duplicati/.env
+    user: root
+    restart: always
+    ports:
+      - "8200:8200"
+    networks:
+      - ft_transcendence
   front:
     build:
       context: ./front/
@@ -100,6 +115,12 @@ services:
       - ft_transcendence
 
 volumes:
+    your_host_path_to_project_data:
+      driver: local
+      driver_opts:
+        type: none
+        o: bind
+        device: ./
     front_data:
         driver: local
         driver_opts:
