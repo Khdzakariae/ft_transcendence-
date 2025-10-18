@@ -3,7 +3,7 @@ const colors = {
         bg: '#0B0033',
         elements: '#0C185A',
         btn: '#00FFFF',
-        text: '#FFFFFF'
+        text: '#FF6B00',
     },
     secondary: {
         btn: '#FF6B00',
