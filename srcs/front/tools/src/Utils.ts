@@ -14,7 +14,21 @@ function pushStateHistory(new_path: string, setPath: Function): void {
 	setPath(new_path);
 }
 
+function successSignUpRedirect(new_path: string, setPath: Function): null {
+	setTimeout(() => { Utils.pushStateHistory(new_path, setPath) }, 2000);
+	return null;
+}
+
+export const LogLevel = {
+	INFO: true,
+	WARN: true,
+	ERROR: true,
+	DEBUG: true,
+} as const;
+
 export const Utils = {
     getCurrentPath,
 	pushStateHistory,
+	LogLevel,
+	successSignUpRedirect,
 }

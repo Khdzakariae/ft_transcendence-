@@ -6,14 +6,14 @@ import { PrimaryButton, SecondaryButton } from './components';
 import { Utils } from './Utils';
 
 // Pages
-export function Views( Data: any ): Element | null {
+export function Views( res: any ): Element | null {
 	const viewsMap: ViewMap = {
 		'/': LandingPage,
 		'/public/': LandingPage,
 		'/sign-up/': SignUpPage,
 		//'/sign-in/': SignInPage,
 	};
-	const { path, setPath } = Data;
+	const { path, setPath } = res;
 
 	return viewsMap[path]?.(setPath);
 }
@@ -60,8 +60,11 @@ function LandingPage( setPath: Function ): Element {
 }
 
 function SignUpPage( setPath: Function ): Element {
+	const [msg, setMsg] = Jarvis.useState('');
+	const [is_signed_up, setIsSignedUp] = Jarvis.useState(false);
+
 	const onSubmit = async (e: HTMLFormElement) => {
-		let response = null;
+	let response = null;
 
 		e.preventDefault();
 		const form = e.currentTarget;
@@ -74,11 +77,11 @@ function SignUpPage( setPath: Function ): Element {
 		// check only password, must contains at least 6 characters, 1 uppercase, 1 lowercase, 1 number
 		const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
 		if (!passwordRegex.test(password)) {
-			alert('Password must be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, and one number.');
+			setMsg('Password must be at least 6 characters long and include uppercase, lowercase letters, and a number.');
 			return;
 		}
-		
-		console.log('SignUp Data:', { firstName, lastName, email, password });
+
+		Utils.LogLevel.DEBUG && console.log('SignUp res:', { firstName, lastName, email, password });
 		try {
 			response = await fetch('http://localhost:3000/api/v1/auth/sign-up', {
 			method: 'POST',
@@ -87,22 +90,41 @@ function SignUpPage( setPath: Function ): Element {
 			body: JSON.stringify({ firstName, lastName, email, password }),
 		})}
 		catch(e) {
-			console.error('SignUp network error:', e);
+			Utils.LogLevel.ERROR && console.error('SignUp network error:', e);
 			const errorMessage = (e && typeof e === 'object' && 'message' in e) ? (e as any).message : String(e);
-			alert(`Network error: ${errorMessage}`);
+			setMsg(`Network error: ${errorMessage}`);
 			return;
 		}
-		console.log('SignUp Response status:', response);
-		//handle response status different phases
-		if (response.status === 201) {
-			Utils.pushStateHistory('/sign-in/', setPath);
-			setPath('/sign-in/');
-		} else if (response.status === 409) {
-			alert('Email already in use. Please use a different email.');
-		} else if (response.status === 500) {
-			alert('Server error. Please try again later.');
+		Utils.LogLevel.DEBUG && console.log('SignUp Response status:', response);
+
+		const contentType: string | null = response.headers.get('content-type');
+		let res: any = {};
+	
+		if (contentType && contentType.includes('application/json')) {
+			res = await response.json();
+		} else {
+			Utils.LogLevel.WARN && console.warn('Response is not JSON');
+		}
+		
+		switch(response.status) {
+			case 200:
+			case 201:
+				setMsg(`${res.message}`);
+				console.log('SignUp Success:', res.message);
+				setIsSignedUp(true);
+				break;
+			case 409:
+				setMsg(`${res.error}`);
+				break;
+			case 500:
+				setMsg(`${res.error}`);
+				break;
+			default:
+				Utils.LogLevel.ERROR && console.error('Unexpected response status:', response.status, res);
+				setMsg(`Unexpected error occurred (${response.status}). Please try again.`);
 		}
 	}
+
 	return (
 		<div>
 			<h1>Sign Up</h1>
@@ -112,6 +134,8 @@ function SignUpPage( setPath: Function ): Element {
 				<input type="text" name="last" placeholder="Last Name" required />
 				<input type="password" name="password" placeholder="Password" required />
 				<button type="submit">Create Account</button>
+				{  (msg && <p>{msg}</p>) || null }
+				{ (is_signed_up && Utils.successSignUpRedirect('/sign-in/', setPath) )  || null }
 			</form>
 		</div>
 	)

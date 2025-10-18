@@ -9,7 +9,6 @@ const container = document.getElementById('root');
 // App
 function App(): Element {
 	const [path, setPath] = Jarvis.useState(Utils.getCurrentPath());
-	console.log("Current Path:", path);
 	const dataObj: Object = {
 		path,
 		setPath,
