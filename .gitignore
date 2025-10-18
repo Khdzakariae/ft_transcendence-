@@ -34,3 +34,6 @@ Thumbs.db
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+srcs/prisma/databaseintro.db
+srcs/front/aif/
