@@ -35,7 +35,7 @@ function LandingPage( setPath: Function ): Element {
 
 			<img src={Banner} alt="Ping Pong Banner" className="absolute inset-0 w-full h-full object-cover z-0" />
 			{/* Dark Overlay for Readability (Instead of a separate absolute div) */}
-			<div className="absolute inset-0 bg-black/60 z-0"></div>
+			<div className="absolute inset-0 bg-black/45 z-0"></div>
 
 			{/* Content Wrapper: Centers the main text and buttons */}
 			<div className="relative z-10 flex flex-col items-center text-center mx-auto">
@@ -125,8 +125,26 @@ function SignUpPage( setPath: Function ): Element {
 		}
 	}
 
+	// relative overflow-hidden 
+// 			bg-cover bg-center min-h-screen bg-gray-900 style={{ backgroundImage: `url(${Banner})`
 	return (
-		<div className="min-h-screen bg-primary-bg text-white flex items-center justify-center p-6 sm:p-10 font-primary">
+		<div className="
+			// **Container & Background Optimization**
+			// Sets the full viewport height and the dark base background
+			min-h-screen bg-gray-900 text-white
+			// Flexbox for centering all content
+			flex flex-col items-center justify-center 
+			// Uses the image as the background with an inset to simulate the banner's position
+			// and applies an overlay gradient for better text contrast
+			relative overflow-hidden
+			bg-cover bg-center 
+			p-4 sm:p-8 md:p-12" style={{ backgroundImage: `url(${Banner})` }} >
+
+			<img src={Banner} alt="Ping Pong Banner" className="absolute inset-0 w-full h-full object-cover z-0" />
+			{/* Dark Overlay for Readability (Instead of a separate absolute div) */}
+			<div className="absolute inset-0 bg-black/60 z-0"></div>
+
+			{/* Content Wrapper: Centers the main text and form */}
 			<div className="w-full max-w-3xl bg-primary-elements backdrop-blur-sm rounded-2xl p-6 sm:p-10 shadow-xl">
 				{/* logo */}
 				<div className="flex justify-center mb-6">
