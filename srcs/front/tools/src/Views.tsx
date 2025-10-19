@@ -20,18 +20,7 @@ export function Views( res: any ): Element | null {
 
 function LandingPage( setPath: Function ): Element {
 	return (
-		<div className="
-			// **Container & Background Optimization**
-			// Sets the full viewport height and the dark base background
-			min-h-screen bg-gray-900 text-white
-			// Flexbox for centering all content
-			flex flex-col items-center justify-center 
-			// Uses the image as the background with an inset to simulate the banner's position
-			// and applies an overlay gradient for better text contrast
-			relative overflow-hidden 
-			bg-cover bg-center 
-			p-4 sm:p-8 md:p-12" style={{ backgroundImage: `url(${Banner})` }}
-		>
+		<div className="background-auth" style={{ backgroundImage: `url(${Banner})` }}>
 
 			<img src={Banner} alt="Ping Pong Banner" className="absolute inset-0 w-full h-full object-cover z-0" />
 			{/* Dark Overlay for Readability (Instead of a separate absolute div) */}
@@ -128,24 +117,16 @@ function SignUpPage( setPath: Function ): Element {
 	// relative overflow-hidden 
 // 			bg-cover bg-center min-h-screen bg-gray-900 style={{ backgroundImage: `url(${Banner})`
 	return (
-		<div className="
-			// **Container & Background Optimization**
-			// Sets the full viewport height and the dark base background
-			min-h-screen bg-gray-900 text-white
-			// Flexbox for centering all content
-			flex flex-col items-center justify-center 
-			// Uses the image as the background with an inset to simulate the banner's position
-			// and applies an overlay gradient for better text contrast
-			relative overflow-hidden
-			bg-cover bg-center 
-			p-4 sm:p-8 md:p-12" style={{ backgroundImage: `url(${Banner})` }} >
+		<div className="background-auth" style={{ backgroundImage: `url(${Banner})` }} >
 
 			<img src={Banner} alt="Ping Pong Banner" className="absolute inset-0 w-full h-full object-cover z-0" />
 			{/* Dark Overlay for Readability (Instead of a separate absolute div) */}
 			<div className="absolute inset-0 bg-black/60 z-0"></div>
 
 			{/* Content Wrapper: Centers the main text and form */}
-			<div className="w-full max-w-3xl bg-primary-elements backdrop-blur-sm rounded-2xl p-6 sm:p-10 shadow-xl">
+			<div className="auth-elements-container font-primary">
+
+			{/* <div className="w-full max-w-3xl bg-primary-elements backdrop-blur-sm rounded-2xl p-6 sm:p-10 shadow-xl border-[1.5px] border-transparent rounded-2xl [border-image:linear-gradient(135deg,#00FFFF,#FF6B00)_1] shadow-[0_0_15px_#00FFFF55]"> */}
 				{/* logo */}
 				<div className="flex justify-center mb-6">
 					<img src={Logo} alt="Logo" className="h-12 sm:h-16 md:h-20" />
@@ -153,10 +134,10 @@ function SignUpPage( setPath: Function ): Element {
 
 				{/* header */}
 				<div className="text-center mb-6">
-					<h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight">
+					<h1 className="text-4xl font-extrabold leading-tight">
 						Create Your <span className="text-primary-text underline">Account</span>
 					</h1>
-					<p className="text-sm sm:text-base mt-2">
+					<p className="text-md mt-2">
 						Join, track stats, and compete on the leaderboard
 					</p>
 				</div>
@@ -170,6 +151,7 @@ function SignUpPage( setPath: Function ): Element {
 
 				<form onSubmit={onSubmit} className="space-y-5 font-secondary">
 					{/* Email */}
+			
 					<div className="relative">
 						<input
 							type="email"
@@ -218,7 +200,7 @@ function SignUpPage( setPath: Function ): Element {
 				</form>
 
 				{/* Already have account */}
-				<div className="mt-6 text-center text-sm text-gray-300">
+				<div className="mt-6 text-center text-md text-gray-300">
 					<a href="/sign-in/" className="hover:text-white transition-colors">
 						Already have an account?{' '}
 						<span className="font-semibold text-cyan-300 underline">Sign In</span>

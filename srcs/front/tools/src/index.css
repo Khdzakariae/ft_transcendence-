@@ -1,3 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* add tokens */
+.auth-elements-container {
+	@apply 	w-full max-w-3xl
+			bg-primary-elements
+			backdrop-blur-md
+			p-6 sm:p-10
+			shadow-lg
+			shadow-[0_0_15px_#00FFFF55]
+			rounded-lg
+			border-transparent 
+			[border:1.5px_solid_transparent] 
+			[background-image:linear-gradient(#0C185A,#0C185A),linear-gradient(90deg,#00FFFF,#FF6B00)]
+			[background-origin:border-box]
+			[background-clip:padding-box,border-box]
+}
+
+.background-auth {
+	@apply 
+			min-h-screen bg-gray-900 text-white
+			flex flex-col items-center justify-center 
+			relative overflow-hidden
+			bg-cover bg-center 
+			p-8
+}
