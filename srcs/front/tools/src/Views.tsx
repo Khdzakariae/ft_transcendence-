@@ -99,7 +99,6 @@ function SignUpPage( setPath: Function ): Element {
 			case 200:
 			case 201:
 				setMsg(`${res.message}`);
-				console.log('SignUp Success:', res.message);
 				setIsSignedUp(true);
 				break;
 			case 409:
@@ -195,7 +194,7 @@ function SignUpPage( setPath: Function ): Element {
 					<PrimaryButton func={ () => {} } props={ { children: 'Create Account', type: 'submit', className: 'w-full rounded-lg bg-cyan-500 hover:bg-cyan-600 active:bg-primary-btn transition-colors duration-300 text-secondary-text py-3 font-bold shadow-md' } } />
 	
 					{/* Message / Redirect */}
-					{(msg && <p className="text-center text-sm text-red-400">{msg}</p>) || null}
+					{(msg && <p className={`text-center font-fontFamily-secondary ${msg.includes('success') ? 'bg-success/20 text-success' : 'bg-error/20 text-error'} rounded-lg p-4`}>{msg}</p>) || null}
 					{(is_signed_up && Utils.successSignUpRedirect('/sign-in/', setPath)) || null}
 				</form>
 

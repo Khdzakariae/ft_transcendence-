@@ -15,7 +15,7 @@ function pushStateHistory(new_path: string, setPath: Function): void {
 }
 
 function successSignUpRedirect(new_path: string, setPath: Function): null {
-	setTimeout(() => { Utils.pushStateHistory(new_path, setPath) }, 2000);
+	setTimeout(() => { Utils.pushStateHistory(new_path, setPath) }, 5000);
 	return null;
 }
 
