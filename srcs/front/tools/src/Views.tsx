@@ -1,12 +1,12 @@
-import { Jarvis } from './lib/jarvisLib';
 import { ViewMap } from './Types';
 import Logo from './assets/ping_pong_logo.png'
 import Banner from './assets/landing_page_banner_4k.png'
 import { PrimaryButton, SecondaryButton } from './components';
 import { Utils } from './Utils';
+import { useState } from 'react';
 
 // Pages
-export function Views( res: any ): Element | null {
+export function Views( res: any ): JSX.Element | null {
 	const viewsMap: ViewMap = {
 		'/': LandingPage,
 		'/public/': LandingPage,
@@ -18,7 +18,7 @@ export function Views( res: any ): Element | null {
 	return viewsMap[path]?.(setPath);
 }
 
-function LandingPage( setPath: Function ): Element {
+function LandingPage( setPath: Function ): JSX.Element {
 	return (
 		<div className="background-auth" style={{ backgroundImage: `url(${Banner})` }}>
 
@@ -48,11 +48,11 @@ function LandingPage( setPath: Function ): Element {
 	)
 }
 
-function SignUpPage( setPath: Function ): Element {
-	const [msg, setMsg] = Jarvis.useState('');
-	const [is_signed_up, setIsSignedUp] = Jarvis.useState(false);
+function SignUpPage( setPath: Function ): JSX.Element {
+	const [msg, setMsg] = useState('');
+	const [is_signed_up, setIsSignedUp] = useState(false);
 
-	const onSubmit = async (e: HTMLFormElement) => {
+	const onSubmit = async (e: any) => {
 	let response = null;
 
 		e.preventDefault();

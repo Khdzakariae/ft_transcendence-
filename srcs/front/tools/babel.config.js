@@ -9,7 +9,7 @@ module.exports = {
         runtime: 'classic',
 
         // Tell Babel to use 'Jarvis.createElement' instead of 'React.createElement'
-        pragma: 'Jarvis.createElement',
+        pragma: 'React.createElement',
       },
     ],
   ],

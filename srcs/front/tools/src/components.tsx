@@ -1,8 +1,7 @@
 // create reusable components for views
-import { Jarvis } from './lib/jarvisLib';
 
 // buttons components
-export function PrimaryButton({ func, ...props }: { func: Function; [key: string]: any }): Element {
+export function PrimaryButton({ func, ...props }: { func: Function; [key: string]: any }): JSX.Element {
 	console.log('props:', props);
 	return (
 		<button
@@ -29,7 +28,7 @@ export function PrimaryButton({ func, ...props }: { func: Function; [key: string
 	);
 }
 
-export function SecondaryButton({ func, ...props }: { func: Function; [key: string]: any }): Element {
+export function SecondaryButton({ func, ...props }: { func: Function; [key: string]: any }): JSX.Element {
 	console.log('props:', props);
 	return (
 		<button

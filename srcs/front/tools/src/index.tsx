@@ -1,14 +1,15 @@
 import './index.css';
-import { Jarvis } from "./lib/jarvisLib";
 import { Views } from "./Views";
 import { Utils } from './Utils';
+import ReactDOM from 'react-dom/client';
+import { useState } from 'react';
 
 // container where to render the App
 const container = document.getElementById('root');
 
 // App
-function App(): Element {
-	const [path, setPath] = Jarvis.useState(Utils.getCurrentPath());
+function App(): JSX.Element {
+	const [path, setPath] = useState(Utils.getCurrentPath());
 	const dataObj: Object = {
 		path,
 		setPath,
@@ -22,10 +23,14 @@ function App(): Element {
 
 	return (
 		<div className="bg-primary-bg  min-h-screen">
-			{ Views(dataObj) }
+			<Views {...dataObj} />
 		</div>
 	)
 }
 
 // Rendering
-Jarvis.render(<App />, container);
+
+// render inside container with react 18
+
+const root = ReactDOM.createRoot(container!);
+root.render(<App />);
