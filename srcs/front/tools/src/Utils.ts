@@ -14,11 +14,6 @@ function pushStateHistory(new_path: string, setPath: Function): void {
 	setPath(new_path);
 }
 
-function successSignUpRedirect(new_path: string, setPath: Function): null {
-	setTimeout(() => { Utils.pushStateHistory(new_path, setPath) }, 5000);
-	return null;
-}
-
 export const LogLevel = {
 	INFO: true,
 	WARN: true,
@@ -29,6 +24,5 @@ export const LogLevel = {
 export const Utils = {
     getCurrentPath,
 	pushStateHistory,
-	LogLevel,
-	successSignUpRedirect,
+	LogLevel
 }

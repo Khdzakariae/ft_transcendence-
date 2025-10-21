@@ -3,7 +3,7 @@ import Logo from './assets/ping_pong_logo.png'
 import Banner from './assets/landing_page_banner_4k.png'
 import { PrimaryButton, SecondaryButton } from './components';
 import { Utils } from './Utils';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 // Pages
 export function Views( res: any ): JSX.Element | null {
@@ -49,10 +49,10 @@ function LandingPage( setPath: Function ): JSX.Element {
 }
 
 function SignUpPage( setPath: Function ): JSX.Element | null {
-	const [msg, setMsg] = useState('');
-	const [is_signed_up, setIsSignedUp] = useState(false);
-	const [is_loading, setIsLoading] = useState(false);
-	const [creation_msg, setCreationMsg] = useState('Create Account');
+	const [msg, setMsg] = useState(''); // message to show user
+	const [is_signed_up, setIsSignedUp] = useState(false); // track if user signed up successfully
+	const [is_loading, setIsLoading] = useState(false); // track account creation loading state
+	const [creation_msg, setCreationMsg] = useState('Create Account'); // create account button message
 
 	const auth_login = (auth_provider: 'google' | '42intra') => {
 		// Store attempt info before redirect
@@ -60,6 +60,18 @@ function SignUpPage( setPath: Function ): JSX.Element | null {
 		window.location.href = `http://localhost:3000/api/v1/auth/${auth_provider}`;
 	};
 
+	// useEffect for redirect after signup
+	useEffect(() => {
+		let timer: NodeJS.Timeout;
+
+		if (is_signed_up) {
+			timer = setTimeout(() => {
+				Utils.pushStateHistory('/sign-in/', setPath);
+			}, 5000);
+		}
+		return () => clearTimeout(timer);
+	}, [is_signed_up]);
+	
 	const onSubmit = async (e: any) => {
 	let response = null;
 
@@ -213,7 +225,6 @@ function SignUpPage( setPath: Function ): JSX.Element | null {
 	
 					{/* Message / Redirect */}
 					{(msg && <p className={`text-center font-fontFamily-secondary ${msg.includes('success') ? 'bg-success/20 text-success' : 'bg-error/20 text-error'} rounded-lg p-4`}>{msg}</p>) || null}
-					{(is_signed_up && Utils.successSignUpRedirect('/sign-in/', setPath)) || null}
 				</form>
 
 				{/* Already have account */}
