@@ -51,6 +51,8 @@ function LandingPage( setPath: Function ): JSX.Element {
 function SignUpPage( setPath: Function ): JSX.Element {
 	const [msg, setMsg] = useState('');
 	const [is_signed_up, setIsSignedUp] = useState(false);
+	const [is_loading, setIsLoading] = useState(false);
+	const [creation_msg, setCreationMsg] = useState('Create Account');
 
 	const onSubmit = async (e: any) => {
 	let response = null;
@@ -72,6 +74,8 @@ function SignUpPage( setPath: Function ): JSX.Element {
 
 		Utils.LogLevel.DEBUG && console.log('SignUp res:', { firstName, lastName, email, password });
 		try {
+			setIsLoading(true);
+			setCreationMsg('Creating...');
 			response = await fetch('http://localhost:3000/api/v1/auth/sign-up', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -82,6 +86,7 @@ function SignUpPage( setPath: Function ): JSX.Element {
 			Utils.LogLevel.ERROR && console.error('SignUp network error:', e);
 			const errorMessage = (e && typeof e === 'object' && 'message' in e) ? (e as any).message : String(e);
 			setMsg(`Network error: ${errorMessage}`);
+			setIsLoading(false);
 			return;
 		}
 		Utils.LogLevel.DEBUG && console.log('SignUp Response status:', response);
@@ -99,13 +104,16 @@ function SignUpPage( setPath: Function ): JSX.Element {
 			case 200:
 			case 201:
 				setMsg(`${res.message}`);
+				setCreationMsg('Redirecting to Sign In...');
 				setIsSignedUp(true);
 				break;
 			case 409:
 				setMsg(`${res.error}`);
+				setIsLoading(false);
 				break;
 			case 500:
 				setMsg(`${res.error}`);
+				setIsLoading(false);
 				break;
 			default:
 				Utils.LogLevel.ERROR && console.error('Unexpected response status:', response.status, res);
@@ -191,7 +199,7 @@ function SignUpPage( setPath: Function ): JSX.Element {
 					</div>
 
 					{/* Submit */}
-					<PrimaryButton func={ () => {} } props={ { children: 'Create Account', type: 'submit', className: 'w-full rounded-lg bg-cyan-500 hover:bg-cyan-600 active:bg-primary-btn transition-colors duration-300 text-secondary-text py-3 font-bold shadow-md' } } />
+					<PrimaryButton func={ () => {} } props={ { children: creation_msg, type: 'submit', disabled: is_loading, className: `w-full rounded-lg bg-cyan-500 hover:bg-cyan-600 active:bg-primary-btn transition-colors duration-300 text-secondary-text py-3 font-bold shadow-md ${is_loading ? 'opacity-50 cursor-not-allowed' : ''}` } } />
 	
 					{/* Message / Redirect */}
 					{(msg && <p className={`text-center font-fontFamily-secondary ${msg.includes('success') ? 'bg-success/20 text-success' : 'bg-error/20 text-error'} rounded-lg p-4`}>{msg}</p>) || null}
