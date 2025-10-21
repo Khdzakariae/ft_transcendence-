@@ -77,12 +77,12 @@ function SignUpPage( setPath: Function ): JSX.Element {
 			setIsLoading(true);
 			setCreationMsg('Creating...');
 			response = await fetch('http://localhost:3000/api/v1/auth/sign-up', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			credentials: 'include',
-			body: JSON.stringify({ firstName, lastName, email, password }),
-		})}
-		catch(e) {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ firstName, lastName, email, password }),
+			});
+		} catch(e) {
 			Utils.LogLevel.ERROR && console.error('SignUp network error:', e);
 			const errorMessage = (e && typeof e === 'object' && 'message' in e) ? (e as any).message : String(e);
 			setMsg(`Network error: ${errorMessage}`);
