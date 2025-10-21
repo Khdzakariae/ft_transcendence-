@@ -1,4 +1,4 @@
-import { ViewMap } from './Types';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Logo from './assets/ping_pong_logo.png'
 import Banner from './assets/landing_page_banner_4k.png'
 import { PrimaryButton, SecondaryButton } from './components';
@@ -6,19 +6,21 @@ import { Utils } from './Utils';
 import { useEffect, useState } from 'react';
 
 // Pages
-export function Views( res: any ): JSX.Element | null {
-	const viewsMap: ViewMap = {
-		'/': LandingPage,
-		'/public/': LandingPage,
-		'/sign-up/': SignUpPage,
-		//'/sign-in/': SignInPage,
-	};
-	const { path, setPath } = res;
-
-	return viewsMap[path]?.(setPath);
+export function Views(): JSX.Element {
+	return (
+		<Routes>
+			<Route path="/" element={<LandingPage />} />
+			<Route path="/public/" element={<LandingPage />} />
+			<Route path="/sign-up/" element={<SignUpPage />} />
+			<Route path="/sign-in/" element={<Navigate to="/" replace />} />
+			<Route path="*" element={<Navigate to="/" replace />} />
+		</Routes>
+	);
 }
 
-function LandingPage( setPath: Function ): JSX.Element {
+function LandingPage(): JSX.Element {
+	const navigate = useNavigate();
+
 	return (
 		<div className="background-auth" style={{ backgroundImage: `url(${Banner})` }}>
 
@@ -40,15 +42,16 @@ function LandingPage( setPath: Function ): JSX.Element {
 				
 				{/* Buttons Container: Responsive layout */}
 				<div className="flex flex-col w-full max-w-sm space-y-4 justify-center">
-					<SecondaryButton func={ () => Utils.pushStateHistory('/sign-up/', setPath) } props={ { children: 'Join Now' } } />
-					<PrimaryButton func={ () => Utils.pushStateHistory('/sign-in/', setPath) } props={{ children: 'Sign In' }}/>
+					<SecondaryButton func={ () => navigate('/sign-up/') } props={ { children: 'Join Now' } } />
+					<PrimaryButton func={ () => navigate('/sign-in/') } props={{ children: 'Sign In' }}/>
 				</div>
 			</div>
 		</div>
 	)
 }
 
-function SignUpPage( setPath: Function ): JSX.Element | null {
+function SignUpPage(): JSX.Element | null {
+	const navigate = useNavigate();
 	const [msg, setMsg] = useState(''); // message to show user
 	const [is_signed_up, setIsSignedUp] = useState(false); // track if user signed up successfully
 	const [is_loading, setIsLoading] = useState(false); // track account creation loading state
@@ -66,11 +69,11 @@ function SignUpPage( setPath: Function ): JSX.Element | null {
 
 		if (is_signed_up) {
 			timer = setTimeout(() => {
-				Utils.pushStateHistory('/sign-in/', setPath);
+				navigate('/sign-in/');
 			}, 5000);
 		}
 		return () => clearTimeout(timer);
-	}, [is_signed_up]);
+	}, [is_signed_up, navigate]);
 	
 	const onSubmit = async (e: any) => {
 	let response = null;
@@ -104,6 +107,7 @@ function SignUpPage( setPath: Function ): JSX.Element | null {
 			Utils.LogLevel.ERROR && console.error('SignUp network error:', e);
 			const errorMessage = (e && typeof e === 'object' && 'message' in e) ? (e as any).message : String(e);
 			setMsg(`Network error: ${errorMessage}`);
+			setCreationMsg('Create Account');
 			setIsLoading(false);
 			return;
 		}
@@ -173,9 +177,9 @@ function SignUpPage( setPath: Function ): JSX.Element | null {
 
 				{/* back to login */}
 				<div className="text-center mb-6">
-					<a href="/sign-in/" className="text-md text-gray-300 hover:text-white transition-colors">
+					<button onClick={() => navigate('/sign-in/')} className="text-md text-gray-300 hover:text-white transition-colors">
 						← Back to <span className="font-semibold text-cyan-300 underline">Login</span>
-					</a>
+					</button>
 				</div>
 
 				<form onSubmit={onSubmit} className="space-y-5 font-secondary">
@@ -229,10 +233,10 @@ function SignUpPage( setPath: Function ): JSX.Element | null {
 
 				{/* Already have account */}
 				<div className="mt-6 text-center text-md text-gray-300">
-					<a href="/sign-in/" className="hover:text-white transition-colors">
+					<button onClick={() => navigate('/sign-in/')} className="hover:text-white transition-colors">
 						Already have an account?{' '}
 						<span className="font-semibold text-cyan-300 underline">Sign In</span>
-					</a>
+					</button>
 				</div>
 
 				{/* Social buttons: stacked on mobile, inline on md */}
