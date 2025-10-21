@@ -48,11 +48,17 @@ function LandingPage( setPath: Function ): JSX.Element {
 	)
 }
 
-function SignUpPage( setPath: Function ): JSX.Element {
+function SignUpPage( setPath: Function ): JSX.Element | null {
 	const [msg, setMsg] = useState('');
 	const [is_signed_up, setIsSignedUp] = useState(false);
 	const [is_loading, setIsLoading] = useState(false);
 	const [creation_msg, setCreationMsg] = useState('Create Account');
+
+	const auth_login = (auth_provider: 'google' | '42intra') => {
+		// Store attempt info before redirect
+		sessionStorage.setItem('auth_provider', auth_provider);
+		window.location.href = `http://localhost:3000/api/v1/auth/${auth_provider}`;
+	};
 
 	const onSubmit = async (e: any) => {
 	let response = null;
@@ -222,6 +228,7 @@ function SignUpPage( setPath: Function ): JSX.Element {
 				<div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 font-secondary">
 					<button
 						type="button"
+						onClick={ auth_login.bind(null, 'google') }
 						className="flex items-center justify-center gap-3 w-full rounded-lg border border-gray-700 bg-secondary-btn py-3 text-md font-medium hover:bg-white/10 transition duration-500"
 					>
 						{/* small google icon placeholder */}
@@ -231,6 +238,7 @@ function SignUpPage( setPath: Function ): JSX.Element {
 
 					<button
 						type="button"
+						onClick={ auth_login.bind(null, '42intra') }
 						className="flex items-center justify-center gap-3 w-full rounded-lg border border-gray-700 bg-secondary-btn py-3 text-md font-medium hover:bg-white/10 transition duration-500"
 					>
 						<span className="h-5 w-5 rounded-sm bg-white/20 flex items-center justify-center text-[10px] font-bold">42</span>
