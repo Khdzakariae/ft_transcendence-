@@ -37,3 +37,6 @@ Thumbs.db
 
 srcs/prisma/databaseintro.db
 srcs/front/aif/
+
+# ignore .json
+*.json

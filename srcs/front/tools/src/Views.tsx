@@ -109,15 +109,19 @@ function SignUpPage( setPath: Function ): JSX.Element {
 				break;
 			case 409:
 				setMsg(`${res.error}`);
+				setCreationMsg('Create Account');
 				setIsLoading(false);
 				break;
 			case 500:
 				setMsg(`${res.error}`);
+				setCreationMsg('Create Account');
 				setIsLoading(false);
 				break;
 			default:
 				Utils.LogLevel.ERROR && console.error('Unexpected response status:', response.status, res);
 				setMsg(`Unexpected error occurred (${response.status}). Please try again.`);
+				setCreationMsg('Create Account');
+				setIsLoading(false);
 		}
 	}
 
