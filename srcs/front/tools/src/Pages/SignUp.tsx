@@ -100,60 +100,79 @@ export function SignUpPage(): JSX.Element {
 	}
 
 	return (
-		<div>
-			<AuthLayout>
-				{/* logo */}
+		<AuthLayout>
+			{/* Header */}
+			<div className="text-center mb-6">
+				{/* Logo */}
 				<div className="flex justify-center mb-6">
 					<img src={Logo} alt="Logo" className="h-12 sm:h-16 md:h-20" />
 				</div>
-				{/* header */}
-				<div className="text-center mb-6">
-					<h1 className="text-4xl font-extrabold leading-tight">
-						Create Your <span className="text-primary-text underline">Account</span>
-					</h1>
-					<p className="text-md mt-2">
-						Join, track stats, and compete on the leaderboard
-					</p>
+				<h1 className="text-4xl font-extrabold leading-tight text-white">
+					Create Your <span className="text-primary-text underline">Account</span>
+				</h1>
+				<p className="text-md mt-2 text-gray-300">
+					Join, track stats, and compete on the leaderboard
+				</p>
+			</div>
+
+			{/* Back to login */}
+			<div className="text-center mb-6">
+				<button 
+					onClick={() => navigate('/sign-in/')} 
+					className="text-md text-gray-300 hover:text-white transition-colors"
+				>
+					← Back to <span className="font-semibold text-cyan-300 underline">Login</span>
+				</button>
+			</div>
+
+			<form onSubmit={onSubmit} className="space-y-5 font-secondary">
+				{/* Email */}
+				<AuthInputForms type="email" name="email" placeholder="Email" required />
+
+				{/* First + Last (responsive two-column on sm+) */}
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+					<AuthInputForms type="text" name="first" placeholder="First Name" required />
+					<AuthInputForms type="text" name="last" placeholder="Last Name" required />
 				</div>
 
-				{/* back to login */}
-				<div className="text-center mb-6">
-					<button onClick={() => navigate('/sign-in/')} className="text-md text-gray-300 hover:text-white transition-colors">
-						← Back to <span className="font-semibold text-cyan-300 underline">Login</span>
-					</button>
-				</div>
+				{/* Password */}
+				<AuthInputForms type="password" name="password" placeholder="Password" required />
 
-				<form onSubmit={onSubmit} className="space-y-5 font-secondary">
-					{/* Email */}
-					<AuthInputForms type="email" name="email" placeholder="Email" required />
-
-					{/* First + Last (responsive two-column on sm+) */}
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-						<AuthInputForms type="text" name="first" placeholder="First Name" required />
-						<AuthInputForms type="text" name="last" placeholder="Last Name" required />
-					</div>
-
-					{/* Password */}
-					<AuthInputForms type="password" name="password" placeholder="Password" required />
-
-					{/* Submit */}
-					<PrimaryButton func={ () => {} } props={ { children: creation_msg, type: 'submit', disabled: is_loading, className: `w-full rounded-lg bg-cyan-500 hover:bg-cyan-600 active:bg-primary-btn transition-colors duration-300 text-secondary-text py-3 font-bold shadow-md ${is_loading ? 'opacity-50 cursor-not-allowed' : ''}` } } />
+				{/* Submit */}
+				<PrimaryButton 
+					func={() => {}} 
+					props={{ 
+						children: creation_msg, 
+						type: 'submit', 
+						disabled: is_loading, 
+						className: `w-full rounded-lg bg-cyan-500 hover:bg-cyan-600 active:bg-primary-btn transition-colors duration-300 text-secondary-text py-3 font-bold shadow-md ${is_loading ? 'opacity-50 cursor-not-allowed' : ''}` 
+					}} 
+				/>
 		
-					{/* Message / Redirect */}
-					{(msg && <p className={`text-center font-fontFamily-secondary ${msg.includes('success') ? 'bg-success/20 text-success' : 'bg-error/20 text-error'} rounded-lg p-4`}>{msg}</p>) || null}
-				</form>
+				{/* Message / Redirect */}
+				{msg && (
+					<p className={`text-center font-fontFamily-secondary ${msg.includes('success') ? 'bg-success/20 text-success' : 'bg-error/20 text-error'} rounded-lg p-4`}>
+						{msg}
+					</p>
+				)}
+			</form>
 
-				{/* Already have account */}
-				<div className="mt-6 text-center text-md text-gray-300">
-					<button onClick={() => navigate('/sign-in/')} className="hover:text-white transition-colors">
-						Already have an account?{' '}
-						<span className="font-semibold text-cyan-300 underline">Sign In</span>
-					</button>
-				</div>
+			{/* Already have account */}
+			<div className="mt-6 text-center text-md text-gray-300">
+				<button 
+					onClick={() => navigate('/sign-in/')} 
+					className="hover:text-white transition-colors"
+				>
+					Already have an account?{' '}
+					<span className="font-semibold text-cyan-300 underline">Sign In</span>
+				</button>
+			</div>
 
-				{/* Social buttons: stacked on mobile, inline on md+ */}
-				<AuthProvidersButtons />
-			</AuthLayout>
-		</div>
-	)
+			{/* Social buttons */}
+			<div className="text-center mb-4 mt-6 font-secondary text-gray-300">
+				<p className="text-md">Or continue with</p>
+			</div>
+			<AuthProvidersButtons />
+		</AuthLayout>
+	);
 }
