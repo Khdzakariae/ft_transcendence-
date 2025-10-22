@@ -4,15 +4,18 @@ import Banner from './assets/landing_page_banner_4k.png'
 import { PrimaryButton, SecondaryButton } from './components';
 import { Utils } from './Utils';
 import { useEffect, useState } from 'react';
+import { AuthGuard } from './components/AuthGuard';
+import { Dashboard } from './components/Dashboard';
 
 // Pages
 export function Views(): JSX.Element {
 	return (
 		<Routes>
-			<Route path="/" element={<LandingPage />} />
-			<Route path="/public/" element={<LandingPage />} />
-			<Route path="/sign-up/" element={<SignUpPage />} />
-			<Route path="/sign-in/" element={<Navigate to="/" replace />} />
+			<Route path="/" element={<AuthGuard><LandingPage /></AuthGuard>} />
+			<Route path="/public/" element={<AuthGuard><LandingPage /></AuthGuard>} />
+			<Route path="/sign-up/" element={<AuthGuard><SignUpPage /></AuthGuard>} />
+			<Route path="/sign-in/" element={<AuthGuard><Navigate to="/" replace /></AuthGuard>} />
+			<Route path="/dashboard" element={<Dashboard />} />
 			<Route path="*" element={<Navigate to="/" replace />} />
 		</Routes>
 	);
