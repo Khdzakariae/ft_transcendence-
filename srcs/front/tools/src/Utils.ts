@@ -33,6 +33,7 @@ async function checkAuthCookie(): Promise<AuthResponse> {
 		}
 
 		const data = await response.json();
+		console.log('Auth check response data:', data);
 		return data;
 	} catch (error) {
 		Utils.LogLevel.ERROR && console.error('Auth check error:', error);

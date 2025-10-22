@@ -53,4 +53,3 @@ export function SecondaryButton({ func, ...props }: { func: Function; [key: stri
 		</button>
 	);
 }
-
