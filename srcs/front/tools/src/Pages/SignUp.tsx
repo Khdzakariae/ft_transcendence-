@@ -158,7 +158,7 @@ export function SignUpPage(): JSX.Element {
 			</form>
 
 			{/* Already have account */}
-			<div className="mt-6 text-center text-md text-gray-300">
+			<div className="mt-4 text-center text-md text-gray-300">
 				<button 
 					onClick={() => navigate('/sign-in/')} 
 					className="hover:text-white transition-colors"
@@ -169,8 +169,8 @@ export function SignUpPage(): JSX.Element {
 			</div>
 
 			{/* Social buttons */}
-			<div className="text-center mb-4 mt-6 font-secondary text-gray-300">
-				<p className="text-md">Or continue with</p>
+			<div className="text-center mb-4 mt-2 font-primary text-gray-300">
+				<span className="text-md">Or Continue with</span>
 			</div>
 			<AuthProvidersButtons />
 		</AuthLayout>

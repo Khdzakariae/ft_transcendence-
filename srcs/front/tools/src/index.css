@@ -4,7 +4,7 @@
 
 /* add tokens */
 .auth-elements-container {
-	@apply 	w-full max-w-3xl
+	@apply 	w-full max-w-xl sm:max-w-2xl md:max-w-3xl
 			bg-primary-elements
 			backdrop-blur-md
 			p-6 sm:p-10

@@ -39,7 +39,7 @@ export function SignInPage(): JSX.Element {
 				<h1 className="text-5xl font-extrabold leading-tight text-white">
 					Welcome <span className="text-primary-text">Back</span>
 				</h1>
-				<p className="text-xl mt-2 text-gray-300">
+				<p className="text-base sm:text-md md:text-lg text-gray-300">
 					Glad to have you back!
 				</p>
 			</div>
@@ -63,21 +63,20 @@ export function SignInPage(): JSX.Element {
 						{msg}
 					</p>
 				)}
-
-				{/* Forgot password */}
-				<div className="text-center font-primary">
-					<button 
-						onClick={forgotPassword} 
-						className="text-md text-gray-300 hover:text-white transition-colors"
-					>
-						Forgot password? <span className="font-semibold text-cyan-300 underline">Click here</span>
-					</button>
-				</div>
 			</form>
+			{/* Forgot password */}
+			<div className="text-right font-primary mt-2">
+				<button 
+					onClick={forgotPassword} 
+					className="text-md text-gray-300 hover:text-white transition-colors"
+				>
+					Forgot password? <span className="font-semibold text-cyan-300 underline">Click here</span>
+				</button>
+			</div>
 
 			{/* Sign in with other providers */}
-			<div className="text-center mb-4 mt-6 text-gray-300">
-				<p className="text-md">Sign in with others</p>
+			<div className="text-center mb-4 mt-4 text-gray-300">
+				<p className="text-md sm:text-lg">Sign in with others</p>
 			</div>
 			<AuthProvidersButtons />
 
