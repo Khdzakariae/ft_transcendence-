@@ -5,6 +5,7 @@ import Logo from '../assets/ping_pong_logo.png'
 import { PrimaryButton } from '../components/Buttons';
 import { AuthLayout } from '../components/AuthLayout';
 import { AuthInputForms } from '../components/AuthInputForms';
+import { AuthProvidersButtons } from '../components/Buttons';
 
 
 export function SignUpPage(): JSX.Element {
@@ -13,12 +14,6 @@ export function SignUpPage(): JSX.Element {
 	const [is_signed_up, setIsSignedUp] = useState(false); // track if user signed up successfully
 	const [is_loading, setIsLoading] = useState(false); // track account creation loading state
 	const [creation_msg, setCreationMsg] = useState('Create Account'); // create account button message
-
-	const auth_login = (auth_provider: 'google' | '42intra') => {
-		// Store attempt info before redirect
-		sessionStorage.setItem('auth_provider', auth_provider);
-		window.location.href = `http://localhost:3000/api/v1/auth/${auth_provider}`;
-	};
 
 	// useEffect for redirect after signup
 	useEffect(() => {
@@ -156,27 +151,8 @@ export function SignUpPage(): JSX.Element {
 					</button>
 				</div>
 
-				{/* Social buttons: stacked on mobile, inline on md */}
-				<div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 font-secondary">
-					<button
-						type="button"
-						onClick={ auth_login.bind(null, 'google') }
-						className="flex items-center justify-center gap-3 w-full rounded-lg border border-gray-700 bg-secondary-btn py-3 text-md font-medium hover:bg-white/10 transition duration-500"
-					>
-					{/* small google icon placeholder */}
-					<span className="h-5 w-5 rounded-sm bg-white/20 flex items-center justify-center text-xs">G</span>
-					<span>Continue with Google</span>
-					</button>
-
-					<button
-						type="button"
-						onClick={ auth_login.bind(null, '42intra') }
-						className="flex items-center justify-center gap-3 w-full rounded-lg border border-gray-700 bg-secondary-btn py-3 text-md font-medium hover:bg-white/10 transition duration-500"
-					>
-						<span className="h-5 w-5 rounded-sm bg-white/20 flex items-center justify-center text-[10px] font-bold">42</span>
-						<span>Continue with 42 Intra</span>
-					</button>
-				</div>
+				{/* Social buttons: stacked on mobile, inline on md+ */}
+				<AuthProvidersButtons />
 			</AuthLayout>
 		</div>
 	)
