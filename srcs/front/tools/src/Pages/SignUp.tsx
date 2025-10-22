@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Utils } from '../Utils';
 import Logo from '../assets/ping_pong_logo.png'
-import Banner from '../assets/landing_page_banner_4k.png'
 import { PrimaryButton } from '../components/Buttons';
+import { AuthLayout } from '../components/AuthLayout';
+import { AuthInputForms } from '../components/AuthInputForms';
 
 
-export function SignUpPage(): JSX.Element | null {
+export function SignUpPage(): JSX.Element {
 	const navigate = useNavigate();
 	const [msg, setMsg] = useState(''); // message to show user
 	const [is_signed_up, setIsSignedUp] = useState(false); // track if user signed up successfully
@@ -103,24 +104,13 @@ export function SignUpPage(): JSX.Element | null {
 		}
 	}
 
-	// relative overflow-hidden 
-// 			bg-cover bg-center min-h-screen bg-gray-900 style={{ backgroundImage: `url(${Banner})`
 	return (
-		<div className="background-auth" style={{ backgroundImage: `url(${Banner})` }} >
-
-			<img src={Banner} alt="Ping Pong Banner" className="absolute inset-0 w-full h-full object-cover z-0" />
-			{/* Dark Overlay for Readability (Instead of a separate absolute div) */}
-			<div className="absolute inset-0 bg-black/60 z-0"></div>
-
-			{/* Content Wrapper: Centers the main text and form */}
-			<div className="auth-elements-container font-primary">
-
-			{/* <div className="w-full max-w-3xl bg-primary-elements backdrop-blur-sm rounded-2xl p-6 sm:p-10 shadow-xl border-[1.5px] border-transparent rounded-2xl [border-image:linear-gradient(135deg,#00FFFF,#FF6B00)_1] shadow-[0_0_15px_#00FFFF55]"> */}
+		<div>
+			<AuthLayout>
 				{/* logo */}
 				<div className="flex justify-center mb-6">
 					<img src={Logo} alt="Logo" className="h-12 sm:h-16 md:h-20" />
 				</div>
-
 				{/* header */}
 				<div className="text-center mb-6">
 					<h1 className="text-4xl font-extrabold leading-tight">
@@ -140,49 +130,20 @@ export function SignUpPage(): JSX.Element | null {
 
 				<form onSubmit={onSubmit} className="space-y-5 font-secondary">
 					{/* Email */}
-			
-					<div className="relative">
-						<input
-							type="email"
-							name="email"
-							placeholder="Email"
-							required
-							className="w-full rounded-lg border border-gray-700 bg-primary-bg py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400"
-						/>
-					</div>
+					<AuthInputForms type="email" name="email" placeholder="Email" required />
 
 					{/* First + Last (responsive two-column on sm+) */}
 					<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-						<input
-							type="text"
-							name="first"
-							placeholder="First Name"
-							required
-							className="w-full rounded-lg border border-gray-700 bg-primary-bg py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400"
-						/>
-						<input
-							type="text"
-							name="last"
-							placeholder="Last Name"
-							required
-							className="w-full rounded-lg border border-gray-700 bg-primary-bg py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400"
-						/>
+						<AuthInputForms type="text" name="first" placeholder="First Name" required />
+						<AuthInputForms type="text" name="last" placeholder="Last Name" required />
 					</div>
 
 					{/* Password */}
-					<div className="relative">
-						<input
-							type="password"
-							name="password"
-							placeholder="Password"
-							required
-							className="w-full rounded-lg border border-gray-700 bg-primary-bg py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400"
-						/>
-					</div>
+					<AuthInputForms type="password" name="password" placeholder="Password" required />
 
 					{/* Submit */}
 					<PrimaryButton func={ () => {} } props={ { children: creation_msg, type: 'submit', disabled: is_loading, className: `w-full rounded-lg bg-cyan-500 hover:bg-cyan-600 active:bg-primary-btn transition-colors duration-300 text-secondary-text py-3 font-bold shadow-md ${is_loading ? 'opacity-50 cursor-not-allowed' : ''}` } } />
-	
+		
 					{/* Message / Redirect */}
 					{(msg && <p className={`text-center font-fontFamily-secondary ${msg.includes('success') ? 'bg-success/20 text-success' : 'bg-error/20 text-error'} rounded-lg p-4`}>{msg}</p>) || null}
 				</form>
@@ -202,9 +163,9 @@ export function SignUpPage(): JSX.Element | null {
 						onClick={ auth_login.bind(null, 'google') }
 						className="flex items-center justify-center gap-3 w-full rounded-lg border border-gray-700 bg-secondary-btn py-3 text-md font-medium hover:bg-white/10 transition duration-500"
 					>
-						{/* small google icon placeholder */}
-						<span className="h-5 w-5 rounded-sm bg-white/20 flex items-center justify-center text-xs">G</span>
-						<span>Continue with Google</span>
+					{/* small google icon placeholder */}
+					<span className="h-5 w-5 rounded-sm bg-white/20 flex items-center justify-center text-xs">G</span>
+					<span>Continue with Google</span>
 					</button>
 
 					<button
@@ -216,7 +177,7 @@ export function SignUpPage(): JSX.Element | null {
 						<span>Continue with 42 Intra</span>
 					</button>
 				</div>
-			</div>
+			</AuthLayout>
 		</div>
 	)
 }
