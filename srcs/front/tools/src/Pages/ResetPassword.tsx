@@ -54,7 +54,7 @@ export function ResetPasswordPage(): JSX.Element {
 						onClick={() => navigate('/sign-in/')} 
 						className="text-md text-gray-300 hover:text-white transition-colors"
 					>
-						← Back to <span className="font-semibold text-secondary-btn underline">Login</span>
+						← Back to <span className="font-semibold text-primary-btn underline">Login</span>
 					</button>
 				</div>
 			</div>
