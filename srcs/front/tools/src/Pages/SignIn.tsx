@@ -89,7 +89,7 @@ export function SignInPage(): JSX.Element {
 	};
 
 	const forgotPassword = () => {
-		navigate('/forgot-password/');
+		navigate('/reset-password/');
 	};
 
 	return (
