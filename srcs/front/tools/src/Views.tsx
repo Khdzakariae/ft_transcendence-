@@ -1,10 +1,12 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { SignUpPage } from './Pages/SignUp';
 import { SignInPage } from './Pages/SignIn';
 import { AuthGuard } from './components/AuthGuard';
 import { Dashboard } from './Pages/Dashboard';
 import { LandingPage } from './Pages/LandingPage';
 import { ResetPasswordEmailPage, ResetPasswordPage } from './Pages/ResetPassword';
+import { NotFoundPage } from './Pages/NotFound';
+
 // Pages
 export function Views(): JSX.Element {
 	return (
@@ -16,7 +18,7 @@ export function Views(): JSX.Element {
 			<Route path="/dashboard/" element={<Dashboard />} />
 			<Route path="/reset-password-email/" element={<ResetPasswordEmailPage />} />
 			<Route path="/reset-password/:userId/" element={<ResetPasswordPage />} />
-			<Route path="*" element={<Navigate to="/" replace />} />
+			<Route path="*" element={<NotFoundPage />} />
 		</Routes>
 	);
 }
