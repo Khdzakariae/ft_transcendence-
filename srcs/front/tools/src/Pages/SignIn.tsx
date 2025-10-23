@@ -81,10 +81,10 @@ export function SignInPage(): JSX.Element {
 				setIsLoading(false);
 				break;
 			default:
-				setMsg(`${res.error}`);
+				Utils.LogLevel.ERROR && console.error('Unexpected response status:', response.status, res);
+				setMsg(`Unexpected error occurred (${response.status}). Please try again.`);
 				setCreationMsg('Sign In');
 				setIsLoading(false);
-				break;
 		}
 	};
 

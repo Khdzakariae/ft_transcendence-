@@ -82,10 +82,8 @@ export function SignUpPage(): JSX.Element {
 				setIsSignedUp(true);
 				break;
 			case 409:
-				setMsg(`${res.error}`);
-				setCreationMsg('Create Account');
-				setIsLoading(false);
-				break;
+			case 400:
+			case 404:
 			case 500:
 				setMsg(`${res.error}`);
 				setCreationMsg('Create Account');
