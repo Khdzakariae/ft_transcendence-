@@ -10,18 +10,7 @@ export function ResetPasswordEmailPage(): JSX.Element {
 	const [is_loading, setIsLoading] = useState(false);
 	const [msg, setMsg] = useState('');
 	const [btn_msg, setBtnMsg] = useState('Send Reset Link');
-	const [is_success, setIsSuccess] = useState(false);
 	const navigate = useNavigate();
-
-	useEffect(() => {
-		let timer: NodeJS.Timeout;
-		if (is_success) {
-			timer = setTimeout(() => {
-				navigate('/sign-in/');
-			}, 3000);
-		}
-		return () => clearTimeout(timer);
-	}, [is_success, navigate]);
 
 	const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -61,8 +50,7 @@ export function ResetPasswordEmailPage(): JSX.Element {
 		switch(response.status) {
 			case 200:
 				setMsg(res.message);
-				setBtnMsg('Send Reset Link');
-				setIsSuccess(true);
+				setBtnMsg('Please check your email for the reset link');
 				break;
 			case 400:
 			case 500:
