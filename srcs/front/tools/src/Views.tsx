@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { SignUpPage } from './Pages/SignUp';
 import { SignInPage } from './Pages/SignIn';
 import { AuthGuard } from './components/AuthGuard';
-import { Dashboard } from './components/Dashboard';
+import { Dashboard } from './Pages/Dashboard';
 import { LandingPage } from './Pages/LandingPage';
 import { ResetPasswordEmailPage, ResetPasswordPage } from './Pages/ResetPassword';
 // Pages
