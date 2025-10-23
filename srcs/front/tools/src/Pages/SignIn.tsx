@@ -4,24 +4,88 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthInputForms } from '../components/AuthInputForms';
 import { AuthProvidersButtons, PrimaryButton } from '../components/Buttons';
 import { useState } from 'react';
+import { Utils } from '../Utils';
+import { useEffect } from 'react';
 
 export function SignInPage(): JSX.Element {
+	let response = null;
+
 	const navigate = useNavigate();
 	const [isLoading, setIsLoading] = useState(false);
 	const [creation_msg, setCreationMsg] = useState('Sign In');
 	const [msg, setMsg] = useState('');
+	const [isSignedIn, setIsSignedIn] = useState(false);
+
+	useEffect(() => {
+		let timer: NodeJS.Timeout;
+		if (isLoading) {
+			timer = setTimeout(() => {
+				navigate('/dashboard/');
+			}, 2000);
+		}
+		return () => clearTimeout(timer);
+	}, [isSignedIn, navigate]);
 
 	const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		setIsLoading(true);
-		setCreationMsg('Signing In...');
 		
-		// TODO: Implement actual sign-in logic here
-		setTimeout(() => {
-			setIsLoading(false);
+		const form = e.currentTarget;
+		const email = form.email.value;
+		const password = form.password.value;
+
+		const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+		if (!passwordRegex.test(password)) {
+			setMsg('Password must be at least 6 characters long and include uppercase, lowercase letters, and a number.');
+			return;
+		}
+
+		try {
+			setIsLoading(true);
+			setCreationMsg('Signing In...');
+			response = await fetch('http://localhost:3000/api/v1/auth/sign-in', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ email, password }),
+			});
+		} catch(e) {
+			Utils.LogLevel.ERROR && console.error('SignIn network error:', e);
+			const errorMessage = (e && typeof e === 'object' && 'message' in e) ? (e as any).message : String(e);
+			setMsg(`Network error: ${errorMessage}`);
 			setCreationMsg('Sign In');
-			setMsg('Sign-in functionality not implemented yet');
-		}, 2000);
+			setIsLoading(false);
+			return;
+		}
+
+		const contentType: string | null = response.headers.get('content-type');
+		let res: any = {};
+	
+		if (contentType && contentType.includes('application/json')) {
+			res = await response.json();
+		} else {
+			Utils.LogLevel.WARN && console.warn('Response is not JSON');
+		}
+
+		switch(response.status) {
+			case 200:
+			case 201:
+				setMsg(`${res.message}`);
+				setCreationMsg('Redirecting to Dashboard...');
+				setIsSignedIn(true);
+				break;
+			case 401:
+			case 404:
+			case 500:
+				setMsg(`${res.error}`);
+				setCreationMsg('Sign In');
+				setIsLoading(false);
+				break;
+			default:
+				setMsg(`${res.error}`);
+				setCreationMsg('Sign In');
+				setIsLoading(false);
+				break;
+		}
 	};
 
 	const forgotPassword = () => {
@@ -80,10 +144,9 @@ export function SignInPage(): JSX.Element {
 			</div>
 			<AuthProvidersButtons />
 
-			{/* Don't have an account? */}
 			<div className="text-center mt-6 font-primary text-gray-300">
 				<Link to="/sign-up/" className="text-md hover:text-white transition-colors">
-					Don't have an account? <span className="font-semibold text-cyan-300 underline">Register here</span>
+					Don't have an account yet? <span className="font-semibold text-cyan-300 underline">Register here</span>
 				</Link>
 			</div>
 		</AuthLayout>

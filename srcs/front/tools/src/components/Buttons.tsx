@@ -53,7 +53,7 @@ export function AuthProvidersButtons() {
 	}
 
 	return (
-		<div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 font-secondary">
+		<div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 font-secondary">
 			<button
 				type="button"
 				onClick={ auth_login.bind(null, 'google') }

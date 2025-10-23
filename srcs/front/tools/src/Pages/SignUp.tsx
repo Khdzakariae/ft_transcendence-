@@ -169,7 +169,7 @@ export function SignUpPage(): JSX.Element {
 			</div>
 
 			{/* Social buttons */}
-			<div className="text-center mb-4 mt-2 font-primary text-gray-300">
+			<div className="text-center mt-2 font-primary text-gray-300">
 				<span className="text-md">Or Continue with</span>
 			</div>
 			<AuthProvidersButtons />
