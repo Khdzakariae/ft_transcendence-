@@ -13,7 +13,7 @@ export function Views(): JSX.Element {
 			<Route path="/public/" element={<AuthGuard><LandingPage /></AuthGuard>} />
 			<Route path="/sign-up/" element={<AuthGuard><SignUpPage /></AuthGuard>} />
 			<Route path="/sign-in/" element={<AuthGuard><SignInPage /></AuthGuard>} />
-			<Route path="/dashboard" element={<Dashboard />} />
+			<Route path="/dashboard/" element={<Dashboard />} />
 			<Route path="/reset-password-email/" element={<ResetPasswordEmailPage />} />
 			<Route path="/reset-password/:userId/" element={<ResetPasswordPage />} />
 			<Route path="*" element={<Navigate to="/" replace />} />
