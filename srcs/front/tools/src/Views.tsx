@@ -4,7 +4,7 @@ import { SignInPage } from './Pages/SignIn';
 import { AuthGuard } from './components/AuthGuard';
 import { Dashboard } from './components/Dashboard';
 import { LandingPage } from './Pages/LandingPage';
-import { ResetPasswordPage } from './Pages/ResetPassword';
+import { ResetPasswordEmailPage, ResetPasswordPage } from './Pages/ResetPassword';
 // Pages
 export function Views(): JSX.Element {
 	return (
@@ -14,7 +14,8 @@ export function Views(): JSX.Element {
 			<Route path="/sign-up/" element={<AuthGuard><SignUpPage /></AuthGuard>} />
 			<Route path="/sign-in/" element={<AuthGuard><SignInPage /></AuthGuard>} />
 			<Route path="/dashboard" element={<Dashboard />} />
-			<Route path="/reset-password/" element={<ResetPasswordPage />} />
+			<Route path="/reset-password-email/" element={<ResetPasswordEmailPage />} />
+			<Route path="/reset-password/:userId/" element={<ResetPasswordPage />} />
 			<Route path="*" element={<Navigate to="/" replace />} />
 		</Routes>
 	);
