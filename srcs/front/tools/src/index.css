@@ -26,3 +26,12 @@
 			bg-cover bg-center 
 			p-8
 }
+
+.side-bar-expanded {
+	@apply 
+		text-secondary-text font-semibold bg-primary-btn py-1 rounded hover:text-primary-btn hover:bg-primary-btn/30 transition-all duration-500
+}
+.side-bar-collapsed {
+	@apply 
+		hover:text-cyan-400 transition-colors duration-200
+}
