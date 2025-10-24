@@ -6,7 +6,21 @@ export function Dashboard(): JSX.Element {
 	const navigate = useNavigate();
 	const [user, setUser] = useState<AuthResponse['user'] | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
+	let	loading_flag: boolean = false;
 
+	useEffect(() => {
+		let timer: NodeJS.Timeout;
+
+		// delay dashboard loading
+		if (loading_flag = true) {
+			timer = setTimeout(() => {
+				setIsLoading(false);
+			}, (2000));
+		}
+
+		return () => clearTimeout(timer);
+	}, [loading_flag]);
+	
 	useEffect(() => {
 		const checkAuth = async () => {
 			try {
@@ -22,7 +36,7 @@ export function Dashboard(): JSX.Element {
 				Utils.LogLevel.ERROR && console.error('Dashboard auth check error:', error);
 				navigate('/', { replace: true });
 			} finally {
-				setIsLoading(false);
+				loading_flag = true;
 			}
 		};
 
@@ -34,7 +48,7 @@ export function Dashboard(): JSX.Element {
 			<div className="min-h-screen bg-primary-bg flex items-center justify-center">
 				<div className="text-center">
 					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-					<p className="text-gray-300">Loading dashboard...</p>
+					<p className="animate-pulse text-gray-400 font-primary text-center text-md sm:text-lg">Loading dashboard...</p>
 				</div>
 			</div>
 		);
