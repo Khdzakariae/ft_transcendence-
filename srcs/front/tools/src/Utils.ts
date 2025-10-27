@@ -18,6 +18,20 @@ export interface AuthResponse {
 	message?: string;
 }
 
+/**
+ * trimIfEndsWith - trim a specific char from str end
+ * 
+ * @param str: pahtname to check
+ * @param c: character to be tested in str end
+ * @returns: new str if true, otherwise same str
+ */
+function trimIfEndsWith(str: string, c: string): string {
+	if (str.endsWith(c)) {
+		return str.slice(0, -1);
+	}
+	return str;
+}
+
 async function checkAuthCookie(): Promise<AuthResponse> {
 	try {
 		const response = await fetch('http://localhost:3000/api/v1/auth/checkAuthCookie', {
@@ -43,5 +57,6 @@ async function checkAuthCookie(): Promise<AuthResponse> {
 
 export const Utils = {
 	LogLevel,
-	checkAuthCookie
+	checkAuthCookie,
+	trimIfEndsWith,
 }
