@@ -12,7 +12,7 @@ import Logo from "../assets/ping_pong_logo.png";
 import { Utils } from "../Utils";
 
 export function SideBar(): JSX.Element {
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [currentPath, _] = useState<string>(
     Utils.trimIfEndsWith(window.location.pathname, "/")
   ); // select active page in sidebar
