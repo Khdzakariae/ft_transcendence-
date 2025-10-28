@@ -21,6 +21,7 @@ Thumbs.db
 # .env.*.local
 
 # IDE/editor settings
+.vscode/
 .idea/
 *.swp
 
@@ -38,5 +39,4 @@ srcs/prisma/databaseintro.db
 srcs/front/aif/
 
 # ignore .json
-*.json
 package-lock.json
