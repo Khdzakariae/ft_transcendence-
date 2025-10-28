@@ -2,13 +2,13 @@
  * in order to use JSX syntax, we need to declare the JSX namespace globally.
  *This is necessary for TypeScript to understand JSX elements and their types.
  *and make it global so that it can be used in any file that imports this module.
-*/
+ */
 declare global {
-	namespace JSX {
-		interface IntrinsicElements {
-			[elemName: string]: any;
-		}
-	}
+  namespace JSX {
+    interface IntrinsicElements {
+      [elemName: string]: any;
+    }
+  }
 }
 
 // ============================================================================
@@ -90,7 +90,6 @@ let wipFiber: Fiber | null = null;
 // The index of the current hook being processed.
 let hookIndex: number = 0;
 
-
 // ============================================================================
 // 3. CORE API
 // The public API for Jarvis, similar to React's.
@@ -110,9 +109,13 @@ function createElement(
 ): JarvisElement {
   const props: any = { ...config };
 
-  props.children = children.flat().map(child =>
-    typeof child === "object" && child !== null ? child : createTextElement((child as string | number))
-  );
+  props.children = children
+    .flat()
+    .map((child) =>
+      typeof child === "object" && child !== null
+        ? child
+        : createTextElement(child as string | number),
+    );
 
   return { type, props };
 }
@@ -123,7 +126,10 @@ function createElement(
  * @param element The Jarvis element to render.
  * @param container The DOM node to render the element into.
  */
-function render(element: JarvisElement, container: HTMLElement | Element | null): void {
+function render(
+  element: JarvisElement,
+  container: HTMLElement | Element | null,
+): void {
   wipRoot = {
     dom: container,
     props: { children: [element] },
@@ -139,8 +145,9 @@ function render(element: JarvisElement, container: HTMLElement | Element | null)
  * @returns A tuple containing the current state and a function to update it.
  */
 function useState<T>(initial: T): [T, (action: SetStateAction<T>) => void] {
-  const oldHook =
-    wipFiber?.alternate?.hooks?.[hookIndex] as Hook<T> | undefined;
+  const oldHook = wipFiber?.alternate?.hooks?.[hookIndex] as
+    | Hook<T>
+    | undefined;
 
   const hook: Hook<T> = {
     state: oldHook ? oldHook.state : initial,
@@ -148,15 +155,21 @@ function useState<T>(initial: T): [T, (action: SetStateAction<T>) => void] {
   };
 
   const actions = oldHook ? oldHook.queue : [];
-  actions.forEach(action => {
-    hook.state = typeof action === "function" ? (action as (prevState: T) => T)(hook.state) : action;
+  actions.forEach((action) => {
+    hook.state =
+      typeof action === "function"
+        ? (action as (prevState: T) => T)(hook.state)
+        : action;
   });
 
   const setState = (action: SetStateAction<T>): void => {
     // Check if the new state is different from the current state
-    const newState = typeof action === "function" ? (action as (prevState: T) => T)(hook.state) : action;
+    const newState =
+      typeof action === "function"
+        ? (action as (prevState: T) => T)(hook.state)
+        : action;
     if (newState === hook.state) {
-        return;
+      return;
     }
 
     hook.queue.push(action as (prevState: T) => T | T);
@@ -283,10 +296,7 @@ function reconcileChildren(wipFiber: Fiber, elements: JarvisElement[]): void {
     const element = elements[index];
     let newFiber: Fiber | null = null;
 
-    const sameType =
-      oldFiber &&
-      element &&
-      element.type === oldFiber.type;
+    const sameType = oldFiber && element && element.type === oldFiber.type;
 
     if (sameType) {
       // If the type is the same, it's an update.
@@ -295,7 +305,7 @@ function reconcileChildren(wipFiber: Fiber, elements: JarvisElement[]): void {
         props: element.props,
         dom: (oldFiber as Fiber).dom,
         parent: wipFiber,
-        alternate: (oldFiber as Fiber | null),
+        alternate: oldFiber as Fiber | null,
         effectTag: EffectTag.UPDATE,
       };
     }
@@ -382,23 +392,25 @@ function commitWork(fiber?: Fiber | null): void {
  * @param fiber The fiber to delete.
  * @param domParent The parent DOM node to remove the child from.
  */
-function commitDeletion(fiber: Fiber, domParent: Node | null | undefined): void {
-    if (fiber.dom) {
-        try {
-            domParent?.removeChild(fiber.dom);
-        } catch (error) {
-            console.error("Failed to remove child during commitDeletion:", {
-                error,
-                domParent,
-                child: fiber.dom,
-            });
-        }
-    } else if (fiber.child) {
-        // If the fiber has no DOM node, recurse to find the child that does.
-        commitDeletion(fiber.child, domParent);
+function commitDeletion(
+  fiber: Fiber,
+  domParent: Node | null | undefined,
+): void {
+  if (fiber.dom) {
+    try {
+      domParent?.removeChild(fiber.dom);
+    } catch (error) {
+      console.error("Failed to remove child during commitDeletion:", {
+        error,
+        domParent,
+        child: fiber.dom,
+      });
     }
+  } else if (fiber.child) {
+    // If the fiber has no DOM node, recurse to find the child that does.
+    commitDeletion(fiber.child, domParent);
+  }
 }
-
 
 // ============================================================================
 // 6. DOM UTILITIES
@@ -441,18 +453,19 @@ function createDom(fiber: Fiber): Node {
 function updateDom(
   dom: Node,
   prevProps: { [key: string]: any },
-  nextProps: { [key: string]: any }
+  nextProps: { [key: string]: any },
 ): void {
   const isEvent = (key: string) => key.startsWith("on");
   const isProperty = (key: string) => key !== "children" && !isEvent(key);
-  const isNew = (prev: any, next: any) => (key: string) => prev[key] !== next[key];
+  const isNew = (prev: any, next: any) => (key: string) =>
+    prev[key] !== next[key];
   const isGone = (next: any) => (key: string) => !(key in next);
 
   // Remove old or changed event listeners
   Object.keys(prevProps)
     .filter(isEvent)
-    .filter(key => !(key in nextProps) || isNew(prevProps, nextProps)(key))
-    .forEach(name => {
+    .filter((key) => !(key in nextProps) || isNew(prevProps, nextProps)(key))
+    .forEach((name) => {
       const eventType = name.toLowerCase().substring(2);
       dom.removeEventListener(eventType, prevProps[name]);
     });
@@ -461,7 +474,7 @@ function updateDom(
   Object.keys(prevProps)
     .filter(isProperty)
     .filter(isGone(nextProps))
-    .forEach(name => {
+    .forEach((name) => {
       (dom as any)[name] = "";
     });
 
@@ -469,7 +482,7 @@ function updateDom(
   Object.keys(nextProps)
     .filter(isProperty)
     .filter(isNew(prevProps, nextProps))
-    .forEach(name => {
+    .forEach((name) => {
       (dom as any)[name] = nextProps[name];
     });
 
@@ -477,7 +490,7 @@ function updateDom(
   Object.keys(nextProps)
     .filter(isEvent)
     .filter(isNew(prevProps, nextProps))
-    .forEach(name => {
+    .forEach((name) => {
       const eventType = name.toLowerCase().substring(2);
       dom.addEventListener(eventType, nextProps[name]);
     });

@@ -1,4 +1,3 @@
-
 services:
   front:
     build:
@@ -100,42 +99,42 @@ services:
       - ft_transcendence
 
 volumes:
-    front_data:
-        driver: local
-        driver_opts:
-            type: none
-            o: bind
-            device: ./front/tools/
-    gateway_data:
-        driver: local
-        driver_opts:
-            type: none
-            o: bind
-            device: ./gateway/tools/
-    user-service_data:
-        driver: local
-        driver_opts:
-            type: none
-            o: bind
-            device: ./user-service/tools/
-    chat-service_data:
-        driver: local
-        driver_opts:
-            type: none
-            o: bind
-            device: ./chat-service/tools/
-    log-service_data:
-        driver: local
-        driver_opts:
-            type: none
-            o: bind
-            device: ./log-service/tools/
-    prisma_data:
-        driver: local
-        driver_opts:
-            type: none
-            o: bind
-            device: ./prisma/
+  front_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./front/tools/
+  gateway_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./gateway/tools/
+  user-service_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./user-service/tools/
+  chat-service_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./chat-service/tools/
+  log-service_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./log-service/tools/
+  prisma_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./prisma/
 
 networks:
   ft_transcendence:
