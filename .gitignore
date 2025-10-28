@@ -39,3 +39,4 @@ srcs/front/aif/
 
 # ignore .json
 *.json
+package-lock.json
