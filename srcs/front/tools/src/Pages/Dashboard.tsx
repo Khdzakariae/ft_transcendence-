@@ -80,7 +80,7 @@ export function Dashboard(): JSX.Element {
 			<div 
 				id='side-bar' 
 				className={`flex flex-col min-h-screen space-y-4 border-r-2 border-gray-800 text-center text-white justify-between py-8 transition-all duration-500 ${
-					isSidebarExpanded ? 'w-64' : 'w-24'
+					isSidebarExpanded ? 'w-60' : 'w-24'
 				}`}
 			>
 				<div className="flex justify-center">
@@ -97,46 +97,48 @@ export function Dashboard(): JSX.Element {
 				</button>
 				<div className="flex flex-col space-y-4 transition-all duration-500 font-secondary font-medium">
 					<div id='nav-bar-section' className={`flex flex-row justify-center items-center	gap-2 ${currentPath === '/dashboard' ? 'current-section' : 'default-section'}`}>
-						<div className='flex basis-1/3 justify-end'>
+						<div className={`flex ${isSidebarExpanded ? 'justify-end basis-1/3' : 'justify-center basis-full'}`}>
 							<LuLayoutDashboard className='w-6 h-6' />
 						</div>
-						<Link to="/dashboard" className='basis-2/3 text-left'>Dashboard</Link>
+						{isSidebarExpanded && <Link to="/dashboard" className='basis-2/3 text-left'>Dashboard</Link>}
 					</div>
 					<div id='nav-bar-section' className={`flex flex-row justify-center items-center gap-2	${currentPath === '/game' ? 'current-section' : 'default-section'}`}>
-						<div className='flex basis-1/3 justify-end'>
-							<RiGamepadLine className='w-6 h-6' />  
+						<div className={`flex ${isSidebarExpanded ? 'justify-end basis-1/3' : 'justify-center basis-full'}`}>
+							<a href="/dashboard/game"><RiGamepadLine className='w-6 h-6' /></a>
 						</div>
-						<Link to="/dashboard/game" className='basis-2/3 text-left'>Game</Link>
+						{isSidebarExpanded && <Link to="/dashboard/game" className='basis-2/3 text-left'>Game</Link>}
 					</div>
 					<div id='nav-bar-section' className={`flex flex-row justify-center items-center gap-2 ${currentPath === '/profile' ? 'current-section' : 'default-section'}`}>
-						<div className='flex justify-end basis-1/3'>
-							<CgProfile className='w-6 h-6' />
+						<div className={`flex ${isSidebarExpanded ? 'justify-end basis-1/3' : 'justify-center basis-full'}`}>
+							<a href="/dashboard/profile"><CgProfile className='w-6 h-6' /></a>
 						</div>
-						<Link to="/dashboard/profile" className='basis-2/3 text-left'>Profile</Link>
+						{isSidebarExpanded && <Link to="/dashboard/profile" className='basis-2/3 text-left'>Profile</Link>}
 					</div>
 					<div id='nav-bar-section' className={`flex flex-row justify-center items-center gap-2 ${currentPath === '/settings' ? 'current-section' : 'default-section'}`}>
-						<div className='flex justify-end basis-1/3'>
-							<IoSettingsOutline className='w-6 h-6' />
+						<div className={`flex ${isSidebarExpanded ? 'justify-end basis-1/3' : 'justify-center basis-full'}`}>
+							<a href="/dashboard/settings"><IoSettingsOutline className='w-6 h-6' /></a>
 						</div>
-						<Link to="/dashboard/settings" className='basis-2/3 text-left'>Settings</Link>
+						{isSidebarExpanded && <Link to="/dashboard/settings" className='basis-2/3 text-left'>Settings</Link>}
 					</div>
 					<div id='nav-bar-section' className={`flex flex-row justify-center items-center gap-2 ${currentPath === '/friends' ? 'current-section' : 'default-section'}`}>
-						<div className='flex justify-end basis-1/3'>
-							<LiaUserFriendsSolid className='w-6 h-6' />
+						<div className={`flex ${isSidebarExpanded ? 'justify-end basis-1/3' : 'justify-center basis-full'}`}>
+							<a href="/dashboard/friends"><LiaUserFriendsSolid className='w-6 h-6' /></a>
 						</div>
-						<Link to="/dashboard/friends" className='basis-2/3 text-left'>Friends</Link>
+						{isSidebarExpanded && <Link to="/dashboard/friends" className='basis-2/3 text-left'>Friends</Link>}
 					</div>
 					<div id='nav-bar-section' className={`flex flex-row justify-center items-center gap-2 ${currentPath === '/messages' ? 'current-section' : 'default-section'}`}>
-						<div className='flex justify-end basis-1/3'>
-							<IoChatbubblesOutline className='w-6 h-6' />
+						<div className={`flex ${isSidebarExpanded ? 'justify-end basis-1/3' : 'justify-center basis-full'}`}>
+							<a href="/dashboard/messages"><IoChatbubblesOutline className='w-6 h-6' /></a>
 						</div>
-						<Link to="/dashboard/messages" className='basis-2/3 text-left'>Messages</Link>
+						{isSidebarExpanded && (
+							<Link to="/dashboard/messages" className="basis-2/3 text-left">Messages</Link>
+						)}
 					</div>
 					<div id='nav-bar-section' className={`flex flex-row justify-center items-center gap-2 ${currentPath === '/logout' ? 'current-section' : 'default-section'}`}>
-						<div className='flex justify-end basis-1/3'>
-							<TbLogout2 className='w-6 h-6' />
+						<div className={`flex ${isSidebarExpanded ? 'justify-end basis-1/3' : 'justify-center basis-full'}`}>
+							<a href="/dashboard/logout"><TbLogout2 className='w-6 h-6' /></a>
 						</div>
-						<Link to="/dashboard/logout" className='basis-2/3 text-left'>Logout</Link>
+						{isSidebarExpanded && <Link to="/dashboard/logout" className='basis-2/3 text-left'>Logout</Link>}
 					</div>
 				</div>
 				<div className={`flex flex-col space-y-4 transition-all duration-500 ${!isSidebarExpanded ? 'opacity-0' : 'opacity-100'}`}>
