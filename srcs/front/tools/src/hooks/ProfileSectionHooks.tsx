@@ -3,8 +3,10 @@ import { UserInter, Utils } from "../Utils";
 
 export function ProfileSectionHooks({
   user,
+  setUserData,
 }: {
   user: UserInter | null;
+  setUserData: (data: any) => void;
 }): void {
   let user_data: any;
   useEffect(() => {
@@ -24,6 +26,7 @@ export function ProfileSectionHooks({
         Utils.LogLevel.DEBUG &&
           console.error("Error fetching profile data:", user_data.error);
       } else {
+        setUserData(user_data);
         Utils.LogLevel.DEBUG && console.log("Profile data:", user_data);
       }
     };
