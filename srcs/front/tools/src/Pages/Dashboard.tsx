@@ -79,10 +79,16 @@ export function Dashboard(): JSX.Element {
         section={section}
         setSection={setSection}
       />
-      {(
+      {section === "dashboard" ? (
         <div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
           <h1 className="text-white text-2xl font-bold">
             Welcome {`${user?.name}`}! This is your dashboard.
+          </h1>
+        </div>
+      ) : (
+        <div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
+          <h1 className="text-white text-2xl font-bold">
+            Welcome This is your dashboard.
           </h1>
         </div>
       )}
