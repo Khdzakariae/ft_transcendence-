@@ -61,7 +61,7 @@ export function SideBar({
               <LuLayoutDashboard className="w-6 h-6" />
             </button>
           </div>
-          <button 
+          <button
             className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
               isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
             }`}
@@ -87,7 +87,7 @@ export function SideBar({
               <RiGamepadLine className="w-6 h-6" />
             </button>
           </div>
-          <button 
+          <button
             className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
               isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
             }`}
@@ -113,7 +113,7 @@ export function SideBar({
               <CgProfile className="w-6 h-6" />
             </button>
           </div>
-          <button 
+          <button
             className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
               isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
             }`}
@@ -139,7 +139,7 @@ export function SideBar({
               <IoSettingsOutline className="w-6 h-6" />
             </button>
           </div>
-          <button 
+          <button
             onClick={() => {
               setSection("settings");
             }}
@@ -165,7 +165,7 @@ export function SideBar({
               <LiaUserFriendsSolid className="w-6 h-6" />
             </button>
           </div>
-          <button 
+          <button
             onClick={() => {
               setSection("friends");
             }}
@@ -191,7 +191,7 @@ export function SideBar({
               <IoChatbubblesOutline className="w-6 h-6" />
             </button>
           </div>
-          <button 
+          <button
             onClick={() => {
               setSection("messages");
             }}
@@ -221,9 +221,6 @@ export function SideBar({
             className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
               isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
             }`}
-            onClick={() => {
-              setSection("logout");
-            }}
           >
             Logout
           </button>
@@ -242,8 +239,10 @@ export function SideBar({
           />
         </div>
         <div
-          className={`basis-2/3 text-left ${
-            isSidebarExpanded ? "opacity-100 max-w-full text-left" : "opacity-0 max-w-0"
+          className={`basis-2/3 text-left font-secondary font-medium ${
+            isSidebarExpanded
+              ? "opacity-100 max-w-full text-left"
+              : "opacity-0 max-w-0"
           }`}
         >
           <p>{`${active_user?.name}`}</p>

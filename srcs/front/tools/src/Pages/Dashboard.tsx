@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Utils, AuthResponse, UserInter } from "../Utils";
 import { SideBar } from "../components/SideBar";
+import { DashSection } from "../components/dashboard-sections/DashSection";
+import { ProfileSection } from "../components/dashboard-sections/ProfileSection";
+import { SettingsSection } from "../components/dashboard-sections/SettingsSection";
+import { GameSection } from "../components/dashboard-sections/GameSection";
+import { FriendsSection } from "../components/dashboard-sections/FriendsSection";
+import { MessagesSection } from "../components/dashboard-sections/MessagesSection";
 
 // import { UserIcon, SettingsIcon, FilesIcon, ImagesIcon, BellIcon, TrophyIcon, BarChartIcon } from 'lucide-react';
 
@@ -15,7 +21,6 @@ export function Dashboard(): JSX.Element {
 
   useEffect(() => {
     Utils.LogLevel.DEBUG && console.log("checking on user: ", user);
-    console.log("checking on current path: ", document.location.pathname);
   }, [user]);
 
   useEffect(() => {
@@ -73,7 +78,7 @@ export function Dashboard(): JSX.Element {
   }
 
   return (
-    <div className="flex flex-row">
+    <div className="flex flex-row text-white">
       <SideBar
         active_user={user as UserInter}
         section={section}
@@ -81,18 +86,23 @@ export function Dashboard(): JSX.Element {
       />
       {/* dashboar will be customized later */}
       {section === "dashboard" ? (
-        <div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
-          <h1 className="text-white text-2xl font-bold">
-            Welcome {`${user?.name}`}! This is your dashboard.
-          </h1>
-        </div>
-      ) : (
-        <div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
-          <h1 className="text-white text-2xl font-bold">
-            Welcome This is your dashboard.
-          </h1>
-        </div>
-      )} 
+        <DashSection user={user as UserInter | null} />
+      ) : null}
+      {section === "profile" ? (
+        <ProfileSection user={user as UserInter | null} />
+      ) : null}
+      {section === "settings" ? (
+        <SettingsSection user={user as UserInter | null} />
+      ) : null}
+      {section === "game" ? (
+        <GameSection user={user as UserInter | null} />
+      ) : null}
+      {section === "friends" ? (
+        <FriendsSection user={user as UserInter | null} />
+      ) : null}
+      {section === "messages" ? (
+        <MessagesSection user={user as UserInter | null} />
+      ) : null}
     </div>
   );
 }
