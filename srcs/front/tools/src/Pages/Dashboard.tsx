@@ -13,31 +13,13 @@ import { DashboardHooks } from "../hooks/DashboardHooks";
 
 export function Dashboard(): JSX.Element {
   const [user, setUser] = useState<AuthResponse["user"] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  let loading_flag: boolean = false;
   const [section, setSection] = useState<string>("dashboard");
-  // const [p, setP] = useState<string>('profile');
 
   DashboardHooks({
     user,
     section,
     setUser,
-    loading_flag,
-    setIsLoading,
   });
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-primary-bg flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-          <p className="animate-pulse text-gray-400 font-primary text-center text-md sm:text-lg">
-            Loading dashboard...
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-row text-white">

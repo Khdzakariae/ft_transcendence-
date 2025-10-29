@@ -1,13 +1,17 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AuthResponse, Utils } from "../Utils";
 import { useNavigate } from "react-router-dom";
 
 interface LoadingPageProps {
   children: React.ReactNode;
+  pageName: string;
 }
 
-export function LoadingPage({ children }: LoadingPageProps): JSX.Element {
-  const [isLoading, setIsLoading] = useState(false);
+export function LoadingPage({
+  children,
+  pageName,
+}: LoadingPageProps): JSX.Element {
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,7 +20,8 @@ export function LoadingPage({ children }: LoadingPageProps): JSX.Element {
         const authResult: AuthResponse = await Utils.checkAuthCookie();
 
         if (authResult.isAuthenticated && authResult.user) {
-          setIsLoading(true); // prepare loading view for dashboard
+          // remove this in case, add more seconds on loading is needed.
+          setIsLoading(false); // prepare loading view for dashboard
         } else {
           navigate("/", { replace: true });
         }
@@ -29,25 +34,29 @@ export function LoadingPage({ children }: LoadingPageProps): JSX.Element {
     checkAuth();
   }, []);
 
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
+  // add 2s on loading
+  // useEffect(() => {
+  //   let timer: NodeJS.Timeout;
 
-    if (isLoading) {
-      timer = setTimeout(() => {
-        setIsLoading(false);
-      }, 2000);
-
-      return clearTimeout(timer);
-    }
-  }, [isLoading]);
+  //   if (isLoading) {
+  //     timer = setTimeout(() => {
+  //       setIsLoading(false);
+  //     }, 2000);
+  //   }
+  //   return () => {
+  //     clearTimeout(timer);
+  //   };
+  // }, [isLoading]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-primary-bg flex flex-col items-center justify-center gap-6">
-        <h1 className="animate-pulse text-primary-btn text-2xl sm:text-4xl md:text-6xl font-bold text-center font-primary">
-          Setting up your dashboard...
-        </h1>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-btn"></div>
+      <div className="min-h-screen bg-primary-bg flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+          <p className="animate-pulse text-gray-400 font-primary text-center text-md sm:text-lg">
+            {`Loading ${pageName}...`}
+          </p>
+        </div>
       </div>
     );
   }

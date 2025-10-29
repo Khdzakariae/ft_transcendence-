@@ -9,6 +9,7 @@ import {
   ResetPasswordPage,
 } from "./Pages/ResetPassword";
 import { NotFoundPage } from "./Pages/NotFound";
+import { LoadingPage } from "./Pages/LoadingPage";
 
 // Pages
 export function Views(): JSX.Element {
@@ -51,7 +52,14 @@ export function Views(): JSX.Element {
         element={<ResetPasswordEmailPage />}
       />
       <Route path="/reset-password/:userId/" element={<ResetPasswordPage />} />
-      <Route path="/dashboard/" element={<Dashboard />} />
+      <Route
+        path="/dashboard/"
+        element={
+          <LoadingPage pageName="Dashboard">
+            <Dashboard />
+          </LoadingPage>
+        }
+      />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
