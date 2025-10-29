@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Utils, AuthResponse } from "../Utils";
+import { Utils, AuthResponse, UserInter } from "../Utils";
 import { SideBar } from "../components/SideBar";
 
 // import { UserIcon, SettingsIcon, FilesIcon, ImagesIcon, BellIcon, TrophyIcon, BarChartIcon } from 'lucide-react';
@@ -69,7 +69,7 @@ export function Dashboard(): JSX.Element {
 
   return (
     <div className="flex flex-row">
-      <SideBar />
+      <SideBar {...(user as UserInter)} />
       <div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
         <h1 className="text-white text-2xl font-bold">
           Welcome {`${user?.name}`}! This is your dashboard.

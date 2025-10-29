@@ -18,6 +18,12 @@ export interface AuthResponse {
   message?: string;
 }
 
+export interface UserInter {
+  id: string;
+  email: string;
+  name: string;
+}
+
 /**
  * trimIfEndsWith - trim a specific char from str end
  *
@@ -42,7 +48,7 @@ async function checkAuthCookie(): Promise<AuthResponse> {
         headers: {
           "Content-Type": "application/json",
         },
-      },
+      }
     );
 
     if (!response.ok) {

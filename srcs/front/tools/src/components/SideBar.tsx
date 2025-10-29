@@ -9,9 +9,10 @@ import { IoChatbubblesOutline } from "react-icons/io5";
 import { TbLogout2 } from "react-icons/tb";
 import { useState } from "react";
 import Logo from "../assets/ping_pong_logo.png";
-import { Utils } from "../Utils";
+import profile_image from "../assets/dash_profile_image.png";
+import { Utils, UserInter } from "../Utils";
 
-export function SideBar(): JSX.Element {
+export function SideBar(active_user: UserInter): JSX.Element {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [currentPath, _] = useState<string>(
     Utils.trimIfEndsWith(window.location.pathname, "/")
@@ -160,14 +161,22 @@ export function SideBar(): JSX.Element {
         </div>
       </div>
       <div
-        className={`flex flex-col space-y-4 transition-all duration-500 ${!isSidebarExpanded ? "opacity-0" : "opacity-100"}`}
+        className={`flex flex-row justify-center items-center gap-2 transition-all duration-500`}
       >
-        <Link
-          to="/dashboard/profile"
-          className="hover:text-cyan-400 transition-colors duration-200"
+        <div
+          className={`${isSidebarExpanded ? "basis-1/3 flex justify-end" : "basis-full items-center flex justify-center"}`}
         >
-          Profile
-        </Link>
+          <img
+            src={profile_image}
+            alt="profile image"
+            className="w-10 h-10 rounded-full"
+          />
+        </div>
+        <div
+          className={`${isSidebarExpanded ? "text-left" : "basis-0 hidden"} basis-2/3`}
+        >
+          <p>{`${active_user?.name}`}</p>
+        </div>
       </div>
     </div>
   );
