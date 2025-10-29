@@ -34,7 +34,7 @@ export function SideBar({
         <img
           src={Logo}
           alt="Logo"
-          className="h-16 transition-all duration-300"
+          className="h-12 sm:h-16 transition-all duration-300"
         />
       </div>
       <button
