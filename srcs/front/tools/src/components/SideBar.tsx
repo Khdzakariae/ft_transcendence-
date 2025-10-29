@@ -10,6 +10,7 @@ import { useState } from "react";
 import Logo from "../assets/ping_pong_logo.png";
 import profile_image from "../assets/dash_profile_image.png";
 import { UserInter } from "../Utils";
+import { AvatarDot } from "./AvatarDot";
 
 export function SideBar({
   active_user,
@@ -228,11 +229,13 @@ export function SideBar({
         <div
           className={`flex transition-all duration-300 ${isSidebarExpanded ? "basis-1/3 justify-end" : "basis-full justify-center items-center"}`}
         >
-          <img
-            src={profile_image}
-            alt="profile image"
-            className="w-10 h-10 rounded-full"
-          />
+          <AvatarDot>
+            <img
+              src={profile_image}
+              alt="profile image"
+              className="w-10 h-10 rounded-full"
+            />
+          </AvatarDot>
         </div>
         <div
           className={`basis-2/3 text-left font-secondary font-medium ${
