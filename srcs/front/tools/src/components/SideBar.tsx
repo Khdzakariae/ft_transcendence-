@@ -209,11 +209,7 @@ export function SideBar({
           <div
             className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
           >
-            <button
-              onClick={() => {
-                setSection("logout");
-              }}
-            >
+            <button>
               <TbLogout2 className="w-6 h-6" />
             </button>
           </div>
