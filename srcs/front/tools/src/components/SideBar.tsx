@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { RxHamburgerMenu } from "react-icons/rx";
 import { RiGamepadLine } from "react-icons/ri";
 import { LuLayoutDashboard } from "react-icons/lu";
@@ -10,26 +9,31 @@ import { TbLogout2 } from "react-icons/tb";
 import { useState } from "react";
 import Logo from "../assets/ping_pong_logo.png";
 import profile_image from "../assets/dash_profile_image.png";
-import { Utils, UserInter } from "../Utils";
+import { UserInter } from "../Utils";
 
-export function SideBar(active_user: UserInter): JSX.Element {
+export function SideBar({
+  active_user,
+  section,
+  setSection,
+}: {
+  active_user: UserInter;
+  section: string;
+  setSection: (section: string) => void;
+}): JSX.Element {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
-  const [currentPath, _] = useState<string>(
-    Utils.trimIfEndsWith(window.location.pathname, "/")
-  ); // select active page in sidebar
 
   return (
     <div
       id="side-bar"
-      className={`flex flex-col min-h-screen space-y-4 border-r-2 border-gray-800 text-center text-white justify-between py-8 transition-all duration-500 ${
-        isSidebarExpanded ? "w-60" : "w-24"
+      className={`flex flex-col min-h-screen border-r-2 border-gray-800 text-center text-white justify-between py-8 transition-all duration-300 ease-in-out overflow-hidden ${
+        isSidebarExpanded ? "w-64" : "w-24"
       }`}
     >
       <div className="flex justify-center">
         <img
           src={Logo}
           alt="Logo"
-          className="h-16 transition-all duration-500"
+          className="h-16 transition-all duration-300"
         />
       </div>
       <button
@@ -37,134 +41,199 @@ export function SideBar(active_user: UserInter): JSX.Element {
           // setP('user-icon-this-is-a-long-test');
           setIsSidebarExpanded(!isSidebarExpanded);
         }}
-        className="bg-secondary-btn hover:bg-secondary-btn/30 text-white px-3 py-1 rounded transition-colors duration-200 flex items-center justify-center transition-all duration-500"
+        className="bg-secondary-btn hover:bg-secondary-btn/30 text-white px-3 py-1 rounded transition-all duration-300 flex items-center justify-center"
       >
         <RxHamburgerMenu className="w-6 h-6 " />
       </button>
-      <div className="flex flex-col space-y-4 transition-all duration-500 font-secondary font-medium">
+      <div className="flex flex-col space-y-4 font-secondary font-medium">
         <div
           id="nav-bar-section"
-          className={`flex flex-row justify-center items-center	gap-2 ${currentPath === "/dashboard" ? "current-section" : "default-section"}`}
+          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "dashboard" ? "current-section" : "default-section"}`}
         >
           <div
-            className={`flex ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
+            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
           >
-            <LuLayoutDashboard className="w-6 h-6" />
+            <button
+              onClick={() => {
+                setSection("dashboard");
+              }}
+            >
+              <LuLayoutDashboard className="w-6 h-6" />
+            </button>
           </div>
-          {isSidebarExpanded && (
-            <Link to="/dashboard" className="basis-2/3 text-left">
-              Dashboard
-            </Link>
-          )}
+          <button 
+            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
+              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
+            }`}
+            onClick={() => {
+              setSection("dashboard");
+            }}
+          >
+            Dashboard
+          </button>
         </div>
         <div
           id="nav-bar-section"
-          className={`flex flex-row justify-center items-center gap-2	${currentPath === "/game" ? "current-section" : "default-section"}`}
+          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "game" ? "current-section" : "default-section"}`}
         >
           <div
-            className={`flex ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
+            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
           >
-            <a href="/dashboard/game">
+            <button
+              onClick={() => {
+                setSection("game");
+              }}
+            >
               <RiGamepadLine className="w-6 h-6" />
-            </a>
+            </button>
           </div>
-          {isSidebarExpanded && (
-            <Link to="/dashboard/game" className="basis-2/3 text-left">
-              Game
-            </Link>
-          )}
+          <button 
+            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
+              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
+            }`}
+            onClick={() => {
+              setSection("game");
+            }}
+          >
+            Game
+          </button>
         </div>
         <div
           id="nav-bar-section"
-          className={`flex flex-row justify-center items-center gap-2 ${currentPath === "/profile" ? "current-section" : "default-section"}`}
+          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "profile" ? "current-section" : "default-section"}`}
         >
           <div
-            className={`flex ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
+            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
           >
-            <a href="/dashboard/profile">
+            <button
+              onClick={() => {
+                setSection("profile");
+              }}
+            >
               <CgProfile className="w-6 h-6" />
-            </a>
+            </button>
           </div>
-          {isSidebarExpanded && (
-            <Link to="/dashboard/profile" className="basis-2/3 text-left">
-              Profile
-            </Link>
-          )}
+          <button 
+            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
+              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
+            }`}
+            onClick={() => {
+              setSection("profile");
+            }}
+          >
+            Profile
+          </button>
         </div>
         <div
           id="nav-bar-section"
-          className={`flex flex-row justify-center items-center gap-2 ${currentPath === "/settings" ? "current-section" : "default-section"}`}
+          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "settings" ? "current-section" : "default-section"}`}
         >
           <div
-            className={`flex ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
+            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
           >
-            <a href="/dashboard/settings">
+            <button
+              onClick={() => {
+                setSection("settings");
+              }}
+            >
               <IoSettingsOutline className="w-6 h-6" />
-            </a>
+            </button>
           </div>
-          {isSidebarExpanded && (
-            <Link to="/dashboard/settings" className="basis-2/3 text-left">
-              Settings
-            </Link>
-          )}
+          <button 
+            onClick={() => {
+              setSection("settings");
+            }}
+            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
+              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
+            }`}
+          >
+            Settings
+          </button>
         </div>
         <div
           id="nav-bar-section"
-          className={`flex flex-row justify-center items-center gap-2 ${currentPath === "/friends" ? "current-section" : "default-section"}`}
+          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "friends" ? "current-section" : "default-section"}`}
         >
           <div
-            className={`flex ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
+            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
           >
-            <a href="/dashboard/friends">
+            <button
+              onClick={() => {
+                setSection("friends");
+              }}
+            >
               <LiaUserFriendsSolid className="w-6 h-6" />
-            </a>
+            </button>
           </div>
-          {isSidebarExpanded && (
-            <Link to="/dashboard/friends" className="basis-2/3 text-left">
-              Friends
-            </Link>
-          )}
+          <button 
+            onClick={() => {
+              setSection("friends");
+            }}
+            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
+              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
+            }`}
+          >
+            Friends
+          </button>
         </div>
         <div
           id="nav-bar-section"
-          className={`flex flex-row justify-center items-center gap-2 ${currentPath === "/messages" ? "current-section" : "default-section"}`}
+          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "messages" ? "current-section" : "default-section"}`}
         >
           <div
-            className={`flex ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
+            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
           >
-            <a href="/dashboard/messages">
+            <button
+              onClick={() => {
+                setSection("messages");
+              }}
+            >
               <IoChatbubblesOutline className="w-6 h-6" />
-            </a>
+            </button>
           </div>
-          {isSidebarExpanded && (
-            <Link to="/dashboard/messages" className="basis-2/3 text-left">
-              Messages
-            </Link>
-          )}
+          <button 
+            onClick={() => {
+              setSection("messages");
+            }}
+            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
+              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
+            }`}
+          >
+            Messages
+          </button>
         </div>
         <div
           id="nav-bar-section"
-          className={`flex flex-row justify-center items-center gap-2 ${currentPath === "/logout" ? "current-section" : "default-section"}`}
+          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "logout" ? "current-section" : "default-section"}`}
         >
           <div
-            className={`flex ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
+            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
           >
-            <a href="/dashboard/logout">
+            <button
+              onClick={() => {
+                setSection("logout");
+              }}
+            >
               <TbLogout2 className="w-6 h-6" />
-            </a>
+            </button>
           </div>
-          {isSidebarExpanded && (
-            <Link to="/dashboard/logout" className="basis-2/3 text-left">
-              Logout
-            </Link>
-          )}
+          <button
+            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
+              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
+            }`}
+            onClick={() => {
+              setSection("logout");
+            }}
+          >
+            Logout
+          </button>
         </div>
       </div>
       <div
-        className={`flex flex-row justify-center items-center gap-2 transition-all duration-500`}
+        className={`flex flex-row justify-center items-center gap-2 transition-all duration-300`}
       >
         <div
-          className={`${isSidebarExpanded ? "basis-1/3 flex justify-end" : "basis-full items-center flex justify-center"}`}
+          className={`flex transition-all duration-300 ${isSidebarExpanded ? "basis-1/3 justify-end" : "basis-full justify-center items-center"}`}
         >
           <img
             src={profile_image}
@@ -173,7 +242,9 @@ export function SideBar(active_user: UserInter): JSX.Element {
           />
         </div>
         <div
-          className={`${isSidebarExpanded ? "text-left" : "basis-0 hidden"} basis-2/3`}
+          className={`basis-2/3 text-left ${
+            isSidebarExpanded ? "opacity-100 max-w-full text-left" : "opacity-0 max-w-0"
+          }`}
         >
           <p>{`${active_user?.name}`}</p>
         </div>

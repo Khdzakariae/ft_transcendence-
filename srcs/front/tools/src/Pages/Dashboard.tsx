@@ -10,12 +10,17 @@ export function Dashboard(): JSX.Element {
   const [user, setUser] = useState<AuthResponse["user"] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   let loading_flag: boolean = false;
+  const [section, setSection] = useState<string>("dashboard");
   // const [p, setP] = useState<string>('profile');
 
   useEffect(() => {
     Utils.LogLevel.DEBUG && console.log("checking on user: ", user);
     console.log("checking on current path: ", document.location.pathname);
   }, [user]);
+
+  useEffect(() => {
+    Utils.LogLevel.DEBUG && console.log("Current dashboard section: ", section);
+  }, [section]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -69,12 +74,18 @@ export function Dashboard(): JSX.Element {
 
   return (
     <div className="flex flex-row">
-      <SideBar {...(user as UserInter)} />
-      <div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
-        <h1 className="text-white text-2xl font-bold">
-          Welcome {`${user?.name}`}! This is your dashboard.
-        </h1>
-      </div>
+      <SideBar
+        active_user={user as UserInter}
+        section={section}
+        setSection={setSection}
+      />
+      {(
+        <div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
+          <h1 className="text-white text-2xl font-bold">
+            Welcome {`${user?.name}`}! This is your dashboard.
+          </h1>
+        </div>
+      )}
     </div>
   );
 }
