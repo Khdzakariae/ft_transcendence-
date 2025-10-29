@@ -79,6 +79,7 @@ export function Dashboard(): JSX.Element {
         section={section}
         setSection={setSection}
       />
+      {/* dashboar will be customized later */}
       {section === "dashboard" ? (
         <div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
           <h1 className="text-white text-2xl font-bold">
@@ -91,7 +92,7 @@ export function Dashboard(): JSX.Element {
             Welcome This is your dashboard.
           </h1>
         </div>
-      )}
+      )} 
     </div>
   );
 }
