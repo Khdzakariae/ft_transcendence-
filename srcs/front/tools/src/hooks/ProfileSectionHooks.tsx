@@ -22,7 +22,8 @@ export function ProfileSectionHooks({
         Utils.LogLevel.DEBUG &&
           console.error("Error fetching profile data:", error);
       }
-      user_data = (await response.json()) as UserDataInter;
+      const data: any = await response.json();
+      user_data = data.data as UserDataInter;
       if (user_data?.error) {
         Utils.LogLevel.DEBUG &&
           console.error("Error fetching profile data:", user_data.error);
