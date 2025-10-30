@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { UserInter } from "../../Utils";
 import { ProfileSectionHooks } from "../../hooks/ProfileSectionHooks";
+import { UserDataInter } from "../../Utils";
 
 export function ProfileSection({
   user,
 }: {
   user: UserInter | null;
 }): JSX.Element {
-  const [user_data, setUserData] = useState<any>(null);
+  const [user_data, setUserData] = useState<UserDataInter | null>(null);
 
   ProfileSectionHooks({ user, setUserData });
 

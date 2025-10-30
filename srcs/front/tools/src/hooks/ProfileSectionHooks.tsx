@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { UserInter, Utils } from "../Utils";
+import { UserDataInter } from "../Utils";
 
 export function ProfileSectionHooks({
   user,
@@ -8,7 +9,7 @@ export function ProfileSectionHooks({
   user: UserInter | null;
   setUserData: (data: any) => void;
 }): void {
-  let user_data: any;
+  let user_data: UserDataInter | null = null;
   useEffect(() => {
     let response: any;
     const fetchProfile = async () => {
@@ -21,7 +22,7 @@ export function ProfileSectionHooks({
         Utils.LogLevel.DEBUG &&
           console.error("Error fetching profile data:", error);
       }
-      user_data = await response.json();
+      user_data = (await response.json()) as UserDataInter;
       if (user_data?.error) {
         Utils.LogLevel.DEBUG &&
           console.error("Error fetching profile data:", user_data.error);

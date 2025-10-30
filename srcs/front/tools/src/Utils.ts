@@ -67,6 +67,28 @@ async function checkAuthCookie(): Promise<AuthResponse> {
   }
 }
 
+// User data interface for the profile section (may be used for other sections as well)
+export interface UserDataInter {
+  achievements: string[];
+	avatar: string;
+	createAt: string;
+	email: string;
+	id: string;
+	level: number;
+	medals: { gold: number; silver: number; bronze: number };
+	name: string;
+	onlineStatus: boolean;
+	recentActivities: string[];
+	totalAchievements: number;
+	twoFactorEnabled: boolean;
+	updatedAt: string;
+	verified: boolean;
+	xp: number;
+	firstName: string;
+	lastName: string;
+  error?: string | null;
+}
+
 export const Utils = {
   LogLevel,
   checkAuthCookie,
