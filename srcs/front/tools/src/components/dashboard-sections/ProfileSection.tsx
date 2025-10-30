@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UserInter } from "../../Utils";
 import { ProfileSectionHooks } from "../../hooks/ProfileSectionHooks";
 import { UserDataInter } from "../../Utils";
@@ -12,8 +12,18 @@ export function ProfileSection({
 }): JSX.Element {
   const [user_data, setUserData] = useState<UserDataInter | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const total_xp: number = 6000;
+  const [xpProgress, setXpProgress] = useState<number>(0);
 
   ProfileSectionHooks({ user, setUserData });
+
+  // need user_data to be fetch first so this useEffect can run
+  useEffect(() => {
+    if (!user_data) return;
+    const target = Math.min(100, Math.round((user_data.xp / total_xp) * 100));
+    const t = setTimeout(() => setXpProgress(target), 100);
+    return () => clearTimeout(t);
+  }, [user_data]);
 
   if (!user_data) {
     return (
@@ -41,6 +51,7 @@ export function ProfileSection({
               onLoad={() => setLoaded(true)}
             />
           </LazyLoadingImage>
+          <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md shadow-2xl shadow-cyan-500/30 animate-pulse"></div>
         </div>
         <div className="flex flex-col items-center justify-center">
           <h1 className="text-4xl font-bold">{user_data.name}</h1>
@@ -61,6 +72,24 @@ export function ProfileSection({
           <p className="text-lg font-bold font-secondary text-primary-text">
             Keep Serving 🏓
           </p>
+        </div>
+      </div>
+      {/* bars for xp and achievements */}
+      <div className="flex flex-row items-center justify-center gap-4 bg-primary-elements p-4 rounded-lg w-full max-w-xl md:max-w-2xl lg:max-w-3xl mt-8">
+        <div className="flex flex-col w-full">
+          <h2 className="text-2xl font-bold mb-2 mt-2">XP Progress</h2>
+          <div className="relative mx-4 bg-gray-400/30 h-2 rounded-lg overflow-hidden">
+            <div
+              className="absolute left-0 top-0 h-2 rounded-lg bg-secondary-btn transition-[width] duration-700 ease-out"
+              style={{ width: `${xpProgress}%` }}
+            />
+          </div>
+          <h3 className="text-md font-secondary mt-1">
+            {user_data.xp} XP /{" "}
+            <span className="font-secondary font-bold text-primary-text">
+              {total_xp}
+            </span>
+          </h3>
         </div>
       </div>
     </div>

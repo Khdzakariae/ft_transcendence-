@@ -10,6 +10,7 @@ export function ProfileSectionHooks({
   setUserData: (data: any) => void;
 }): void {
   let user_data: UserDataInter | null = null;
+
   useEffect(() => {
     let response: any;
     const fetchProfile = async () => {
@@ -23,6 +24,7 @@ export function ProfileSectionHooks({
           console.error("Error fetching profile data:", error);
       }
       const data: any = await response.json();
+      data.data.xp = 1000; // mock xp for testing
       user_data = data.data as UserDataInter;
       if (user_data?.error) {
         Utils.LogLevel.DEBUG &&
