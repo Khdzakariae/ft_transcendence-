@@ -69,10 +69,10 @@ export function ProfileSection({
             Joined at{" "}
             {user_data.createdAt.substring(0, user_data.createdAt.indexOf("T"))}
           </p>
-          <p className="text-base sm:text-lg font-bold font-secondary mt-2 sm:mt-4 text-primary-text">
-            Current Game Level: {user_data.level}
+          <p className="sm:text-lg font-bold font-secondary mt-2 sm:mt-4 text-primary-text">
+            Game Level: {user_data.level}
           </p>
-          <p className="text-base sm:text-lg font-bold font-secondary text-primary-text">
+          <p className="font-secondary text-sm sm:text-lg">
             Keep Serving 🏓
           </p>
         </div>
