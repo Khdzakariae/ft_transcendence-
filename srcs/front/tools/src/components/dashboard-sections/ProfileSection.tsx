@@ -12,8 +12,9 @@ export function ProfileSection({
 }): JSX.Element {
   const [user_data, setUserData] = useState<UserDataInter | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const total_xp: number = 6000;
+  const total_xp: number = 6000; // mock total xp for testing
   const [xpProgress, setXpProgress] = useState<number>(0);
+  const total_achievements: number = 10; // mock total achievements for testing
 
   ProfileSectionHooks({ user, setUserData });
 
@@ -75,7 +76,7 @@ export function ProfileSection({
         </div>
       </div>
       {/* bars for xp and achievements */}
-      <div className="flex flex-row items-center justify-center gap-4 bg-primary-elements p-4 rounded-lg w-full max-w-xl md:max-w-2xl lg:max-w-3xl mt-8">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 bg-primary-elements p-4 rounded-lg w-full max-w-xl md:max-w-2xl lg:max-w-3xl mt-8 font-secondary">
         <div className="flex flex-col w-full">
           <h2 className="text-2xl font-bold mb-2 mt-2">XP Progress</h2>
           <div className="relative mx-4 bg-gray-400/30 h-2 rounded-lg overflow-hidden">
@@ -90,6 +91,36 @@ export function ProfileSection({
               {total_xp}
             </span>
           </h3>
+        </div>
+        <div className="flex flex-col w-full">
+          <h2 className="text-2xl font-bold mb-2 mt-2">Achievements</h2>
+          <div className="relative mx-4 bg-gray-400/30 h-2 rounded-lg overflow-hidden">
+            <div
+              className="absolute left-0 top-0 h-2 rounded-lg bg-secondary-btn transition-[width] duration-700 ease-out"
+              style={{ width: `${user_data.achievements.length / total_achievements * 100}%` }}
+            />
+          </div>
+          <h3 className="text-md font-secondary mt-1">
+            {user_data.achievements.length} /{" "}
+            <span className="font-secondary font-bold text-primary-text">
+              {total_achievements}
+            </span>
+          </h3>
+        </div>
+      </div>
+      {/* Gold, silver, bronze medals  */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 bg-primary-elements p-4 rounded-lg w-full max-w-xl md:max-w-2xl lg:max-w-3xl mt-8 font-secondary">
+        <div className="flex flex-col w-full">
+          <h2 className="text-2xl font-bold mb-2 mt-2"><span className="text-amber-400">Gold</span> Medals</h2>
+          <span className="text-lg font-secondary mt-1">x{user_data.medals.gold}</span>
+        </div>
+        <div className="flex flex-col w-full">
+          <h2 className="text-2xl font-bold mb-2 mt-2"><span className="text-gray-400">Silver</span> Medals</h2>
+          <span className="text-lg font-secondary mt-1">x{user_data.medals.silver}</span>
+        </div>
+        <div className="flex flex-col w-full">
+          <h2 className="text-2xl font-bold mb-2 mt-2"><span className="text-orange-400">Bronze</span> Medals</h2>
+          <span className="text-lg font-secondary mt-1">x{user_data.medals.bronze}</span>
         </div>
       </div>
     </div>
