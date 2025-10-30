@@ -51,7 +51,6 @@ export function ProfileSection({
             </div>
           )}
           <br />
-          <p className="text-md">{user_data.email}</p>
           <p className="text-md">
             Joined at{" "}
             {user_data.createdAt.substring(0, user_data.createdAt.indexOf("T"))}
@@ -60,7 +59,7 @@ export function ProfileSection({
             Current Game Level: {user_data.level}
           </p>
           <p className="text-lg font-bold font-secondary text-primary-text">
-            Keep playing 🏓
+            Keep Serving 🏓
           </p>
         </div>
       </div>
