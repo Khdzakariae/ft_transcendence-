@@ -11,6 +11,7 @@ import Logo from "../assets/ping_pong_logo.png";
 import profile_image from "../assets/dash_profile_image.png";
 import { UserInter } from "../Utils";
 import { AvatarDot } from "./AvatarDot";
+import { LazyLoadingImage } from "./LazyLoadingImage";
 
 export function SideBar({
   active_user,
@@ -22,6 +23,8 @@ export function SideBar({
   setSection: (section: string) => void;
 }): JSX.Element {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+  const [loading_logo, setLoadingLogo] = useState(true);
+  const [loading_avatar, setLoadingAvatar] = useState(true);
 
   return (
     <div
@@ -31,11 +34,22 @@ export function SideBar({
       }`}
     >
       <div className="flex justify-center">
-        <img
-          src={Logo}
-          alt="Logo"
-          className="h-12 sm:h-16 transition-all duration-300"
-        />
+        <LazyLoadingImage
+          dimension={{
+            width: "w-12 sm:w-16",
+            height: "h-12 sm:h-16",
+          }}
+          loading={!loading_logo}
+          color="bg-primary-btn/30"
+        >
+          <img
+            src={Logo}
+            alt="Logo"
+            className="h-12 w-12 sm:h-16 sm:w-16 transition-all duration-300"
+            loading="lazy"
+            onLoad={() => setLoadingLogo(false)}
+          />
+        </LazyLoadingImage>
       </div>
       <button
         onClick={() => {
@@ -229,13 +243,24 @@ export function SideBar({
         <div
           className={`flex transition-all duration-300 ${isSidebarExpanded ? "basis-1/3 justify-end" : "basis-full justify-center items-center"}`}
         >
-          <AvatarDot>
-            <img
-              src={profile_image}
-              alt="profile image"
-              className="w-10 h-10 rounded-full"
-            />
-          </AvatarDot>
+          <LazyLoadingImage
+            dimension={{
+              width: "w-10",
+              height: "h-10",
+            }}
+            loading={!loading_avatar}
+            color="bg-primary-btn/30"
+          >
+            <AvatarDot>
+              <img
+                src={profile_image}
+                alt="profile image"
+                className="w-10 h-10 rounded-full"
+                loading="lazy"
+                onLoad={() => setLoadingAvatar(false)}
+              />
+            </AvatarDot>
+          </LazyLoadingImage>
         </div>
         <div
           className={`basis-2/3 text-left font-secondary font-medium ${
