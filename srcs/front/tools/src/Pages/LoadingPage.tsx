@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { AuthResponse, Utils } from "../Utils";
+import { Utils } from "../Utils";
+import { AuthResponse } from "../interfaces/AuthResponse";
 import { useNavigate } from "react-router-dom";
 
 interface LoadingPageProps {

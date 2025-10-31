@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { UserInter } from "../../Utils";
+import { UserInter } from "../../interfaces/UserInterfaces";
 import { ProfileSectionHooks } from "../../hooks/ProfileSectionHooks";
-import { UserDataInter } from "../../Utils";
+import { UserDataInter } from "../../interfaces/UserInterfaces";
 import { LazyLoadingImage } from "../LazyLoadingImage";
 import { MdOutlineVerified } from "react-icons/md";
 

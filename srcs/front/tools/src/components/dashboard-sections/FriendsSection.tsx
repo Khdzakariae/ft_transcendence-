@@ -1,4 +1,4 @@
-import { UserInter } from "../../Utils";
+import { UserInter } from "../../interfaces/UserInterfaces";
 
 export function FriendsSection({
   user,

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { AuthResponse, Utils } from "../Utils";
+import { Utils } from "../Utils";
+import { AuthResponse } from "../interfaces/AuthResponse";
 import { useNavigate as Navigate } from "react-router-dom";
 
 export function DashboardHooks({

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { AuthResponse, UserInter } from "../Utils";
+import { AuthResponse } from "../interfaces/AuthResponse";
+import { UserInter } from "../interfaces/UserInterfaces";
 import { SideBar } from "../components/SideBar";
 import { DashSection } from "../components/dashboard-sections/DashSection";
 import { ProfileSection } from "../components/dashboard-sections/ProfileSection";

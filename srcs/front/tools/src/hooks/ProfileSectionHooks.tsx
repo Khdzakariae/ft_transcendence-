@@ -1,6 +1,7 @@
 import { useEffect } from "react";
-import { UserInter, Utils } from "../Utils";
-import { UserDataInter } from "../Utils";
+import { UserInter } from "../interfaces/UserInterfaces";
+import { UserDataInter } from "../interfaces/UserInterfaces";
+import { Utils } from "../Utils";
 
 export function ProfileSectionHooks({
   user,

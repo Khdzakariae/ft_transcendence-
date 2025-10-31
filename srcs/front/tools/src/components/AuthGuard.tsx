@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Utils, AuthResponse } from "../Utils";
+import { Utils } from "../Utils";
+import { AuthResponse } from "../interfaces/AuthResponse";
 
 interface AuthGuardProps {
   children: React.ReactNode;

@@ -9,7 +9,7 @@ import { TbLogout2 } from "react-icons/tb";
 import { useState } from "react";
 import Logo from "../assets/ping_pong_logo.png";
 import profile_image from "../assets/dash_profile_image.png";
-import { UserInter } from "../Utils";
+import { UserInter } from "../interfaces/UserInterfaces";
 import { AvatarDot } from "./AvatarDot";
 import { LazyLoadingImage } from "./LazyLoadingImage";
 
