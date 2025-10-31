@@ -30,7 +30,7 @@ export function SideBar({
   return (
     <div
       id="side-bar"
-      className={`flex flex-col min-h-screen border-r-2 border-gray-800 text-center text-white justify-between py-8 transition-all duration-300 ease-in-out overflow-hidden ${
+      className={`flex flex-col max-h-screen sticky top-0 border-r-2 border-gray-800 text-center text-white justify-between py-8 transition-all duration-300 ease-in-out overflow-hidden ${
         isSidebarExpanded ? "w-64" : "w-24"
       }`}
     >

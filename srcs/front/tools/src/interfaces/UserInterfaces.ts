@@ -17,6 +17,7 @@ export interface UserDataInter {
   xp: number;
   firstName: string;
   lastName: string;
+  bio?: string;
   error?: string | null;
 }
 

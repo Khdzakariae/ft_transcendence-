@@ -75,7 +75,12 @@ export function ProfileSection({
           <p className="sm:text-lg font-bold font-secondary mt-2 sm:mt-4 text-primary-text">
             Game Level: {user_data.level}
           </p>
-          <p className="font-secondary text-sm sm:text-lg">Keep Serving 🏓</p>
+          {user_data.bio && (
+            <p className="font-secondary text-sm sm:text-base mt-2 sm:mt-3 text-gray-300 max-w-xs sm:max-w-sm md:max-w-md break-words">
+              {user_data.bio}
+            </p>
+          )}
+          <p className="font-secondary text-sm sm:text-lg mt-2">Keep Serving 🏓</p>
         </div>
       </div>
       {/* bars for xp and achievements */}
