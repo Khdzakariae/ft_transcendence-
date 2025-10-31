@@ -1,22 +1,20 @@
 import { useEffect, useState } from "react";
 import { UserInter } from "../../interfaces/UserInterfaces";
-import { ProfileSectionHooks } from "../../hooks/ProfileSectionHooks";
-import { UserDataInter } from "../../interfaces/UserInterfaces";
 import { LazyLoadingImage } from "../LazyLoadingImage";
 import { MdOutlineVerified } from "react-icons/md";
+import { UserDataInter } from "../../interfaces/UserInterfaces";
 
 export function ProfileSection({
   user,
+  user_data,
 }: {
   user: UserInter | null;
+  user_data: UserDataInter | null;
 }): JSX.Element {
-  const [user_data, setUserData] = useState<UserDataInter | null>(null);
   const [loaded, setLoaded] = useState(false);
   const total_xp: number = 6000; // mock total xp for testing
   const [xpProgress, setXpProgress] = useState<number>(0);
   const total_achievements: number = 10; // mock total achievements for testing
-
-  ProfileSectionHooks({ user, setUserData });
 
   // need user_data to be fetch first so this useEffect can run
   useEffect(() => {

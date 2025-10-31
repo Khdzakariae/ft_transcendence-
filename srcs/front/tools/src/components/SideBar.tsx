@@ -8,17 +8,18 @@ import { IoChatbubblesOutline } from "react-icons/io5";
 import { TbLogout2 } from "react-icons/tb";
 import { useState } from "react";
 import Logo from "../assets/ping_pong_logo.png";
-import profile_image from "../assets/dash_profile_image.png";
-import { UserInter } from "../interfaces/UserInterfaces";
+import { UserDataInter, UserInter } from "../interfaces/UserInterfaces";
 import { AvatarDot } from "./AvatarDot";
 import { LazyLoadingImage } from "./LazyLoadingImage";
 
 export function SideBar({
   active_user,
+  user_data,
   section,
   setSection,
 }: {
   active_user: UserInter;
+  user_data: UserDataInter | null;
   section: string;
   setSection: (section: string) => void;
 }): JSX.Element {
@@ -253,8 +254,8 @@ export function SideBar({
           >
             <AvatarDot>
               <img
-                src={profile_image}
-                alt="profile image"
+                src={user_data?.avatar}
+                alt="avatar image"
                 className="w-10 h-10 rounded-full"
                 loading="lazy"
                 onLoad={() => setLoadingAvatar(false)}

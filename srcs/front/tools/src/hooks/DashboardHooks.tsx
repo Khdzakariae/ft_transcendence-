@@ -2,15 +2,20 @@ import { useEffect } from "react";
 import { Utils } from "../Utils";
 import { AuthResponse } from "../interfaces/AuthResponse";
 import { useNavigate as Navigate } from "react-router-dom";
+import { UserDataInter } from "../interfaces/UserInterfaces";
 
 export function DashboardHooks({
   user,
   section,
   setUser,
+  user_data,
+  setUserData,
 }: {
   user: AuthResponse["user"] | null;
   section: string;
   setUser: (user: AuthResponse["user"] | null) => void;
+  user_data: UserDataInter | null;
+  setUserData: (data: UserDataInter | null) => void;
 }): void {
   const navigate = Navigate();
 
@@ -42,4 +47,30 @@ export function DashboardHooks({
 
     checkAuth();
   }, [navigate]);
+
+  useEffect(() => {
+    let response: any;
+    const fetchProfile = async () => {
+      try {
+        response = await fetch("http://localhost:3000/api/v1/user/me", {
+          method: "GET",
+          credentials: "include",
+        });
+      } catch (error) {
+        Utils.LogLevel.DEBUG &&
+          console.error("Error fetching profile data:", error);
+      }
+      const data: any = await response.json();
+      user_data = data.data as UserDataInter;
+      if (user_data?.error) {
+        Utils.LogLevel.DEBUG &&
+          console.error("Error fetching profile data:", user_data.error);
+      } else {
+        setUserData(user_data);
+        Utils.LogLevel.DEBUG && console.log("Profile data:", user_data);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
 }
