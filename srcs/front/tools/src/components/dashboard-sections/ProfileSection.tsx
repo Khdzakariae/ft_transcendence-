@@ -34,6 +34,11 @@ export function ProfileSection({
     );
   }
 
+  // need to fix bio update through settings later TODO.
+  if (user_data) {
+    user_data.bio = "Updated bio from settings section, and keep Serving 🏓";
+  }
+
   return (
     <div className="min-h-screen bg-primary-bg flex flex-col items-center justify-center w-full text-center text-white font-primary px-4 sm:px-6 md:px-8">
       <div className="relative flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 md:gap-16 bg-primary-elements p-4 sm:p-6 md:p-8 rounded-lg w-full max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-4xl">
@@ -68,19 +73,18 @@ export function ProfileSection({
             </div>
           )}
           <div className="h-3" />
-          <p className="text-sm sm:text-base">
+          <span className="rounded-full border border-primary-btn/50 bg-primary-bg px-3 py-1 text-white/75">
             Joined at{" "}
             {user_data.createdAt.substring(0, user_data.createdAt.indexOf("T"))}
-          </p>
-          <p className="sm:text-lg font-bold font-secondary mt-2 sm:mt-4 text-primary-text">
+          </span>
+          <span className="rounded-full border px-3 py-1 border-amber-400/70 bg-amber-500/15 text-amber-200 mt-2">
             Game Level: {user_data.level}
-          </p>
+          </span>
           {user_data.bio && (
-            <p className="font-secondary text-sm sm:text-base mt-2 sm:mt-3 text-gray-300 max-w-xs sm:max-w-sm md:max-w-md break-words">
+            <div className="rounded border border-primary-btn/50 bg-primary-bg px-3 py-2 text-white/75 mt-4 w-full max-w-sm sm:max-w-lg max-h-32 overflow-y-auto break-words text-left">
               {user_data.bio}
-            </p>
+            </div>
           )}
-          <p className="font-secondary text-sm sm:text-lg mt-2">Keep Serving 🏓</p>
         </div>
       </div>
       {/* bars for xp and achievements */}
