@@ -41,7 +41,7 @@ export function ProfileSection({
 
   return (
     <div className="min-h-screen bg-primary-bg flex flex-col items-center justify-center w-full text-center text-white font-primary px-4 sm:px-6 md:px-8">
-      <div className="relative flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 md:gap-16 bg-primary-elements p-4 sm:p-6 md:p-8 rounded-lg w-full max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-4xl">
+      <div className="relative flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 md:gap-16 bg-primary-elements p-4 sm:p-6 md:p-8 rounded-lg w-full max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-4xl border border-white/10">
         <div className="relative shrink-0">
           <LazyLoadingImage
             dimension={{
@@ -88,7 +88,7 @@ export function ProfileSection({
         </div>
       </div>
       {/* bars for xp and achievements */}
-      <div className="grid grid-cols-1 md:grid-cols-2 items-stretch justify-center gap-4 bg-primary-elements p-4 sm:p-6 rounded-lg w-full max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-4xl mt-6 sm:mt-8 font-secondary">
+      <div className="grid grid-cols-1 md:grid-cols-2 items-stretch justify-center gap-4 bg-primary-elements p-4 sm:p-6 rounded-lg w-full max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-4xl mt-6 sm:mt-8 font-secondary border border-white/10">
         <div className="flex flex-col w-full">
           <h2 className="text-xl sm:text-2xl font-bold mb-2 mt-2">
             XP Progress
@@ -127,7 +127,7 @@ export function ProfileSection({
         </div>
       </div>
       {/* Gold, silver, bronze medals  */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 items-stretch justify-center gap-4 bg-primary-elements p-4 sm:p-6 rounded-lg w-full max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-4xl mt-6 sm:mt-8 font-secondary">
+      <div className="grid grid-cols-1 sm:grid-cols-3 items-stretch justify-center gap-4 bg-primary-elements p-4 sm:p-6 rounded-lg w-full max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-4xl mt-6 sm:mt-8 font-secondary border border-white/10">
         <div className="flex flex-col items-center w-full">
           <h2 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2 mt-1 sm:mt-2">
             <span className="text-amber-400">Gold</span> Medals
