@@ -7,6 +7,7 @@ import { LiaUserFriendsSolid } from "react-icons/lia";
 import { IoChatbubblesOutline } from "react-icons/io5";
 import { TbLogout2 } from "react-icons/tb";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Logo from "../assets/ping_pong_logo.png";
 import { UserDataInter, UserInter } from "../interfaces/UserInterfaces";
 import { AvatarDot } from "./AvatarDot";
@@ -26,6 +27,28 @@ export function SideBar({
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [loading_logo, setLoadingLogo] = useState(true);
   const [loading_avatar, setLoadingAvatar] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    
+    setIsLoggingOut(true);
+    try {
+      const response = await fetch("http://localhost:3000/api/v1/auth/sign-out", {
+        method: "POST",
+        credentials: "include"
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to logout");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      navigate("/");
+    }
+  };
 
   return (
     <div
@@ -225,16 +248,22 @@ export function SideBar({
           <div
             className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
           >
-            <button>
+            <button
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <TbLogout2 className="w-6 h-6" />
             </button>
           </div>
           <button
-            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed ${
               isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
             }`}
           >
-            Logout
+            {isLoggingOut ? "Logging out..." : "Logout"}
           </button>
         </div>
       </div>
