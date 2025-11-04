@@ -10,6 +10,7 @@ import { FriendsSection } from "../components/dashboard-sections/FriendsSection"
 import { MessagesSection } from "../components/dashboard-sections/MessagesSection";
 import { DashboardHooks } from "../hooks/DashboardHooks";
 import { UserDataInter } from "../interfaces/UserInterfaces";
+import { NotificationsSection } from "../components/dashboard-sections/NotificationsSection";
 
 // import { UserIcon, SettingsIcon, FilesIcon, ImagesIcon, BellIcon, TrophyIcon, BarChartIcon } from 'lucide-react';
 
@@ -56,6 +57,9 @@ export function Dashboard(): JSX.Element {
       ) : null}
       {section === "messages" ? (
         <MessagesSection user={user as UserInter} />
+      ) : null}
+      {section === "notifications" ? (
+        <NotificationsSection user={user as UserInter} />
       ) : null}
     </div>
   );

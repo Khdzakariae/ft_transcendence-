@@ -12,6 +12,7 @@ import Logo from "../assets/ping_pong_logo.png";
 import { UserDataInter, UserInter } from "../interfaces/UserInterfaces";
 import { AvatarDot } from "./AvatarDot";
 import { LazyLoadingImage } from "./LazyLoadingImage";
+import { IoIosNotificationsOutline } from "react-icons/io";
 
 export function SideBar({
   active_user,
@@ -239,6 +240,33 @@ export function SideBar({
             }`}
           >
             Messages
+          </button>
+        </div>
+        {/* implement notifications section same way as the others */}
+        <div
+          id="nav-bar-section"
+          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "notifications" ? "current-section" : "default-section"}`}
+        >
+          <div
+            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
+          >
+            <button
+              onClick={() => {
+                setSection("notifications");
+              }}
+            >
+              <IoIosNotificationsOutline className="w-6 h-6" />
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              setSection("notifications");
+            }}
+            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
+              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
+            }`}
+          >
+            Notifications
           </button>
         </div>
         <div
