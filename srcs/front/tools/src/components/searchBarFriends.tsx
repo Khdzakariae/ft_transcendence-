@@ -133,7 +133,10 @@ export function SearchBarFriends({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to send friend request");
+        throw new Error(
+          errorData.error + ` for id: (${userId})` ||
+            "Failed to send friend request"
+        );
       }
 
       alert("Friend request sent successfully!");
