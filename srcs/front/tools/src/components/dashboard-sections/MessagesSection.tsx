@@ -86,6 +86,7 @@ export function MessagesSection({
   const isSendingRef = useRef(false); // Ref to prevent double submissions
   const currentChatIdRef = useRef<string | null>(null); // Track current chat to prevent race conditions
   const isNearBottomRef = useRef(true); // Track if user is at bottom of messages
+  const isFreshChatLoadRef = useRef(false); // Track if this is a fresh chat load to force instant scroll
 
   // Fetch all chats
   const fetchChats = useCallback(async (abortSignal?: AbortSignal) => {
@@ -145,9 +146,9 @@ export function MessagesSection({
           return; // User switched chats, discard these messages
         }
 
-        if (Array.isArray(data.data)) {
+        if (data.data) {
           // Sort messages by createdAt to ensure proper order and remove duplicates
-          const uniqueMessages: Message[] = Array.from(
+          const uniqueMessages = Array.from(
             new Map(data.data.map((msg: Message) => [msg.id, msg])).values()
           ) as Message[];
           const sortedMessages: Message[] = uniqueMessages.sort(
@@ -280,6 +281,7 @@ export function MessagesSection({
       if (existingChat) {
         // Open existing chat and fetch its messages
         currentChatIdRef.current = existingChat.id; // Update current chat ref
+        isFreshChatLoadRef.current = true; // Mark as fresh chat load to force instant scroll
         setMessages([]); // Clear messages first
         setMessagesError(null);
         setSelectedChat(existingChat);
@@ -309,6 +311,7 @@ export function MessagesSection({
         // Add the new chat to the list (optimistic update)
         setChats((prev) => [...prev, data.data]);
         currentChatIdRef.current = data.data.id; // Update current chat ref
+        isFreshChatLoadRef.current = true; // Mark as fresh chat load to force instant scroll
         setMessages([]); // Clear messages before selecting new chat
         setMessagesError(null);
         setSelectedChat(data.data);
@@ -407,6 +410,8 @@ export function MessagesSection({
   const handleSelectChat = (chat: Chat) => {
     // Update current chat ref immediately (synchronous)
     currentChatIdRef.current = chat.id;
+    // Mark this as a fresh chat load to force instant scroll to bottom
+    isFreshChatLoadRef.current = true;
     // Clear messages immediately before switching
     setMessages([]);
     setMessagesError(null);
@@ -430,11 +435,16 @@ export function MessagesSection({
   }, []);
 
   // Scroll to bottom of messages (only if user was already near bottom)
-  const scrollToBottom = useCallback((force: boolean = false) => {
-    if (force || isNearBottomRef.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, []);
+  const scrollToBottom = useCallback(
+    (force: boolean = false, instant: boolean = false) => {
+      if (force || isNearBottomRef.current) {
+        messagesEndRef.current?.scrollIntoView({
+          behavior: instant ? "auto" : "smooth",
+        });
+      }
+    },
+    []
+  );
 
   // Fetch chats on mount
   useEffect(() => {
@@ -465,8 +475,13 @@ export function MessagesSection({
   // Auto-scroll to bottom when messages change (if user was near bottom)
   useEffect(() => {
     if (messages.length > 0) {
-      // Force scroll on initial load, otherwise respect user's scroll position
-      scrollToBottom(messages.length <= 10);
+      // Force instant scroll on fresh chat load (when user clicks on a chat)
+      if (isFreshChatLoadRef.current) {
+        scrollToBottom(true, true); // Force instant scroll to bottom (no animation)
+        isFreshChatLoadRef.current = false; // Reset flag after scrolling
+      } else {
+        scrollToBottom(false, false); // Use smart scroll with smooth animation (only if near bottom)
+      }
     }
   }, [messages, scrollToBottom]);
 
