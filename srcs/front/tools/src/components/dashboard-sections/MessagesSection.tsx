@@ -82,6 +82,7 @@ export function MessagesSection({
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Friend[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [hiddenChatIds, setHiddenChatIds] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isSendingRef = useRef(false); // Ref to prevent double submissions
   const currentChatIdRef = useRef<string | null>(null); // Track current chat to prevent race conditions
@@ -456,6 +457,23 @@ export function MessagesSection({
     fetchMessages(chat.id);
   };
 
+  // Remove chat entry from the list (local only)
+  const removeChatFromList = useCallback(
+    (chatId: string) => {
+      setHiddenChatIds((prev) => {
+        const next = new Set(prev);
+        next.add(chatId);
+        return next;
+      });
+      if (selectedChat?.id === chatId) {
+        setSelectedChat(null);
+        setMessages([]);
+        setMessagesError(null);
+      }
+    },
+    [selectedChat]
+  );
+
   // Check if user is near bottom of messages (for auto-scroll)
   const checkIfNearBottom = useCallback(() => {
     const element = messagesEndRef.current?.parentElement;
@@ -625,13 +643,14 @@ export function MessagesSection({
     // Filter chats to only show those with messages (exclude empty chats)
     // Sort by most recent message first
     return chats
+      .filter((chat) => !hiddenChatIds.has(chat.id))
       .filter((chat) => chat.lastMessage !== null)
       .sort((a, b) => {
         const dateA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
         const dateB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
         return dateB - dateA; // Most recent first
       });
-  }, [chats]);
+  }, [chats, hiddenChatIds]);
 
   // Get list of friend IDs that already have chats WITH messages
   const friendIdsWithChats = useMemo(() => {
@@ -724,7 +743,7 @@ export function MessagesSection({
                 <button
                   key={chat.id}
                   onClick={() => handleSelectChat(chat)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${
                     selectedChat?.id === chat.id
                       ? "bg-primary-btn/10 border-l-4 border-l-[#FF6B00] border-r border-t border-b border-primary-btn/30 shadow-lg"
                       : "hover:bg-primary-bg/50 border border-transparent hover:border-l-2 hover:border-l-[#FF6B00]/50"
@@ -767,6 +786,29 @@ export function MessagesSection({
                         {chat.lastMessage.content || "(No content)"}
                       </p>
                     )}
+                  </div>
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!chat.isGroup) {
+                        removeChatFromList(chat.id);
+                      }
+                    }}
+                    className={`ml-2 p-1 rounded-lg text-white/40 hover:text-white hover:bg-primary-bg/50 transition-all duration-200 ${chat.isGroup ? "hidden" : "opacity-0 group-hover:opacity-100"}`}
+                    title="Remove from list"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!chat.isGroup) {
+                          removeChatFromList(chat.id);
+                        }
+                      }
+                    }}
+                  >
+                    <MdClose size={18} />
                   </div>
                 </button>
               ))}
