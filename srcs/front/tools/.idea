@@ -1,0 +1,69 @@
+// Welcome to the TypeScript Playground, this is a website
+// which gives you a chance to write, share and learn TypeScript.
+
+// You could think of it in three ways:
+//
+//  - A location to learn TypeScript where nothing can break
+//  - A place to experiment with TypeScript syntax, and share the URLs with others
+//  - A sandbox to experiment with different compiler features of TypeScript
+
+const anExampleVariable = "Hello World"
+console.log(anExampleVariable)
+
+// To learn more about the language, click above in "Examples" or "What's New".
+// Otherwise, get started by removing these comments and the world is your playground.
+
+
+//Make Array Consecutive 2
+// const statue: number[] = [3, 2, 6, 8]; // array of status
+// let     res: number = 0;
+
+// // loop over array from beginning to elements - 1
+// // n - n + 1 == -1 and n is not last element, we are good
+// // else must add the diff * -1 to result 
+
+// // for (let i = 0; i < statue.length - 1 /* skip last element */; i++) {
+// //     const diff: number = statue[i] - statue[i + 1];
+// //     if (diff !== -1) {
+// //         res += (diff + 1) * -1; // diff + 1 to match exact number of elments needed
+// //     }
+// // }
+
+// statue.sort((a, b) => {return a - b}); // sort in ascendent order
+
+// for (let i = 1; i <= statue.length - 1; i++) {
+//     const diff = statue[i] - statue [i - 1]
+//     if (diff !== 1) {
+//         res += (diff - 1); // diff - 1 to match num of elements needed
+//     }
+// }
+
+// console.log('number to add are:', res);
+
+// given a year, return the century it is in.
+// e.g 1 to 100 (included) -> 1
+// 101 to 200 (include) -> 2
+
+// solving idea:
+// year / 100 ? division depends on how many digits we got on year.
+// 
+
+let year: number = 1805;
+
+console.log(Math.ceil(year / (year.toString().length === 1 ? 10 : 100))); // ceil to always round to the next number.
+
+// Next exercice: check palindrome?? (if string reads the same backwards and forwards)
+function isPalindrome(str: string): boolean {
+
+	let last: number = str.length - 1;
+	let begin: number = 0;
+
+	while (begin != last) {
+		if (str[begin] != str[last]) return false;
+		begin++;
+		last++;
+	}
+	return true;
+}
+
+
