@@ -133,7 +133,11 @@ export function MessagesSection({
 
   // Fetch messages for a specific chat
   const fetchMessages = useCallback(
-    async (chatId: string, abortSignal?: AbortSignal, silent: boolean = false) => {
+    async (
+      chatId: string,
+      abortSignal?: AbortSignal,
+      silent: boolean = false
+    ) => {
       if (!silent) {
         setMessagesLoading(true);
       }
@@ -169,12 +173,13 @@ export function MessagesSection({
             (a, b) =>
               new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
           );
-          
+
           // Track last message timestamp for this chat
           if (sortedMessages.length > 0) {
-            lastMessageTimestampRef.current[chatId] = sortedMessages[sortedMessages.length - 1].createdAt;
+            lastMessageTimestampRef.current[chatId] =
+              sortedMessages[sortedMessages.length - 1].createdAt;
           }
-          
+
           // Replace all messages (don't merge with existing)
           setMessages(sortedMessages);
         } else {
@@ -483,7 +488,7 @@ export function MessagesSection({
       if (!response.ok) return;
 
       const data = await response.json();
-      
+
       // Only update if we're still on the same chat
       if (currentChatIdRef.current !== currentChatId) return;
 
@@ -497,18 +502,22 @@ export function MessagesSection({
         );
 
         // Check if there are new messages
-        const lastKnownTimestamp = lastMessageTimestampRef.current[currentChatId];
+        const lastKnownTimestamp =
+          lastMessageTimestampRef.current[currentChatId];
         const hasNewMessages = sortedMessages.some(
-          (msg) => !lastKnownTimestamp || new Date(msg.createdAt) > new Date(lastKnownTimestamp)
+          (msg) =>
+            !lastKnownTimestamp ||
+            new Date(msg.createdAt) > new Date(lastKnownTimestamp)
         );
 
         if (hasNewMessages) {
           // Update messages state
           setMessages(sortedMessages);
-          
+
           // Update last message timestamp
           if (sortedMessages.length > 0) {
-            lastMessageTimestampRef.current[currentChatId] = sortedMessages[sortedMessages.length - 1].createdAt;
+            lastMessageTimestampRef.current[currentChatId] =
+              sortedMessages[sortedMessages.length - 1].createdAt;
           }
         }
       }
@@ -535,19 +544,19 @@ export function MessagesSection({
         setChats((prevChats) => {
           // Create a map of existing chats for easy lookup
           const prevChatsMap = new Map(prevChats.map((c) => [c.id, c]));
-          
+
           // Check if there are any new messages in the updated chats
           let hasUpdates = false;
           const newUnreadChats = new Set<string>();
-          
+
           data.data.forEach((newChat: Chat) => {
             const prevChat = prevChatsMap.get(newChat.id);
-            
+
             // Check if this chat has new messages
             if (newChat.lastMessage && newChat.lastMessageAt) {
               const lastViewedTime = lastViewedTimestampRef.current[newChat.id];
               const isCurrentChat = currentChatIdRef.current === newChat.id;
-              
+
               // Mark as unread if:
               // 1. Not the currently open chat
               // 2. Message is from someone else
@@ -555,12 +564,13 @@ export function MessagesSection({
               if (
                 !isCurrentChat &&
                 newChat.lastMessage.senderId !== user.id &&
-                (!lastViewedTime || new Date(newChat.lastMessageAt) > new Date(lastViewedTime))
+                (!lastViewedTime ||
+                  new Date(newChat.lastMessageAt) > new Date(lastViewedTime))
               ) {
                 newUnreadChats.add(newChat.id);
               }
             }
-            
+
             if (!prevChat) {
               hasUpdates = true;
             } else if (
@@ -580,7 +590,10 @@ export function MessagesSection({
             newUnreadChats.forEach((chatId) => updated.add(chatId));
             // Remove chats that are no longer in the list or currently open
             prev.forEach((chatId) => {
-              if (chatId === currentChatIdRef.current || !data.data.find((c: Chat) => c.id === chatId)) {
+              if (
+                chatId === currentChatIdRef.current ||
+                !data.data.find((c: Chat) => c.id === chatId)
+              ) {
                 updated.delete(chatId);
               }
             });
@@ -629,17 +642,17 @@ export function MessagesSection({
     setMessagesError(null);
     setSendError(null);
     setSelectedChat(chat);
-    
+
     // Mark chat as read (remove from unread list)
     setUnreadChats((prev) => {
       const updated = new Set(prev);
       updated.delete(chat.id);
       return updated;
     });
-    
+
     // Update last viewed timestamp to current time
     lastViewedTimestampRef.current[chat.id] = new Date().toISOString();
-    
+
     // Fetch messages for the new chat
     fetchMessages(chat.id);
   };
@@ -692,7 +705,7 @@ export function MessagesSection({
 
     const controller = new AbortController();
     fetchChats(controller.signal);
-    
+
     // Start polling for new messages and chat updates
     startPolling();
 
@@ -754,6 +767,7 @@ export function MessagesSection({
       }, 100);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [selectedChat]);
 
   // Auto-focus message input after sending a message
@@ -988,17 +1002,23 @@ export function MessagesSection({
                   </div>
                   <div className="flex-1 text-left overflow-hidden">
                     <div className="flex items-center justify-between">
-                      <p className={`font-semibold truncate ${unreadChats.has(chat.id) ? "text-[#FF6B00]" : ""}`}>
+                      <p
+                        className={`font-semibold truncate ${unreadChats.has(chat.id) ? "text-[#FF6B00]" : ""}`}
+                      >
                         {getChatDisplayName(chat)}
                       </p>
                       {chat.lastMessageAt && (
-                        <span className={`text-xs font-medium ${unreadChats.has(chat.id) ? "text-[#FF6B00]" : "text-[#FF6B00]/70"}`}>
+                        <span
+                          className={`text-xs font-medium ${unreadChats.has(chat.id) ? "text-[#FF6B00]" : "text-[#FF6B00]/70"}`}
+                        >
                           {formatTimestamp(chat.lastMessageAt)}
                         </span>
                       )}
                     </div>
                     {chat.lastMessage && (
-                      <p className={`text-sm truncate ${unreadChats.has(chat.id) ? "text-white font-medium" : "text-white/60"}`}>
+                      <p
+                        className={`text-sm truncate ${unreadChats.has(chat.id) ? "text-white font-medium" : "text-white/60"}`}
+                      >
                         {user && chat.lastMessage.senderId === user.id && (
                           <span className="text-[#FF6B00] font-medium">
                             You:{" "}
