@@ -85,6 +85,7 @@ export function MessagesSection({
   const [hiddenChatIds, setHiddenChatIds] = useState<Set<string>>(new Set());
   const [unreadChats, setUnreadChats] = useState<Set<string>>(new Set()); // Track chats with unread messages
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageInputRef = useRef<HTMLInputElement>(null); // Ref for message input field
   const isSendingRef = useRef(false); // Ref to prevent double submissions
   const currentChatIdRef = useRef<string | null>(null); // Track current chat to prevent race conditions
   const isNearBottomRef = useRef(true); // Track if user is at bottom of messages
@@ -458,6 +459,10 @@ export function MessagesSection({
     } finally {
       setSendingMessage(false);
       isSendingRef.current = false; // Release the lock
+      // Focus input after sending message
+      setTimeout(() => {
+        messageInputRef.current?.focus();
+      }, 50);
     }
   };
 
@@ -740,13 +745,38 @@ export function MessagesSection({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, showNewChatModal]);
 
+  // Auto-focus message input when a chat is selected
+  useEffect(() => {
+    if (selectedChat && messageInputRef.current) {
+      // Small delay to ensure the input is rendered
+      const timer = setTimeout(() => {
+        messageInputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedChat]);
+
+  // Auto-focus message input after sending a message
+  useEffect(() => {
+    if (!sendingMessage && selectedChat && messageInputRef.current) {
+      // Focus after message is sent (when sendingMessage becomes false)
+      messageInputRef.current.focus();
+    }
+  }, [sendingMessage, selectedChat]);
+
   // Memoized modal close handler
   const closeNewChatModal = useCallback(() => {
     setShowNewChatModal(false);
     setSearchTerm("");
     setSearchResults([]);
     setModalError(null);
-  }, []);
+    // Focus input after modal closes if a chat is selected
+    if (selectedChat && messageInputRef.current) {
+      setTimeout(() => {
+        messageInputRef.current?.focus();
+      }, 100);
+    }
+  }, [selectedChat]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -1128,6 +1158,7 @@ export function MessagesSection({
               )}
               <form onSubmit={sendMessage} className="flex gap-2">
                 <input
+                  ref={messageInputRef}
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
