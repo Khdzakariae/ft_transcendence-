@@ -12,7 +12,7 @@ import {
 // Interfaces
 interface ChatParticipant {
   id: string;
-  name: string;
+  name: string | null;
   avatar: string | null;
   onlineStatus: boolean;
   isSelf: boolean;
@@ -46,15 +46,15 @@ interface Message {
   createdAt: string;
   sender?: {
     id: string;
-    name: string;
+    name: string | null;
     avatar: string | null;
   };
 }
 
 interface Friend {
   id: string;
-  name: string;
-  email: string;
+  name: string | null;
+  email: string | null;
   avatar: string | null;
   onlineStatus: boolean;
 }
@@ -197,7 +197,18 @@ export function MessagesSection({
 
       const data = await response.json();
       if (data.data && !abortSignal?.aborted) {
-        setFriends(data.data);
+        // API returns friends in format: { friendshipId, friendSince, user: {...} }
+        // Extract the user object from each friendship
+        const validatedFriends = data.data
+          .filter((f: any) => f && f.user && f.user.id)
+          .map((f: any) => ({
+            id: f.user.id,
+            name: f.user.name || null,
+            email: f.user.email || null,
+            avatar: f.user.avatar || null,
+            onlineStatus: f.user.onlineStatus || false,
+          }));
+        setFriends(validatedFriends);
       }
     } catch (err: any) {
       if (err.name !== "AbortError" && !abortSignal?.aborted) {
@@ -240,12 +251,12 @@ export function MessagesSection({
         if (data.data && !abortSignal?.aborted) {
           // Filter out current user and map to Friend interface
           const results = data.data
-            .filter((u: any) => u.id !== user?.id)
+            .filter((u: any) => u && u.id && u.id !== user?.id)
             .map((u: any) => ({
               id: u.id,
-              name: u.name,
-              email: u.email,
-              avatar: u.avatar,
+              name: u.name || null,
+              email: u.email || null,
+              avatar: u.avatar || null,
               onlineStatus: u.onlineStatus || false,
             }));
           setSearchResults(results);
@@ -266,6 +277,11 @@ export function MessagesSection({
 
   // Create new chat with a friend or open existing chat
   const createChat = async (friendId: string) => {
+    if (!friendId) {
+      setModalError("Invalid friend selection");
+      return;
+    }
+
     setModalError(null);
     setCreatingChat(true);
 
@@ -275,23 +291,23 @@ export function MessagesSection({
         (chat) =>
           !chat.isGroup &&
           chat.participants &&
+          chat.participants.length > 0 &&
           chat.participants.some((p) => p.id === friendId && !p.isSelf)
       );
 
       if (existingChat) {
         // Open existing chat and fetch its messages
-        currentChatIdRef.current = existingChat.id; // Update current chat ref
-        isFreshChatLoadRef.current = true; // Mark as fresh chat load to force instant scroll
-        setMessages([]); // Clear messages first
+        currentChatIdRef.current = existingChat.id;
+        isFreshChatLoadRef.current = true;
+        setMessages([]);
         setMessagesError(null);
         setSelectedChat(existingChat);
         fetchMessages(existingChat.id);
-        setShowNewChatModal(false);
-        setSearchTerm("");
-        setSearchResults([]);
+        closeNewChatModal();
         return;
       }
 
+      // Create new chat
       const response = await fetch("http://localhost:3000/api/v1/chats", {
         method: "POST",
         credentials: "include",
@@ -302,25 +318,27 @@ export function MessagesSection({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Failed to create chat");
       }
 
       const data = await response.json();
       if (data.data) {
-        // Add the new chat to the list (optimistic update)
-        setChats((prev) => [...prev, data.data]);
-        currentChatIdRef.current = data.data.id; // Update current chat ref
-        isFreshChatLoadRef.current = true; // Mark as fresh chat load to force instant scroll
-        setMessages([]); // Clear messages before selecting new chat
+        // Add the new chat to the list
+        const newChat = data.data;
+        setChats((prev) => [...prev, newChat]);
+        currentChatIdRef.current = newChat.id;
+        isFreshChatLoadRef.current = true;
+        setMessages([]);
         setMessagesError(null);
-        setSelectedChat(data.data);
-        setShowNewChatModal(false);
-        setSearchTerm("");
-        setSearchResults([]);
+        setSelectedChat(newChat);
+        closeNewChatModal();
+      } else {
+        throw new Error("Invalid response from server");
       }
     } catch (err: any) {
       setModalError(err.message || "Failed to create chat");
+      console.error("Error creating chat:", err);
     } finally {
       setCreatingChat(false);
     }
@@ -501,6 +519,90 @@ export function MessagesSection({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, showNewChatModal]);
 
+  // Memoized modal close handler
+  const closeNewChatModal = useCallback(() => {
+    setShowNewChatModal(false);
+    setSearchTerm("");
+    setSearchResults([]);
+    setModalError(null);
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape key closes modal
+      if (e.key === "Escape" && showNewChatModal) {
+        closeNewChatModal();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showNewChatModal, closeNewChatModal]);
+
+  // Helper functions - memoized for performance
+  const getInitials = useCallback((name?: string | null): string => {
+    if (!name || name.trim().length === 0) {
+      return "?";
+    }
+    return name.charAt(0).toUpperCase();
+  }, []);
+
+  const getChatDisplayName = useCallback((chat: Chat): string => {
+    if (chat.isGroup) {
+      return chat.name || "Group Chat";
+    }
+    if (!chat.participants || chat.participants.length === 0) {
+      return "Unknown User";
+    }
+    const otherParticipant = chat.participants.find((p) => !p.isSelf);
+    return otherParticipant?.name || "Unknown User";
+  }, []);
+
+  const getChatAvatar = useCallback((chat: Chat): string => {
+    if (chat.avatar) return chat.avatar;
+    if (!chat.isGroup && chat.participants && chat.participants.length > 0) {
+      const otherParticipant = chat.participants.find((p) => !p.isSelf);
+      return otherParticipant?.avatar || "";
+    }
+    return "";
+  }, []);
+
+  const isOnline = useCallback((chat: Chat): boolean => {
+    if (chat.isGroup) return false;
+    if (!chat.participants || chat.participants.length === 0) return false;
+    const otherParticipant = chat.participants.find((p) => !p.isSelf);
+    return otherParticipant?.onlineStatus || false;
+  }, []);
+
+  const formatTimestamp = useCallback((timestamp: string): string => {
+    try {
+      const date = new Date(timestamp);
+
+      // Check for invalid date
+      if (isNaN(date.getTime())) {
+        return "Unknown";
+      }
+
+      const now = new Date();
+      const diff = now.getTime() - date.getTime();
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+
+      if (minutes < 1) return "Just now";
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days < 7) return `${days}d ago`;
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    } catch {
+      return "Unknown";
+    }
+  }, []);
+
   // Memoized computed values for performance optimization
   const chatsWithMessages = useMemo(() => {
     // Filter chats to only show those with messages (exclude empty chats)
@@ -518,7 +620,10 @@ export function MessagesSection({
   const friendIdsWithChats = useMemo(() => {
     return new Set(
       chatsWithMessages
-        .filter((chat) => !chat.isGroup && chat.participants)
+        .filter(
+          (chat) =>
+            !chat.isGroup && chat.participants && chat.participants.length > 0
+        )
         .map((chat) => {
           const otherParticipant = chat.participants.find((p) => !p.isSelf);
           return otherParticipant?.id;
@@ -550,65 +655,6 @@ export function MessagesSection({
       </div>
     );
   }
-
-  // Get chat display name
-  const getChatDisplayName = (chat: Chat): string => {
-    if (chat.isGroup) {
-      return chat.name || "Group Chat";
-    }
-    if (!chat.participants || chat.participants.length === 0) {
-      return "Unknown User";
-    }
-    const otherParticipant = chat.participants.find((p) => !p.isSelf);
-    return otherParticipant?.name || "Unknown User";
-  };
-
-  // Get chat avatar
-  const getChatAvatar = (chat: Chat): string => {
-    if (chat.avatar) return chat.avatar;
-    if (!chat.isGroup && chat.participants && chat.participants.length > 0) {
-      const otherParticipant = chat.participants.find((p) => !p.isSelf);
-      return otherParticipant?.avatar || "";
-    }
-    return "";
-  };
-
-  // Get online status for direct chats
-  const isOnline = (chat: Chat): boolean => {
-    if (chat.isGroup) return false;
-    if (!chat.participants || chat.participants.length === 0) return false;
-    const otherParticipant = chat.participants.find((p) => !p.isSelf);
-    return otherParticipant?.onlineStatus || false;
-  };
-
-  // Format timestamp
-  const formatTimestamp = (timestamp: string): string => {
-    try {
-      const date = new Date(timestamp);
-
-      // Check for invalid date
-      if (isNaN(date.getTime())) {
-        return "Unknown";
-      }
-
-      const now = new Date();
-      const diff = now.getTime() - date.getTime();
-      const minutes = Math.floor(diff / 60000);
-      const hours = Math.floor(diff / 3600000);
-      const days = Math.floor(diff / 86400000);
-
-      if (minutes < 1) return "Just now";
-      if (minutes < 60) return `${minutes}m ago`;
-      if (hours < 24) return `${hours}h ago`;
-      if (days < 7) return `${days}d ago`;
-      return date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-    } catch {
-      return "Unknown";
-    }
-  };
 
   return (
     <div className="bg-primary-bg h-screen w-full text-white font-primary flex overflow-hidden">
@@ -676,7 +722,7 @@ export function MessagesSection({
                       />
                     ) : (
                       <div className="w-12 h-12 rounded-full bg-primary-btn/30 flex items-center justify-center text-lg font-semibold">
-                        {getChatDisplayName(chat).charAt(0).toUpperCase()}
+                        {getInitials(getChatDisplayName(chat))}
                       </div>
                     )}
                     {!chat.isGroup && isOnline(chat) && (
@@ -696,12 +742,12 @@ export function MessagesSection({
                     </div>
                     {chat.lastMessage && (
                       <p className="text-sm text-white/60 truncate">
-                        {chat.lastMessage.senderId === user.id && (
+                        {user && chat.lastMessage.senderId === user.id && (
                           <span className="text-[#FF6B00] font-medium">
                             You:{" "}
                           </span>
                         )}
-                        {chat.lastMessage.content}
+                        {chat.lastMessage.content || "(No content)"}
                       </p>
                     )}
                   </div>
@@ -735,7 +781,7 @@ export function MessagesSection({
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-primary-btn/30 flex items-center justify-center font-semibold">
-                    {getChatDisplayName(selectedChat).charAt(0).toUpperCase()}
+                    {getInitials(getChatDisplayName(selectedChat))}
                   </div>
                 )}
                 {!selectedChat.isGroup && isOnline(selectedChat) && (
@@ -784,7 +830,7 @@ export function MessagesSection({
               ) : (
                 <div className="space-y-4">
                   {messages.map((message) => {
-                    const isOwnMessage = message.senderId === user.id;
+                    const isOwnMessage = user && message.senderId === user.id;
                     return (
                       <div
                         key={message.id}
@@ -797,12 +843,16 @@ export function MessagesSection({
                               : "bg-primary-elements text-white"
                           }`}
                         >
-                          {!isOwnMessage && selectedChat.isGroup && (
-                            <p className="text-xs text-primary-btn font-semibold mb-1">
-                              {message.sender?.name || "Unknown"}
-                            </p>
-                          )}
-                          <p className="break-words">{message.content}</p>
+                          {!isOwnMessage &&
+                            selectedChat.isGroup &&
+                            message.sender && (
+                              <p className="text-xs text-primary-btn font-semibold mb-1">
+                                {message.sender.name || "Unknown"}
+                              </p>
+                            )}
+                          <p className="break-words">
+                            {message.content || "(Empty message)"}
+                          </p>
                           <p
                             className={`text-xs mt-1 ${
                               isOwnMessage
@@ -810,13 +860,15 @@ export function MessagesSection({
                                 : "text-white/50"
                             }`}
                           >
-                            {new Date(message.createdAt).toLocaleTimeString(
-                              "en-US",
-                              {
-                                hour: "numeric",
-                                minute: "2-digit",
-                              }
-                            )}
+                            {message.createdAt
+                              ? new Date(message.createdAt).toLocaleTimeString(
+                                  "en-US",
+                                  {
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                  }
+                                )
+                              : "Unknown time"}
                           </p>
                         </div>
                       </div>
@@ -839,6 +891,18 @@ export function MessagesSection({
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    // Submit on Enter (without modifiers)
+                    if (
+                      e.key === "Enter" &&
+                      !e.shiftKey &&
+                      !e.ctrlKey &&
+                      !e.metaKey
+                    ) {
+                      e.preventDefault();
+                      sendMessage(e as any);
+                    }
+                  }}
                   placeholder="Type a message..."
                   disabled={sendingMessage}
                   className="flex-1 rounded-xl border border-white/10 bg-primary-bg px-4 py-3 text-white placeholder:text-white/40 focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/50 disabled:opacity-50 transition-all duration-200"
@@ -877,13 +941,9 @@ export function MessagesSection({
             <div className="p-4 border-b border-white/10 flex items-center justify-between">
               <h3 className="text-xl font-bold">Start New Chat</h3>
               <button
-                onClick={() => {
-                  setShowNewChatModal(false);
-                  setSearchTerm("");
-                  setSearchResults([]);
-                  setModalError(null);
-                }}
+                onClick={closeNewChatModal}
                 className="p-2 rounded-lg hover:bg-primary-bg/50 transition-colors"
+                title="Close (Esc)"
               >
                 <MdClose size={24} />
               </button>
@@ -974,12 +1034,12 @@ export function MessagesSection({
                               {friend.avatar ? (
                                 <img
                                   src={friend.avatar}
-                                  alt={friend.name}
+                                  alt={friend.name || "User"}
                                   className="w-12 h-12 rounded-full object-cover"
                                 />
                               ) : (
                                 <div className="w-12 h-12 rounded-full bg-primary-btn/30 flex items-center justify-center text-lg font-semibold">
-                                  {friend.name.charAt(0).toUpperCase()}
+                                  {getInitials(friend.name)}
                                 </div>
                               )}
                               {friend.onlineStatus && (
@@ -988,10 +1048,10 @@ export function MessagesSection({
                             </div>
                             <div className="flex-1 text-left min-w-0">
                               <p className="font-semibold truncate">
-                                {friend.name}
+                                {friend.name || "Unknown"}
                               </p>
                               <p className="text-sm text-white/60 truncate">
-                                {friend.email}
+                                {friend.email || ""}
                               </p>
                               {friend.onlineStatus && (
                                 <p className="text-xs text-green-400 mt-0.5">
@@ -1030,12 +1090,12 @@ export function MessagesSection({
                               {friend.avatar ? (
                                 <img
                                   src={friend.avatar}
-                                  alt={friend.name}
+                                  alt={friend.name || "User"}
                                   className="w-12 h-12 rounded-full object-cover"
                                 />
                               ) : (
                                 <div className="w-12 h-12 rounded-full bg-primary-btn/30 flex items-center justify-center text-lg font-semibold">
-                                  {friend.name.charAt(0).toUpperCase()}
+                                  {getInitials(friend.name)}
                                 </div>
                               )}
                               {friend.onlineStatus && (
@@ -1044,10 +1104,10 @@ export function MessagesSection({
                             </div>
                             <div className="flex-1 text-left min-w-0">
                               <p className="font-semibold truncate">
-                                {friend.name}
+                                {friend.name || "Unknown"}
                               </p>
                               <p className="text-sm text-white/60 truncate">
-                                {friend.email}
+                                {friend.email || ""}
                               </p>
                               {friend.onlineStatus && (
                                 <p className="text-xs text-green-400 mt-0.5">
