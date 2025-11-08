@@ -89,35 +89,41 @@ export function MessagesSection({
   const isFreshChatLoadRef = useRef(false); // Track if this is a fresh chat load to force instant scroll
 
   // Fetch all chats
-  const fetchChats = useCallback(async (abortSignal?: AbortSignal) => {
-    setLoading(true);
-    setChatsError(null);
+  const fetchChats = useCallback(
+    async (abortSignal?: AbortSignal): Promise<Chat[]> => {
+      setLoading(true);
+      setChatsError(null);
 
-    try {
-      const response = await fetch("http://localhost:3000/api/v1/chats", {
-        method: "GET",
-        credentials: "include",
-        signal: abortSignal,
-      });
+      try {
+        const response = await fetch("http://localhost:3000/api/v1/chats", {
+          method: "GET",
+          credentials: "include",
+          signal: abortSignal,
+        });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch chats");
-      }
+        if (!response.ok) {
+          throw new Error("Failed to fetch chats");
+        }
 
-      const data = await response.json();
-      if (data.data && !abortSignal?.aborted) {
-        setChats(data.data);
+        const data = await response.json();
+        if (data.data && !abortSignal?.aborted) {
+          setChats(data.data);
+          return data.data;
+        }
+        return [];
+      } catch (err: any) {
+        if (err.name !== "AbortError" && !abortSignal?.aborted) {
+          setChatsError(err.message || "Failed to load chats");
+        }
+        return [];
+      } finally {
+        if (!abortSignal?.aborted) {
+          setLoading(false);
+        }
       }
-    } catch (err: any) {
-      if (err.name !== "AbortError" && !abortSignal?.aborted) {
-        setChatsError(err.message || "Failed to load chats");
-      }
-    } finally {
-      if (!abortSignal?.aborted) {
-        setLoading(false);
-      }
-    }
-  }, []);
+    },
+    []
+  );
 
   // Fetch messages for a specific chat
   const fetchMessages = useCallback(
@@ -286,8 +292,9 @@ export function MessagesSection({
     setCreatingChat(true);
 
     try {
-      // Check if chat already exists with this friend
-      const existingChat = chats.find(
+      // Check if chat already exists with this friend in our LOCAL state
+      // (already has complete participant data from fetchChats)
+      const existingChatInState = chats.find(
         (chat) =>
           !chat.isGroup &&
           chat.participants &&
@@ -295,14 +302,14 @@ export function MessagesSection({
           chat.participants.some((p) => p.id === friendId && !p.isSelf)
       );
 
-      if (existingChat) {
-        // Open existing chat and fetch its messages
-        currentChatIdRef.current = existingChat.id;
+      if (existingChatInState) {
+        // Open existing chat from local state (already has complete data)
+        currentChatIdRef.current = existingChatInState.id;
         isFreshChatLoadRef.current = true;
         setMessages([]);
         setMessagesError(null);
-        setSelectedChat(existingChat);
-        fetchMessages(existingChat.id);
+        setSelectedChat(existingChatInState);
+        fetchMessages(existingChatInState.id);
         closeNewChatModal();
         return;
       }
@@ -323,16 +330,26 @@ export function MessagesSection({
       }
 
       const data = await response.json();
-      if (data.data) {
-        // Add the new chat to the list
-        const newChat = data.data;
-        setChats((prev) => [...prev, newChat]);
-        currentChatIdRef.current = newChat.id;
-        isFreshChatLoadRef.current = true;
-        setMessages([]);
-        setMessagesError(null);
-        setSelectedChat(newChat);
-        closeNewChatModal();
+      if (data.data && data.data.id) {
+        const newChatId = data.data.id;
+
+        // The API returns incomplete chat data (without participant details)
+        // Refetch all chats to get the complete data structure
+        const updatedChats = await fetchChats();
+
+        // Find the newly created chat in the updated list
+        const completeChat = updatedChats.find((c) => c.id === newChatId);
+
+        if (completeChat) {
+          currentChatIdRef.current = completeChat.id;
+          isFreshChatLoadRef.current = true;
+          setMessages([]);
+          setMessagesError(null);
+          setSelectedChat(completeChat);
+          closeNewChatModal();
+        } else {
+          throw new Error("Failed to find the created chat");
+        }
       } else {
         throw new Error("Invalid response from server");
       }
