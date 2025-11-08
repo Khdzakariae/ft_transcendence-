@@ -7,7 +7,6 @@ import {
   MdClose,
   MdSearch,
   MdMessage,
-  MdDelete,
 } from "react-icons/md";
 
 // Interfaces
@@ -83,20 +82,21 @@ export function MessagesSection({
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Friend[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [hiddenChatIds, setHiddenChatIds] = useState<Set<string>>(new Set());
+  const [unreadChats, setUnreadChats] = useState<Set<string>>(new Set()); // Track chats with unread messages
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isSendingRef = useRef(false); // Ref to prevent double submissions
   const currentChatIdRef = useRef<string | null>(null); // Track current chat to prevent race conditions
   const isNearBottomRef = useRef(true); // Track if user is at bottom of messages
   const isFreshChatLoadRef = useRef(false); // Track if this is a fresh chat load to force instant scroll
-  const lastMessageTimestampRef = useRef<string | null>(null); // Track last message timestamp for polling
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null); // Track polling interval
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null); // For polling new messages
+  const lastMessageTimestampRef = useRef<{ [chatId: string]: string }>({}); // Track last message per chat
+  const lastViewedTimestampRef = useRef<{ [chatId: string]: string }>({}); // Track when user last viewed each chat
 
   // Fetch all chats
   const fetchChats = useCallback(
-    async (abortSignal?: AbortSignal, silent: boolean = false): Promise<Chat[]> => {
-      if (!silent) {
-        setLoading(true);
-      }
+    async (abortSignal?: AbortSignal): Promise<Chat[]> => {
+      setLoading(true);
       setChatsError(null);
 
       try {
@@ -112,34 +112,17 @@ export function MessagesSection({
 
         const data = await response.json();
         if (data.data && !abortSignal?.aborted) {
-          // Update chats while preserving hidden chat IDs
-          setChats((prevChats) => {
-            const updatedChats = data.data;
-            // Merge with existing chats to preserve any local state
-            // Update existing chats with new data, add new chats
-            const chatMap = new Map(prevChats.map((c) => [c.id, c]));
-            updatedChats.forEach((newChat: Chat) => {
-              const existingChat = chatMap.get(newChat.id);
-              if (existingChat) {
-                // Update existing chat with new data (especially lastMessage)
-                chatMap.set(newChat.id, newChat);
-              } else {
-                // Add new chat
-                chatMap.set(newChat.id, newChat);
-              }
-            });
-            return Array.from(chatMap.values());
-          });
+          setChats(data.data);
           return data.data;
         }
         return [];
       } catch (err: any) {
-        if (err.name !== "AbortError" && !abortSignal?.aborted && !silent) {
+        if (err.name !== "AbortError" && !abortSignal?.aborted) {
           setChatsError(err.message || "Failed to load chats");
         }
         return [];
       } finally {
-        if (!abortSignal?.aborted && !silent) {
+        if (!abortSignal?.aborted) {
           setLoading(false);
         }
       }
@@ -149,12 +132,8 @@ export function MessagesSection({
 
   // Fetch messages for a specific chat
   const fetchMessages = useCallback(
-    async (
-      chatId: string,
-      abortSignal?: AbortSignal,
-      mergeNewOnly: boolean = false
-    ) => {
-      if (!mergeNewOnly) {
+    async (chatId: string, abortSignal?: AbortSignal, silent: boolean = false) => {
+      if (!silent) {
         setMessagesLoading(true);
       }
       setMessagesError(null);
@@ -180,7 +159,7 @@ export function MessagesSection({
           return; // User switched chats, discard these messages
         }
 
-        if (data.data && data.data.length > 0) {
+        if (data.data) {
           // Sort messages by createdAt to ensure proper order and remove duplicates
           const uniqueMessages = Array.from(
             new Map(data.data.map((msg: Message) => [msg.id, msg])).values()
@@ -189,60 +168,32 @@ export function MessagesSection({
             (a, b) =>
               new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
           );
-
-          if (mergeNewOnly) {
-            // Merge with existing messages, keeping only unique ones
-            setMessages((prev) => {
-              const existingIds = new Set(prev.map((m) => m.id));
-              const newMessages = sortedMessages.filter(
-                (m) => !existingIds.has(m.id)
-              );
-              if (newMessages.length === 0) return prev;
-
-              // Combine and sort
-              const combined = [...prev, ...newMessages].sort(
-                (a, b) =>
-                  new Date(a.createdAt).getTime() -
-                  new Date(b.createdAt).getTime()
-              );
-              return combined;
-            });
-
-            // Update last message timestamp
-            const lastMsg = sortedMessages[sortedMessages.length - 1];
-            if (lastMsg) {
-              lastMessageTimestampRef.current = lastMsg.createdAt;
-            }
-          } else {
-            // Replace all messages (initial load)
-            setMessages(sortedMessages);
-            const lastMsg = sortedMessages[sortedMessages.length - 1];
-            if (lastMsg) {
-              lastMessageTimestampRef.current = lastMsg.createdAt;
-            } else {
-              lastMessageTimestampRef.current = null;
-            }
+          
+          // Track last message timestamp for this chat
+          if (sortedMessages.length > 0) {
+            lastMessageTimestampRef.current[chatId] = sortedMessages[sortedMessages.length - 1].createdAt;
           }
+          
+          // Replace all messages (don't merge with existing)
+          setMessages(sortedMessages);
         } else {
-          if (!mergeNewOnly) {
-            setMessages([]);
-            lastMessageTimestampRef.current = null;
-          }
+          setMessages([]);
         }
       } catch (err: any) {
         // Only show error if still on same chat and not aborted
         if (
           err.name !== "AbortError" &&
           currentChatIdRef.current === chatId &&
-          !abortSignal?.aborted &&
-          !mergeNewOnly
+          !abortSignal?.aborted
         ) {
-          setMessagesError(err.message || "Failed to load messages");
+          if (!silent) {
+            setMessagesError(err.message || "Failed to load messages");
+          }
           setMessages([]);
         }
       } finally {
         if (currentChatIdRef.current === chatId && !abortSignal?.aborted) {
-          if (!mergeNewOnly) {
+          if (!silent) {
             setMessagesLoading(false);
           }
         }
@@ -478,14 +429,11 @@ export function MessagesSection({
           if (messageExists) {
             return prev;
           }
-          const newMessages = [...prev, data.data].sort(
-            (a, b) =>
-              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-          );
-          // Update last message timestamp
-          lastMessageTimestampRef.current = data.data.createdAt;
-          return newMessages;
+          return [...prev, data.data];
         });
+
+        // Update last message timestamp
+        lastMessageTimestampRef.current[selectedChat.id] = data.data.createdAt;
 
         // Update the chat's last message - this ensures empty chats become visible
         setChats((prevChats) =>
@@ -513,6 +461,158 @@ export function MessagesSection({
     }
   };
 
+  // Poll for new messages in the current chat
+  const pollForNewMessages = useCallback(async () => {
+    const currentChatId = currentChatIdRef.current;
+    if (!currentChatId || !user) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/v1/chats/${currentChatId}/messages?limit=50`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+      
+      // Only update if we're still on the same chat
+      if (currentChatIdRef.current !== currentChatId) return;
+
+      if (data.data && data.data.length > 0) {
+        const uniqueMessages = Array.from(
+          new Map(data.data.map((msg: Message) => [msg.id, msg])).values()
+        ) as Message[];
+        const sortedMessages: Message[] = uniqueMessages.sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+
+        // Check if there are new messages
+        const lastKnownTimestamp = lastMessageTimestampRef.current[currentChatId];
+        const hasNewMessages = sortedMessages.some(
+          (msg) => !lastKnownTimestamp || new Date(msg.createdAt) > new Date(lastKnownTimestamp)
+        );
+
+        if (hasNewMessages) {
+          // Update messages state
+          setMessages(sortedMessages);
+          
+          // Update last message timestamp
+          if (sortedMessages.length > 0) {
+            lastMessageTimestampRef.current[currentChatId] = sortedMessages[sortedMessages.length - 1].createdAt;
+          }
+        }
+      }
+    } catch (err) {
+      // Silently fail for polling
+      console.error("Error polling for messages:", err);
+    }
+  }, [user]);
+
+  // Poll for updates to the chat list
+  const pollForChatUpdates = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const response = await fetch("http://localhost:3000/api/v1/chats", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+      if (data.data) {
+        setChats((prevChats) => {
+          // Create a map of existing chats for easy lookup
+          const prevChatsMap = new Map(prevChats.map((c) => [c.id, c]));
+          
+          // Check if there are any new messages in the updated chats
+          let hasUpdates = false;
+          const newUnreadChats = new Set<string>();
+          
+          data.data.forEach((newChat: Chat) => {
+            const prevChat = prevChatsMap.get(newChat.id);
+            
+            // Check if this chat has new messages
+            if (newChat.lastMessage && newChat.lastMessageAt) {
+              const lastViewedTime = lastViewedTimestampRef.current[newChat.id];
+              const isCurrentChat = currentChatIdRef.current === newChat.id;
+              
+              // Mark as unread if:
+              // 1. Not the currently open chat
+              // 2. Message is from someone else
+              // 3. Message is newer than last viewed time
+              if (
+                !isCurrentChat &&
+                newChat.lastMessage.senderId !== user.id &&
+                (!lastViewedTime || new Date(newChat.lastMessageAt) > new Date(lastViewedTime))
+              ) {
+                newUnreadChats.add(newChat.id);
+              }
+            }
+            
+            if (!prevChat) {
+              hasUpdates = true;
+            } else if (
+              newChat.lastMessageAt &&
+              prevChat.lastMessageAt &&
+              new Date(newChat.lastMessageAt) > new Date(prevChat.lastMessageAt)
+            ) {
+              hasUpdates = true;
+            } else if (newChat.lastMessage && !prevChat.lastMessage) {
+              hasUpdates = true;
+            }
+          });
+
+          // Update unread chats
+          setUnreadChats((prev) => {
+            const updated = new Set(prev);
+            newUnreadChats.forEach((chatId) => updated.add(chatId));
+            // Remove chats that are no longer in the list or currently open
+            prev.forEach((chatId) => {
+              if (chatId === currentChatIdRef.current || !data.data.find((c: Chat) => c.id === chatId)) {
+                updated.delete(chatId);
+              }
+            });
+            return updated;
+          });
+
+          // Only update if there are actual changes
+          return hasUpdates ? data.data : prevChats;
+        });
+      }
+    } catch (err) {
+      // Silently fail for polling
+      console.error("Error polling for chat updates:", err);
+    }
+  }, [user]);
+
+  // Start/stop polling based on component state
+  const startPolling = useCallback(() => {
+    // Clear any existing interval
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+
+    // Poll every 3 seconds for new messages
+    pollingIntervalRef.current = setInterval(() => {
+      pollForNewMessages();
+      pollForChatUpdates();
+    }, 3000);
+  }, [pollForNewMessages, pollForChatUpdates]);
+
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+  }, []);
+
   // Select a chat
   const handleSelectChat = (chat: Chat) => {
     // Update current chat ref immediately (synchronous)
@@ -523,26 +623,35 @@ export function MessagesSection({
     setMessages([]);
     setMessagesError(null);
     setSendError(null);
-    lastMessageTimestampRef.current = null; // Reset timestamp for new chat
     setSelectedChat(chat);
+    
+    // Mark chat as read (remove from unread list)
+    setUnreadChats((prev) => {
+      const updated = new Set(prev);
+      updated.delete(chat.id);
+      return updated;
+    });
+    
+    // Update last viewed timestamp to current time
+    lastViewedTimestampRef.current[chat.id] = new Date().toISOString();
+    
     // Fetch messages for the new chat
     fetchMessages(chat.id);
   };
 
-  // Remove a chat from the list (does not delete the chat on server)
-  const handleRemoveChat = useCallback(
-    (chatId: string, e: React.MouseEvent) => {
-      e.stopPropagation(); // Prevent triggering chat selection
-
-      // If this is the currently selected chat, clear the selection
+  // Remove chat entry from the list (local only)
+  const removeChatFromList = useCallback(
+    (chatId: string) => {
+      setHiddenChatIds((prev) => {
+        const next = new Set(prev);
+        next.add(chatId);
+        return next;
+      });
       if (selectedChat?.id === chatId) {
         setSelectedChat(null);
         setMessages([]);
-        currentChatIdRef.current = null;
+        setMessagesError(null);
       }
-
-      // Remove chat from local state
-      setChats((prevChats) => prevChats.filter((chat) => chat.id !== chatId));
     },
     [selectedChat]
   );
@@ -572,18 +681,22 @@ export function MessagesSection({
     []
   );
 
-  // Fetch chats on mount
+  // Fetch chats on mount and start polling
   useEffect(() => {
     if (!user) return;
 
     const controller = new AbortController();
     fetchChats(controller.signal);
+    
+    // Start polling for new messages and chat updates
+    startPolling();
 
     return () => {
       controller.abort();
+      stopPolling();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, startPolling, stopPolling]);
 
   // Fetch friends when modal opens
   useEffect(() => {
@@ -626,51 +739,6 @@ export function MessagesSection({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, showNewChatModal]);
-
-  // Poll for new messages in the current chat
-  useEffect(() => {
-    if (!user || !selectedChat) {
-      // Clear polling interval if no chat is selected
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-      return;
-    }
-
-    const chatId = selectedChat.id;
-
-    // Poll for new messages every 2 seconds
-    pollingIntervalRef.current = setInterval(() => {
-      // Only poll if we're still on the same chat
-      if (currentChatIdRef.current === chatId) {
-        fetchMessages(chatId, undefined, true); // mergeNewOnly = true
-      }
-    }, 2000);
-
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, selectedChat?.id]);
-
-  // Poll for chat list updates (to get new messages in other chats)
-  useEffect(() => {
-    if (!user) return;
-
-    // Poll for chat list updates every 3 seconds
-    const chatListInterval = setInterval(() => {
-      fetchChats(undefined, true); // silent = true to avoid loading spinner
-    }, 3000);
-
-    return () => {
-      clearInterval(chatListInterval);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
 
   // Memoized modal close handler
   const closeNewChatModal = useCallback(() => {
@@ -761,13 +829,14 @@ export function MessagesSection({
     // Filter chats to only show those with messages (exclude empty chats)
     // Sort by most recent message first
     return chats
+      .filter((chat) => !hiddenChatIds.has(chat.id))
       .filter((chat) => chat.lastMessage !== null)
       .sort((a, b) => {
         const dateA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
         const dateB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
         return dateB - dateA; // Most recent first
       });
-  }, [chats]);
+  }, [chats, hiddenChatIds]);
 
   // Get list of friend IDs that already have chats WITH messages
   const friendIdsWithChats = useMemo(() => {
@@ -881,20 +950,25 @@ export function MessagesSection({
                     {!chat.isGroup && isOnline(chat) && (
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-primary-elements"></div>
                     )}
+                    {unreadChats.has(chat.id) && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6B00] rounded-full border-2 border-primary-elements flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 text-left overflow-hidden">
                     <div className="flex items-center justify-between">
-                      <p className="font-semibold truncate">
+                      <p className={`font-semibold truncate ${unreadChats.has(chat.id) ? "text-[#FF6B00]" : ""}`}>
                         {getChatDisplayName(chat)}
                       </p>
                       {chat.lastMessageAt && (
-                        <span className="text-xs text-[#FF6B00] font-medium">
+                        <span className={`text-xs font-medium ${unreadChats.has(chat.id) ? "text-[#FF6B00]" : "text-[#FF6B00]/70"}`}>
                           {formatTimestamp(chat.lastMessageAt)}
                         </span>
                       )}
                     </div>
                     {chat.lastMessage && (
-                      <p className="text-sm text-white/60 truncate">
+                      <p className={`text-sm truncate ${unreadChats.has(chat.id) ? "text-white font-medium" : "text-white/60"}`}>
                         {user && chat.lastMessage.senderId === user.id && (
                           <span className="text-[#FF6B00] font-medium">
                             You:{" "}
@@ -904,13 +978,19 @@ export function MessagesSection({
                       </p>
                     )}
                   </div>
-                  <button
-                    onClick={(e) => handleRemoveChat(chat.id, e)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1.5 rounded-lg hover:bg-rose-500/20 hover:text-rose-400 text-white/50 shrink-0"
-                    title="Remove from list"
-                  >
-                    <MdDelete size={18} />
-                  </button>
+                  {!chat.isGroup && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeChatFromList(chat.id);
+                      }}
+                      className="ml-2 p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-rose-500/20 hover:border hover:border-rose-500/50 transition-all duration-200 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+                      title="Remove chat from list"
+                      aria-label="Remove chat from list"
+                    >
+                      <MdClose size={18} />
+                    </button>
+                  )}
                 </button>
               ))}
             </div>
