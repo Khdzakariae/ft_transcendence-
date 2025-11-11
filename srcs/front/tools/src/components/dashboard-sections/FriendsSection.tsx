@@ -20,6 +20,11 @@ export function FriendsSection({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingFriendId, setDeletingFriendId] = useState<string | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    friendId: string | null;
+    friendName: string | null;
+  }>({ isOpen: false, friendId: null, friendName: null });
 
   const fetchFriends = useCallback(async (abortSignal?: AbortSignal) => {
     setLoading(true);
@@ -62,11 +67,19 @@ export function FriendsSection({
     }
   }, []);
 
-  const handleDeleteFriend = async (friendId: string) => {
-    if (!confirm("Are you sure you want to remove this friend?")) {
-      return;
-    }
+  const handleDeleteFriend = (friendId: string, friendName: string | null) => {
+    setConfirmModal({
+      isOpen: true,
+      friendId,
+      friendName,
+    });
+  };
 
+  const confirmDeleteFriend = async () => {
+    const friendId = confirmModal.friendId;
+    if (!friendId) return;
+
+    setConfirmModal({ isOpen: false, friendId: null, friendName: null });
     setDeletingFriendId(friendId);
     setError(null);
 
@@ -91,6 +104,10 @@ export function FriendsSection({
     } finally {
       setDeletingFriendId(null);
     }
+  };
+
+  const cancelDeleteFriend = () => {
+    setConfirmModal({ isOpen: false, friendId: null, friendName: null });
   };
 
   const getInitials = (name?: string | null): string => {
@@ -275,7 +292,7 @@ export function FriendsSection({
                             </div>
                           </div>
                           <button
-                            onClick={() => handleDeleteFriend(friend.id)}
+                            onClick={() => handleDeleteFriend(friend.id, friend.name)}
                             disabled={deletingFriendId === friend.id}
                             className="ml-2 px-3 py-2 rounded-lg border border-rose-400/40 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20 hover:border-rose-400/60 hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-rose-500/50 shrink-0"
                             title="Remove friend"
@@ -334,7 +351,7 @@ export function FriendsSection({
                             </div>
                           </div>
                           <button
-                            onClick={() => handleDeleteFriend(friend.id)}
+                            onClick={() => handleDeleteFriend(friend.id, friend.name)}
                             disabled={deletingFriendId === friend.id}
                             className="ml-2 px-3 py-2 rounded-lg border border-rose-400/40 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20 hover:border-rose-400/60 hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-rose-500/50 shrink-0"
                             title="Remove friend"
@@ -372,6 +389,58 @@ export function FriendsSection({
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={cancelDeleteFriend}
+          ></div>
+
+          {/* Modal */}
+          <div className="relative bg-primary-elements border border-white/20 rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 animate-in zoom-in-95 duration-200">
+            {/* Warning Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="p-4 rounded-full bg-rose-500/20 border-2 border-rose-400/40">
+                <MdDelete className="text-rose-400" size={40} />
+              </div>
+            </div>
+
+            {/* Title */}
+            <h3 className="text-2xl font-bold text-center mb-2 text-white">
+              Remove Friend?
+            </h3>
+
+            {/* Message */}
+            <p className="text-center text-white/70 mb-6">
+              Are you sure you want to remove{" "}
+              <span className="font-semibold text-[#FF6B00]">
+                {confirmModal.friendName || "this user"}
+              </span>{" "}
+              from your friends list? This action cannot be undone.
+            </p>
+
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={cancelDeleteFriend}
+                className="flex-1 px-6 py-3 rounded-xl border border-white/20 bg-white/5 text-white font-semibold hover:bg-white/10 hover:border-white/30 transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-white/50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteFriend}
+                className="flex-1 px-6 py-3 rounded-xl border border-rose-400/40 bg-rose-500/20 text-rose-200 font-semibold hover:bg-rose-500/30 hover:border-rose-400/60 transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-rose-500/50 flex items-center justify-center gap-2"
+              >
+                <MdDelete size={20} />
+                Remove Friend
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
