@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import type { IconType } from "react-icons";
 import { MdOutlinePerson } from "react-icons/md";
 import { RiShieldKeyholeLine } from "react-icons/ri";
@@ -93,8 +93,6 @@ export function SettingsSection({
   // Profile update state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [avatarPreview, setAvatarPreview] = useState<string>("");
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [profileLoading, setProfileLoading] = useState(false);
@@ -102,7 +100,6 @@ export function SettingsSection({
     type: "success" | "error";
     text: string;
   } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 2FA state
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(
@@ -141,19 +138,9 @@ export function SettingsSection({
       
       setFirstName(first);
       setLastName(last);
-      setAvatarPreview(user_data.avatar || "");
       setTwoFactorEnabled(user_data.twoFactorEnabled || false);
     }
   }, [user_data]);
-
-  // Cleanup blob URLs on unmount to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      if (avatarPreview && avatarPreview.startsWith("blob:")) {
-        URL.revokeObjectURL(avatarPreview);
-      }
-    };
-  }, [avatarPreview]);
 
   // Fetch security activity logs
   useEffect(() => {
@@ -190,45 +177,6 @@ export function SettingsSection({
 
     fetchSecurityLogs();
   }, []);
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file size (max 10MB)
-      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-      if (file.size > maxSize) {
-        setProfileMessage({
-          type: "error",
-          text: "Avatar file size must be less than 10MB",
-        });
-        return;
-      }
-
-      // Validate file type
-      const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
-      if (!validTypes.includes(file.type)) {
-        setProfileMessage({
-          type: "error",
-          text: "Avatar must be a valid image file (JPG, PNG, GIF, or WebP)",
-        });
-        return;
-      }
-
-      // Clear any previous error messages (unless it's a success message from profile update)
-      if (profileMessage?.type === "error") {
-        setProfileMessage(null);
-      }
-      
-      // Revoke old blob URL to prevent memory leak
-      if (avatarPreview && avatarPreview.startsWith("blob:")) {
-        URL.revokeObjectURL(avatarPreview);
-      }
-      
-      // Store file for preview (but note: upload is not supported by backend)
-      setAvatarFile(file);
-      setAvatarPreview(URL.createObjectURL(file));
-    }
-  };
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -313,14 +261,6 @@ export function SettingsSection({
       // Clear password field on success
       setNewPassword("");
       setShowPassword(false);
-
-      // Clear avatar file state if it was set (even though we didn't upload)
-      // This prevents confusion about whether avatar was saved
-      if (avatarFile) {
-        // Note: Avatar upload is not supported by the backend API
-        // The avatar preview will remain but won't be saved
-        setAvatarFile(null);
-      }
 
       setProfileMessage({
         type: "success",
@@ -633,56 +573,6 @@ export function SettingsSection({
           <div className="px-6 py-6 sm:px-8 sm:py-8">
             {activeTab === "profile" && (
               <form onSubmit={handleProfileUpdate} className="space-y-8">
-                {/* Avatar Section */}
-                <div className={subtleCardClasses}>
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/55">
-                    Profile Picture
-                  </p>
-                  <h3 className="mt-2 font-secondary text-2xl font-semibold text-white">
-                    Your Avatar
-                  </h3>
-                  <p className="mt-1 text-sm text-white/75">
-                    Upload a profile picture to personalize your account.
-                  </p>
-                  <div className="mt-6 flex flex-col items-center gap-6 sm:flex-row">
-                    <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-2xl border border-primary-btn bg-primary-bg shadow-inner">
-                      {avatarPreview ? (
-                        <img
-                          src={avatarPreview}
-                          alt="Avatar preview"
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-4xl font-semibold text-secondary-text">
-                          {initials}
-                        </span>
-                      )}
-                    </div>
-                    <div className="space-y-3">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className={secondaryActionClasses}
-                      >
-                        Change Photo
-                      </button>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        ref={fileInputRef}
-                        onChange={handleAvatarChange}
-                        className="hidden"
-                      />
-                      <p className="text-xs text-white/55">
-                        JPG, PNG, or GIF. Max size 10MB.
-                      </p>
-                      <p className="text-xs text-amber-400/70 italic">
-                        Note: Avatar preview is available, but upload is not currently supported by the backend API.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
                 <div className="grid gap-8 lg:grid-cols-2">
                   <div className={subtleCardClasses}>
                     <p className="text-xs uppercase tracking-[0.3em] text-white/55">
