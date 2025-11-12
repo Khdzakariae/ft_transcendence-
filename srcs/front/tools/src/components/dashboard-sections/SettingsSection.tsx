@@ -1,8 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { IconType } from "react-icons";
 import { MdOutlinePerson } from "react-icons/md";
 import { RiShieldKeyholeLine } from "react-icons/ri";
-import { IoSettingsOutline } from "react-icons/io5";
+import { 
+  AiOutlineEye, 
+  AiOutlineEyeInvisible,
+  AiOutlineDownload,
+  AiOutlineCopy,
+  AiOutlineClose,
+  AiOutlineCheckCircle,
+  AiOutlineWarning
+} from "react-icons/ai";
 import { UserInter } from "../../interfaces/UserInterfaces";
 import { UserDataInter } from "../../interfaces/UserInterfaces";
 import { Utils } from "../../Utils";
@@ -27,17 +35,51 @@ const TABS = [
     icon: RiShieldKeyholeLine as IconType,
   },
   {
-    id: "preferences",
-    label: "Personal Vibes",
-    eyebrow: "Experience",
-    heading: "Personal Vibes",
+    id: "activity",
+    label: "Activity Log",
+    eyebrow: "Security",
+    heading: "Security Activity",
     description:
-      "Control notifications and tailor the experience to fit your flow.",
-    icon: IoSettingsOutline as IconType,
+      "Monitor your account security events and authentication history.",
+    icon: RiShieldKeyholeLine as IconType,
   },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
+
+// Modal Component
+function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-primary-elements p-6 shadow-lg shadow-primary-btn/30">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="font-secondary text-xl font-semibold text-white">
+            {title}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-white/60 transition-colors hover:text-white"
+          >
+            <AiOutlineClose size={20} />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export function SettingsSection({
   user,
@@ -49,15 +91,18 @@ export function SettingsSection({
   const [activeTab, setActiveTab] = useState<TabId>("profile");
 
   // Profile update state
-  const [name, setName] = useState(user_data?.name || "");
-  const [oldPassword, setOldPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileMessage, setProfileMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 2FA state
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(
@@ -73,14 +118,12 @@ export function SettingsSection({
   } | null>(null);
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
   const [disableToken, setDisableToken] = useState("");
+  const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
+  const [showBackupCodesModal, setShowBackupCodesModal] = useState(false);
 
-  // Preferences state
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [preferencesLoading, setPreferencesLoading] = useState(false);
-  const [preferencesMessage, setPreferencesMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  // Security Activity state
+  const [securityActivity, setSecurityActivity] = useState<any[]>([]);
+  const [activityLoading, setActivityLoading] = useState(true);
 
   const primaryActionClasses =
     "inline-flex items-center justify-center rounded-xl bg-secondary-btn px-6 py-3 font-semibold text-secondary-text font-secondary shadow-lg shadow-[0_18px_40px_-18px_rgba(255,107,0,0.55)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-secondary-btn/90 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60";
@@ -91,80 +134,187 @@ export function SettingsSection({
 
   useEffect(() => {
     if (user_data) {
-      setName(user_data.name || "");
+      // Split name into firstName and lastName
+      const nameParts = (user_data.name || "").split(" ");
+      const first = nameParts[0] || "";
+      const last = nameParts.slice(1).join(" ") || "";
+      
+      setFirstName(first);
+      setLastName(last);
+      setAvatarPreview(user_data.avatar || "");
       setTwoFactorEnabled(user_data.twoFactorEnabled || false);
     }
   }, [user_data]);
+
+  // Cleanup blob URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (avatarPreview && avatarPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+    };
+  }, [avatarPreview]);
+
+  // Fetch security activity logs
+  useEffect(() => {
+    const fetchSecurityLogs = async () => {
+      setActivityLoading(true);
+      try {
+        const response = await fetch("http://localhost:3000/api/v1/log/logs", {
+          credentials: "include",
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch logs.");
+
+        const logs = await response.json();
+        const formattedEvents = logs.map((log: any) => ({
+          id: log.id,
+          activity: log.message,
+          date: new Date(log.createdAt).toLocaleString(),
+          status: log.level,
+          statusColor:
+            log.level === "error" || log.level === "ERROR"
+              ? "text-rose-400"
+              : "text-emerald-400",
+        }));
+
+        setSecurityActivity(formattedEvents);
+      } catch (error: any) {
+        Utils.LogLevel.ERROR &&
+          console.error("Error fetching security logs:", error);
+        setSecurityActivity([]);
+      } finally {
+        setActivityLoading(false);
+      }
+    };
+
+    fetchSecurityLogs();
+  }, []);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+      if (file.size > maxSize) {
+        setProfileMessage({
+          type: "error",
+          text: "Avatar file size must be less than 10MB",
+        });
+        return;
+      }
+
+      // Validate file type
+      const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+      if (!validTypes.includes(file.type)) {
+        setProfileMessage({
+          type: "error",
+          text: "Avatar must be a valid image file (JPG, PNG, GIF, or WebP)",
+        });
+        return;
+      }
+
+      // Clear any previous error messages
+      setProfileMessage(null);
+      
+      // Revoke old blob URL to prevent memory leak
+      if (avatarPreview && avatarPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+      
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user_data) return;
 
+    // Validate inputs before making API calls
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
+    
+    if (!trimmedFirstName && !trimmedLastName) {
+      setProfileMessage({
+        type: "error",
+        text: "Please provide at least a first name or last name",
+      });
+      return;
+    }
+
+    if (newPassword && newPassword.length < 6) {
+      setProfileMessage({
+        type: "error",
+        text: "Password must be at least 6 characters long",
+      });
+      return;
+    }
+
     setProfileLoading(true);
     setProfileMessage(null);
 
     try {
-      // Update name if changed
-      if (name !== user_data.name) {
-        const updateResponse = await fetch(
-          `http://localhost:3000/api/v1/user/${user.id}`,
-          {
-            method: "PUT",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: name.trim(),
-            }),
-          }
-        );
+      // Upload avatar if changed
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append("avatar", avatarFile);
 
-        if (!updateResponse.ok) {
-          const errorData = await updateResponse.json();
-          throw new Error(errorData.error || "Failed to update profile");
-        }
-
-        const updateData = await updateResponse.json();
-        Utils.LogLevel.DEBUG && console.log("Profile updated:", updateData);
-      }
-
-      // Update password if provided
-      if (newPassword) {
-        if (newPassword !== confirmPassword) {
-          throw new Error("New passwords do not match");
-        }
-
-        if (newPassword.length < 6) {
-          throw new Error("Password must be at least 6 characters long");
-        }
-
-        const passwordResponse = await fetch(
-          "http://localhost:3000/api/v1/auth/change-password",
+        const avatarResponse = await fetch(
+          "http://localhost:3000/api/v1/user/avatar",
           {
             method: "POST",
             credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              userId: user.id,
-              oldPassword,
-              newPassword,
-            }),
+            body: formData,
           }
         );
 
-        if (!passwordResponse.ok) {
-          const errorData = await passwordResponse.json();
-          throw new Error(errorData.error || "Failed to change password");
+        if (!avatarResponse.ok) {
+          const errorData = await avatarResponse.json();
+          throw new Error(errorData.error || "Failed to upload avatar");
         }
 
-        // Clear password fields on success
-        setOldPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
+        // Clear avatar file state after successful upload
+        setAvatarFile(null);
+        
+        Utils.LogLevel.DEBUG && console.log("Avatar uploaded successfully");
       }
+
+      // Prepare update payload
+      const newName = `${trimmedFirstName} ${trimmedLastName}`.trim();
+      const payload: any = {
+        name: newName,
+      };
+
+      // Add password to payload if provided
+      if (newPassword) {
+        payload.password = newPassword;
+      }
+
+      // Update profile (and password if provided)
+      const updateResponse = await fetch(
+        `http://localhost:3000/api/v1/user/${user.id}`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!updateResponse.ok) {
+        const errorData = await updateResponse.json();
+        throw new Error(errorData.error || "Failed to update profile");
+      }
+
+      const updateData = await updateResponse.json();
+      Utils.LogLevel.DEBUG && console.log("Profile updated:", updateData);
+
+      // Clear password field on success
+      setNewPassword("");
+      setShowPassword(false);
 
       setProfileMessage({
         type: "success",
@@ -213,9 +363,10 @@ export function SettingsSection({
       const data = await response.json();
       setQrCode(data.qrCode);
       setBackupCodes(data.backupCodes || []);
+      setIsSetupModalOpen(true);
       setTwoFactorMessage({
         type: "success",
-        text: "Scan the QR code with your authenticator app",
+        text: "2FA setup initiated. Please scan the QR code.",
       });
     } catch (error: any) {
       Utils.LogLevel.ERROR && console.error("2FA setup error:", error);
@@ -228,10 +379,23 @@ export function SettingsSection({
     }
   };
 
-  const handleVerify2FA = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleVerificationSuccess = () => {
+    setTwoFactorEnabled(true);
+    setIsSetupModalOpen(false);
+    setShowBackupCodesModal(true);
+    setTwoFactorMessage({
+      type: "success",
+      text: "2FA enabled successfully! Save your backup codes.",
+    });
+
+    // Refresh after backup codes modal is closed
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
+  };
+
+  const handleVerify2FA = async () => {
     setTwoFactorLoading(true);
-    setTwoFactorMessage(null);
 
     if (!/^\d{6}$/.test(verificationToken)) {
       setTwoFactorMessage({
@@ -264,18 +428,8 @@ export function SettingsSection({
       }
 
       await response.json();
-      setTwoFactorEnabled(true);
-      setQrCode(null);
       setVerificationToken("");
-      setTwoFactorMessage({
-        type: "success",
-        text: "2FA enabled successfully! Save your backup codes.",
-      });
-
-      // Refresh user data
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+      handleVerificationSuccess();
     } catch (error: any) {
       Utils.LogLevel.ERROR && console.error("2FA verification error:", error);
       setTwoFactorMessage({
@@ -333,29 +487,6 @@ export function SettingsSection({
       });
     } finally {
       setTwoFactorLoading(false);
-    }
-  };
-
-  const handlePreferencesUpdate = async () => {
-    setPreferencesLoading(true);
-    setPreferencesMessage(null);
-
-    try {
-      // Simulate API call for preferences (you'll need to implement this endpoint)
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      setPreferencesMessage({
-        type: "success",
-        text: "Preferences updated successfully!",
-      });
-    } catch (error: any) {
-      Utils.LogLevel.ERROR && console.error("Preferences update error:", error);
-      setPreferencesMessage({
-        type: "error",
-        text: error.message || "Failed to update preferences",
-      });
-    } finally {
-      setPreferencesLoading(false);
     }
   };
 
@@ -496,6 +627,53 @@ export function SettingsSection({
           <div className="px-6 py-6 sm:px-8 sm:py-8">
             {activeTab === "profile" && (
               <form onSubmit={handleProfileUpdate} className="space-y-8">
+                {/* Avatar Section */}
+                <div className={subtleCardClasses}>
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/55">
+                    Profile Picture
+                  </p>
+                  <h3 className="mt-2 font-secondary text-2xl font-semibold text-white">
+                    Your Avatar
+                  </h3>
+                  <p className="mt-1 text-sm text-white/75">
+                    Upload a profile picture to personalize your account.
+                  </p>
+                  <div className="mt-6 flex flex-col items-center gap-6 sm:flex-row">
+                    <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-2xl border border-primary-btn bg-primary-bg shadow-inner">
+                      {avatarPreview ? (
+                        <img
+                          src={avatarPreview}
+                          alt="Avatar preview"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-4xl font-semibold text-secondary-text">
+                          {initials}
+                        </span>
+                      )}
+                    </div>
+                    <div className="space-y-3">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className={secondaryActionClasses}
+                      >
+                        Change Photo
+                      </button>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        onChange={handleAvatarChange}
+                        className="hidden"
+                      />
+                      <p className="text-xs text-white/55">
+                        JPG, PNG, or GIF. Max size 10MB.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid gap-8 lg:grid-cols-2">
                   <div className={subtleCardClasses}>
                     <p className="text-xs uppercase tracking-[0.3em] text-white/55">
@@ -505,17 +683,29 @@ export function SettingsSection({
                       Profile Information
                     </h3>
                     <p className="mt-1 text-sm text-white/75">
-                      Update your display name to personalize your profile.
+                      Update your name to personalize your profile.
                     </p>
                     <div className="mt-6 space-y-5">
                       <div className="space-y-2">
                         <label className="block text-xs uppercase tracking-[0.3em] text-white/65">
-                          Display Name
+                          First Name
                         </label>
                         <input
                           type="text"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          className="w-full rounded-xl border border-white/10 bg-primary-bg px-4 py-3 text-white placeholder:text-white/40 focus:border-primary-btn focus:outline-none focus:ring-2 focus:ring-primary-btn"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-xs uppercase tracking-[0.3em] text-white/65">
+                          Last Name
+                        </label>
+                        <input
+                          type="text"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
                           className="w-full rounded-xl border border-white/10 bg-primary-bg px-4 py-3 text-white placeholder:text-white/40 focus:border-primary-btn focus:outline-none focus:ring-2 focus:ring-primary-btn"
                           required
                         />
@@ -531,45 +721,37 @@ export function SettingsSection({
                       Password Refresh
                     </h3>
                     <p className="mt-1 text-sm text-white/75">
-                      Change your password to keep your account secure. Leave
-                      fields blank to keep your current password.
+                      Enter a new password to update your account security. Leave
+                      blank to keep your current password.
                     </p>
-                    <div className="mt-6 grid gap-4">
-                      <div className="space-y-2">
-                        <label className="block text-xs uppercase tracking-[0.3em] text-white/65">
-                          Current Password
-                        </label>
-                        <input
-                          type="password"
-                          value={oldPassword}
-                          onChange={(e) => setOldPassword(e.target.value)}
-                          className="w-full rounded-xl border border-white/10 bg-primary-bg px-4 py-3 text-white placeholder:text-white/35 focus:border-primary-btn focus:outline-none focus:ring-2 focus:ring-primary-btn"
-                          placeholder="••••••••"
-                        />
-                      </div>
+                    <div className="mt-6">
                       <div className="space-y-2">
                         <label className="block text-xs uppercase tracking-[0.3em] text-white/65">
                           New Password
                         </label>
-                        <input
-                          type="password"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          className="w-full rounded-xl border border-white/10 bg-primary-bg px-4 py-3 text-white placeholder:text-white/35 focus:border-primary-btn focus:outline-none focus:ring-2 focus:ring-primary-btn"
-                          placeholder="At least 6 characters"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="block text-xs uppercase tracking-[0.3em] text-white/65">
-                          Confirm Password
-                        </label>
-                        <input
-                          type="password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="w-full rounded-xl border border-white/10 bg-primary-bg px-4 py-3 text-white placeholder:text-white/35 focus:border-primary-btn focus:outline-none focus:ring-2 focus:ring-primary-btn"
-                          placeholder="Repeat new password"
-                        />
+                        <div className="relative">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-primary-bg px-4 py-3 pr-12 text-white placeholder:text-white/35 focus:border-primary-btn focus:outline-none focus:ring-2 focus:ring-primary-btn"
+                            placeholder="Enter new password (min. 6 characters)"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-0 top-0 flex h-full items-center px-4 text-white/60 hover:text-white"
+                          >
+                            {showPassword ? (
+                              <AiOutlineEyeInvisible size={20} />
+                            ) : (
+                              <AiOutlineEye size={20} />
+                            )}
+                          </button>
+                        </div>
+                        <p className="text-xs text-white/50 mt-2">
+                          💡 No need for your old password - just enter your new one!
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -678,108 +860,15 @@ export function SettingsSection({
                       Enable two-factor authentication to require a one-time
                       code from your authenticator app whenever you sign in.
                     </p>
-                    {!qrCode ? (
-                      <button
-                        onClick={handleSetup2FA}
-                        disabled={twoFactorLoading}
-                        className={`mt-6 ${primaryActionClasses}`}
-                      >
-                        {twoFactorLoading
-                          ? "Generating secret..."
-                          : "Start 2FA setup"}
-                      </button>
-                    ) : (
-                      <form
-                        onSubmit={handleVerify2FA}
-                        className="mt-6 space-y-6"
-                      >
-                        <div className="text-sm text-white/70">
-                          <p className="font-semibold text-white">
-                            Scan & verify
-                          </p>
-                          <p className="mt-1">
-                            Use Google Authenticator, Authy, or any TOTP app.
-                            After scanning, enter the 6-digit code below.
-                          </p>
-                        </div>
-                        {qrCode && (
-                          <div className="mx-auto w-fit rounded-2xl border border-primary-btn bg-primary-bg p-4 shadow-lg shadow-primary-btn/30">
-                            <img
-                              src={qrCode}
-                              alt="2FA QR Code"
-                              className="h-48 w-48 object-contain"
-                            />
-                          </div>
-                        )}
-
-                        {backupCodes.length > 0 && (
-                          <div className="rounded-2xl border border-amber-400/60 bg-primary-bg p-4 text-amber-100">
-                            <p className="font-semibold uppercase tracking-[0.3em] text-xs text-primary-text">
-                              Backup codes
-                            </p>
-                            <p className="mt-1 text-sm text-white/70">
-                              Store these codes somewhere safe. Each can be used
-                              once if you lose access to your authenticator
-                              device.
-                            </p>
-                            <div className="mt-4 grid grid-cols-2 gap-2 text-center font-mono text-sm sm:grid-cols-4">
-                              {backupCodes.map((code, index) => (
-                                <span
-                                  key={`${code}-${index}`}
-                                  className="rounded-lg border border-amber-400/50 bg-amber-500/10 px-3 py-2 tracking-widest text-amber-100"
-                                >
-                                  {code}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="space-y-2">
-                          <label className="block text-xs uppercase tracking-[0.3em] text-white/60">
-                            Verification code
-                          </label>
-                          <input
-                            type="text"
-                            value={verificationToken}
-                            onChange={(e) =>
-                              setVerificationToken(
-                                e.target.value.replace(/\D/g, "").slice(0, 6)
-                              )
-                            }
-                            placeholder="000000"
-                            maxLength={6}
-                            className="w-full rounded-xl border border-white/10 bg-primary-bg px-4 py-3 text-center text-2xl font-semibold tracking-[0.6em] text-white focus:border-primary-btn focus:outline-none focus:ring-2 focus:ring-primary-btn"
-                            required
-                          />
-                        </div>
-
-                        <div className="flex flex-wrap gap-3">
-                          <button
-                            type="submit"
-                            disabled={
-                              twoFactorLoading || verificationToken.length !== 6
-                            }
-                            className={primaryActionClasses}
-                          >
-                            {twoFactorLoading
-                              ? "Verifying..."
-                              : "Verify & enable"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setQrCode(null);
-                              setBackupCodes([]);
-                              setVerificationToken("");
-                            }}
-                            className={secondaryActionClasses}
-                          >
-                            Start over
-                          </button>
-                        </div>
-                      </form>
-                    )}
+                    <button
+                      onClick={handleSetup2FA}
+                      disabled={twoFactorLoading}
+                      className={`mt-6 ${primaryActionClasses}`}
+                    >
+                      {twoFactorLoading
+                        ? "Generating secret..."
+                        : "Start 2FA setup"}
+                    </button>
                   </div>
                 )}
 
@@ -800,74 +889,238 @@ export function SettingsSection({
               </div>
             )}
 
-            {activeTab === "preferences" && (
-              <div className="space-y-8 text-white/75">
-                <div className={`${subtleCardClasses} space-y-4`}>
-                  <div className="flex items-center justify-between gap-4">
+            {activeTab === "activity" && (
+              <div className="space-y-8">
+                <div className={subtleCardClasses}>
+                  <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs uppercase tracking-[0.3em] text-white/55">
-                        Notifications
+                        Security
                       </p>
                       <h3 className="mt-2 font-secondary text-2xl font-semibold text-white">
-                        Email alerts
+                        Activity Log
                       </h3>
                       <p className="mt-1 text-sm text-white/70">
-                        Decide if you want match summaries, friend requests, and
-                        service announcements delivered to your inbox.
+                        Recent authentication events and security-related activities.
                       </p>
                     </div>
-                    <label className="relative inline-flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={emailNotifications}
-                        onChange={(e) =>
-                          setEmailNotifications(e.target.checked)
-                        }
-                        className="peer sr-only"
-                      />
-                      <span className="h-7 w-14 rounded-full border border-primary-btn/60 bg-primary-bg transition-colors peer-checked:bg-secondary-btn" />
-                      <span className="absolute left-1 top-1 h-5 w-5 rounded-full bg-secondary-text shadow transition-all peer-checked:translate-x-7" />
-                    </label>
                   </div>
-                  <ul className="grid gap-2 text-sm text-white/70">
-                    <li>• Weekly performance recaps</li>
-                    <li>• Tournament invitations & milestones</li>
-                    <li>• Security reminders and account nudges</li>
-                  </ul>
-                </div>
 
-                {preferencesMessage && (
-                  <div
-                    className={`flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm backdrop-blur ${
-                      preferencesMessage.type === "success"
-                        ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
-                        : "border-rose-400/40 bg-rose-500/10 text-rose-200"
-                    }`}
-                  >
-                    <span className="text-base">
-                      {preferencesMessage.type === "success" ? "✅" : "⚠️"}
-                    </span>
-                    <span>{preferencesMessage.text}</span>
+                  <div className="mt-6">
+                    {activityLoading ? (
+                      <div className="flex justify-center py-8">
+                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-btn border-t-transparent"></div>
+                      </div>
+                    ) : securityActivity.length > 0 ? (
+                      <div className="space-y-3">
+                        {securityActivity.map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex items-center justify-between rounded-xl border border-white/10 bg-primary-bg p-4 transition-colors hover:border-primary-btn/50"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-elements">
+                                {item.status === "error" ||
+                                item.status === "ERROR" ? (
+                                  <AiOutlineWarning
+                                    className="text-rose-400"
+                                    size={20}
+                                  />
+                                ) : (
+                                  <AiOutlineCheckCircle
+                                    className="text-emerald-400"
+                                    size={20}
+                                  />
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-medium text-white">
+                                  {item.activity}
+                                </p>
+                                <p className="text-sm text-white/60">
+                                  {item.date}
+                                </p>
+                              </div>
+                            </div>
+                            <span
+                              className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${
+                                item.status === "error" ||
+                                item.status === "ERROR"
+                                  ? "bg-rose-500/20 text-rose-300"
+                                  : "bg-emerald-500/20 text-emerald-300"
+                              }`}
+                            >
+                              {item.status}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-elements">
+                          <AiOutlineCheckCircle
+                            className="text-white/40"
+                            size={32}
+                          />
+                        </div>
+                        <p className="text-white/60">
+                          No security activity recorded yet.
+                        </p>
+                      </div>
+                    )}
                   </div>
-                )}
-
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-xs uppercase tracking-[0.35em] text-white/40">
-                    Stay in sync with the rally you care about.
-                  </p>
-                  <button
-                    onClick={handlePreferencesUpdate}
-                    disabled={preferencesLoading}
-                    className={primaryActionClasses}
-                  >
-                    {preferencesLoading ? "Saving..." : "Save Preferences"}
-                  </button>
                 </div>
               </div>
             )}
           </div>
         </section>
       </div>
+
+      {/* 2FA Setup Modal */}
+      <Modal
+        isOpen={isSetupModalOpen}
+        onClose={() => {
+          setIsSetupModalOpen(false);
+          setQrCode(null);
+          setVerificationToken("");
+        }}
+        title="Setup Authenticator App"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-white/70">
+            Scan this QR code with your authenticator app (Google Authenticator,
+            Authy, etc.), then enter the 6-digit code below.
+          </p>
+
+          {qrCode && (
+            <div className="flex justify-center rounded-2xl border border-primary-btn bg-white p-4">
+              <img
+                src={qrCode}
+                alt="2FA QR Code"
+                className="h-48 w-48 object-contain"
+              />
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label className="block text-xs uppercase tracking-[0.3em] text-white/65">
+              Verification Code
+            </label>
+            <input
+              type="text"
+              value={verificationToken}
+              onChange={(e) =>
+                setVerificationToken(
+                  e.target.value.replace(/\D/g, "").slice(0, 6)
+                )
+              }
+              placeholder="000000"
+              maxLength={6}
+              className="w-full rounded-xl border border-white/10 bg-primary-bg px-4 py-3 text-center text-2xl font-semibold tracking-[0.6em] text-white focus:border-primary-btn focus:outline-none focus:ring-2 focus:ring-primary-btn"
+            />
+          </div>
+
+          {twoFactorMessage && twoFactorMessage.type === "error" && (
+            <p className="text-sm text-rose-400">{twoFactorMessage.text}</p>
+          )}
+
+          <div className="flex flex-wrap gap-3 pt-2">
+            <button
+              onClick={() => {
+                setIsSetupModalOpen(false);
+                setQrCode(null);
+                setVerificationToken("");
+              }}
+              className={secondaryActionClasses}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleVerify2FA}
+              disabled={twoFactorLoading || verificationToken.length !== 6}
+              className={primaryActionClasses}
+            >
+              {twoFactorLoading ? "Verifying..." : "Verify & Enable"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Backup Codes Modal */}
+      <Modal
+        isOpen={showBackupCodesModal}
+        onClose={() => setShowBackupCodesModal(false)}
+        title="Save Your Backup Codes"
+      >
+        <div className="space-y-4">
+          <div className="rounded-xl border border-amber-400/60 bg-amber-500/10 p-4">
+            <p className="flex items-start gap-2 text-sm text-amber-200">
+              <AiOutlineWarning className="mt-0.5 flex-shrink-0" size={18} />
+              <span>
+                <strong>Important:</strong> Store these codes in a safe place.
+                Each can be used once if you lose your device.
+              </span>
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 rounded-xl border border-white/10 bg-primary-bg p-4 font-mono text-sm">
+            {backupCodes.map((code, index) => (
+              <span
+                key={`${code}-${index}`}
+                className="rounded-lg border border-primary-btn/50 bg-primary-elements px-3 py-2 text-center tracking-wider text-white"
+              >
+                {code}
+              </span>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-3 pt-2">
+            <button
+              onClick={() => {
+                const codesString = backupCodes.join("\n");
+                navigator.clipboard
+                  .writeText(codesString)
+                  .then(() => {
+                    setTwoFactorMessage({
+                      type: "success",
+                      text: "Backup codes copied to clipboard!",
+                    });
+                  })
+                  .catch(() => {
+                    setTwoFactorMessage({
+                      type: "error",
+                      text: "Failed to copy codes",
+                    });
+                  });
+              }}
+              className="flex items-center gap-2 rounded-xl border border-white/15 bg-primary-elements px-5 py-2.5 font-medium text-white transition-colors duration-200 hover:bg-primary-elements/80"
+            >
+              <AiOutlineCopy size={18} /> Copy
+            </button>
+            <button
+              onClick={() => {
+                const codesString = backupCodes.join("\n");
+                const blob = new Blob([codesString], { type: "text/plain" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "backup-codes.txt";
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="flex items-center gap-2 rounded-xl border border-white/15 bg-primary-elements px-5 py-2.5 font-medium text-white transition-colors duration-200 hover:bg-primary-elements/80"
+            >
+              <AiOutlineDownload size={18} /> Download
+            </button>
+            <button
+              onClick={() => setShowBackupCodesModal(false)}
+              className={primaryActionClasses}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
