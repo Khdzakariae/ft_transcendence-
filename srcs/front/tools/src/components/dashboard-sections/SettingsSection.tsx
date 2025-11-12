@@ -214,14 +214,17 @@ export function SettingsSection({
         return;
       }
 
-      // Clear any previous error messages
-      setProfileMessage(null);
+      // Clear any previous error messages (unless it's a success message from profile update)
+      if (profileMessage?.type === "error") {
+        setProfileMessage(null);
+      }
       
       // Revoke old blob URL to prevent memory leak
       if (avatarPreview && avatarPreview.startsWith("blob:")) {
         URL.revokeObjectURL(avatarPreview);
       }
       
+      // Store file for preview (but note: upload is not supported by backend)
       setAvatarFile(file);
       setAvatarPreview(URL.createObjectURL(file));
     }
@@ -235,6 +238,7 @@ export function SettingsSection({
     const trimmedFirstName = firstName.trim();
     const trimmedLastName = lastName.trim();
     
+    // Check if at least one name field has content
     if (!trimmedFirstName && !trimmedLastName) {
       setProfileMessage({
         type: "error",
@@ -243,10 +247,22 @@ export function SettingsSection({
       return;
     }
 
-    if (newPassword && newPassword.length < 6) {
+    // Validate password if provided
+    const trimmedPassword = newPassword.trim();
+    if (trimmedPassword && trimmedPassword.length < 6) {
       setProfileMessage({
         type: "error",
         text: "Password must be at least 6 characters long",
+      });
+      return;
+    }
+    
+    // Check if name would be empty after combining
+    const newName = `${trimmedFirstName} ${trimmedLastName}`.trim();
+    if (!newName) {
+      setProfileMessage({
+        type: "error",
+        text: "Name cannot be empty",
       });
       return;
     }
@@ -255,43 +271,18 @@ export function SettingsSection({
     setProfileMessage(null);
 
     try {
-      // Upload avatar if changed
-      if (avatarFile) {
-        const formData = new FormData();
-        formData.append("avatar", avatarFile);
-
-        const avatarResponse = await fetch(
-          "http://localhost:3000/api/v1/user/avatar",
-          {
-            method: "POST",
-            credentials: "include",
-            body: formData,
-          }
-        );
-
-        if (!avatarResponse.ok) {
-          const errorData = await avatarResponse.json();
-          throw new Error(errorData.error || "Failed to upload avatar");
-        }
-
-        // Clear avatar file state after successful upload
-        setAvatarFile(null);
-        
-        Utils.LogLevel.DEBUG && console.log("Avatar uploaded successfully");
-      }
-
-      // Prepare update payload
-      const newName = `${trimmedFirstName} ${trimmedLastName}`.trim();
+      // Prepare update payload - only send name and password
+      // Avatar upload endpoint doesn't exist in the backend, so we skip it for now
       const payload: any = {
         name: newName,
       };
 
-      // Add password to payload if provided
-      if (newPassword) {
-        payload.password = newPassword;
+      // Add password to payload if provided (already trimmed in validation)
+      if (trimmedPassword) {
+        payload.password = trimmedPassword;
       }
 
-      // Update profile (and password if provided)
+      // Update profile using the existing API endpoint
       const updateResponse = await fetch(
         `http://localhost:3000/api/v1/user/${user.id}`,
         {
@@ -305,8 +296,15 @@ export function SettingsSection({
       );
 
       if (!updateResponse.ok) {
-        const errorData = await updateResponse.json();
-        throw new Error(errorData.error || "Failed to update profile");
+        let errorMessage = "Failed to update profile";
+        try {
+          const errorData = await updateResponse.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (parseError) {
+          // If response is not JSON, use status text
+          errorMessage = updateResponse.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       const updateData = await updateResponse.json();
@@ -315,6 +313,14 @@ export function SettingsSection({
       // Clear password field on success
       setNewPassword("");
       setShowPassword(false);
+
+      // Clear avatar file state if it was set (even though we didn't upload)
+      // This prevents confusion about whether avatar was saved
+      if (avatarFile) {
+        // Note: Avatar upload is not supported by the backend API
+        // The avatar preview will remain but won't be saved
+        setAvatarFile(null);
+      }
 
       setProfileMessage({
         type: "success",
@@ -329,7 +335,7 @@ export function SettingsSection({
       Utils.LogLevel.ERROR && console.error("Profile update error:", error);
       setProfileMessage({
         type: "error",
-        text: error.message || "Failed to update profile",
+        text: error.message || "Failed to update profile. Please try again.",
       });
     } finally {
       setProfileLoading(false);
@@ -669,6 +675,9 @@ export function SettingsSection({
                       />
                       <p className="text-xs text-white/55">
                         JPG, PNG, or GIF. Max size 10MB.
+                      </p>
+                      <p className="text-xs text-amber-400/70 italic">
+                        Note: Avatar preview is available, but upload is not currently supported by the backend API.
                       </p>
                     </div>
                   </div>
