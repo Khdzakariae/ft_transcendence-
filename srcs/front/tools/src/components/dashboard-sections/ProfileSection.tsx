@@ -146,3 +146,34 @@ export function ProfileSection({
     </div>
   );
 }
+
+//  <img
+//                                   src={friend.avatar}
+//                                   alt={friend.name || "User"}
+//                                   className="w-12 h-12 rounded-full object-cover"
+//                                 />
+//                               ) : (
+//                                 <div className="w-12 h-12 rounded-full bg-primary-btn/30 flex items-center justify-center text-lg font-semibold">
+//                                   {getInitials(friend.name)}
+//                                 </div>
+
+{
+  /* <LazyLoadingImage
+                        dimension={{
+                          width: "w-10",
+                          height: "h-10",
+                        }}
+                        loading={loaded}
+                      >
+                        <img
+                          src={getChatAvatar(chat)}
+                          alt="profile image"
+                          className={`w-10 h-10 rounded-full object-cover ${loaded ? "opacity-100" : "opacity-0"}`}
+                          loading="lazy"
+                          onLoad={() => setLoaded(true)}
+                        />
+                        {!loaded && (
+                          <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md shadow-2xl shadow-cyan-500/30 animate-pulse"></div>
+                        )}
+                      </LazyLoadingImage> */
+}

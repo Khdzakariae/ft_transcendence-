@@ -8,6 +8,7 @@ import {
   MdSearch,
   MdMessage,
 } from "react-icons/md";
+import { LazyLoadingImage } from "../LazyLoadingImage";
 
 // Interfaces
 interface ChatParticipant {
@@ -93,6 +94,7 @@ export function MessagesSection({
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null); // For polling new messages
   const lastMessageTimestampRef = useRef<{ [chatId: string]: string }>({}); // Track last message per chat
   const lastViewedTimestampRef = useRef<{ [chatId: string]: string }>({}); // Track when user last viewed each chat
+  const [loaded, setLoaded] = useState(false);
 
   // Fetch all chats
   const fetchChats = useCallback(
@@ -806,13 +808,6 @@ export function MessagesSection({
   }, [showNewChatModal, closeNewChatModal]);
 
   // Helper functions - memoized for performance
-  const getInitials = useCallback((name?: string | null): string => {
-    if (!name || name.trim().length === 0) {
-      return "?";
-    }
-    return name.charAt(0).toUpperCase();
-  }, []);
-
   const getChatDisplayName = useCallback((chat: Chat): string => {
     if (chat.isGroup) {
       return chat.name || "Group Chat";
@@ -980,16 +975,36 @@ export function MessagesSection({
                   }`}
                 >
                   <div className="relative shrink-0">
-                    {getChatAvatar(chat) ? (
-                      <img
-                        src={getChatAvatar(chat)}
-                        alt={getChatDisplayName(chat)}
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-primary-btn/30 flex items-center justify-center text-lg font-semibold">
-                        {getInitials(getChatDisplayName(chat))}
+                    {getChatAvatar(chat) && (
+                      <LazyLoadingImage
+                        dimension={{
+                          width: "w-10",
+                          height: "h-10",
+                        }}
+                        loading={loaded}
+                      >
+                        <img
+                          src={getChatAvatar(chat)}
+                          alt="profile image"
+                          className={`w-10 h-10 rounded-full object-cover ${loaded ? "opacity-100" : "opacity-0"}`}
+                          loading="lazy"
+                          onLoad={() => setLoaded(true)}
+                        />
+                        {!loaded && (
+                          <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md shadow-2xl shadow-cyan-500/30 animate-pulse"></div>
+                        )}
+                      </LazyLoadingImage>
+                    )}
+                    {!chat.isGroup && isOnline(chat) && (
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-primary-elements"></div>
+                    )}
+                    {unreadChats.has(chat.id) && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6B00] rounded-full border-2 border-primary-elements flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                       </div>
+                    )}
+                    {chat.isGroup && (
+                      <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md shadow-2xl shadow-cyan-500/30 animate-pulse"></div>
                     )}
                     {!chat.isGroup && isOnline(chat) && (
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-primary-elements"></div>
@@ -1063,16 +1078,25 @@ export function MessagesSection({
                 <MdArrowBack size={24} />
               </button>
               <div className="relative">
-                {getChatAvatar(selectedChat) ? (
-                  <img
-                    src={getChatAvatar(selectedChat)}
-                    alt={getChatDisplayName(selectedChat)}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-primary-btn/30 flex items-center justify-center font-semibold">
-                    {getInitials(getChatDisplayName(selectedChat))}
-                  </div>
+                {getChatAvatar(selectedChat) && (
+                  <LazyLoadingImage
+                    dimension={{
+                      width: "w-10",
+                      height: "h-10",
+                    }}
+                    loading={loaded}
+                  >
+                    <img
+                      src={getChatAvatar(selectedChat)}
+                      alt="profile image"
+                      className={`w-10 h-10 rounded-full object-cover ${loaded ? "opacity-100" : "opacity-0"}`}
+                      loading="lazy"
+                      onLoad={() => setLoaded(true)}
+                    />
+                    {!loaded && (
+                      <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md shadow-2xl shadow-cyan-500/30 animate-pulse"></div>
+                    )}
+                  </LazyLoadingImage>
                 )}
                 {!selectedChat.isGroup && isOnline(selectedChat) && (
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-primary-elements"></div>
@@ -1322,16 +1346,25 @@ export function MessagesSection({
                             className="w-full flex items-center gap-3 p-3 rounded-lg border border-white/10 hover:border-[#FF6B00] hover:bg-primary-bg/50 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md hover:shadow-[#FF6B00]/20"
                           >
                             <div className="relative shrink-0">
-                              {friend.avatar ? (
-                                <img
-                                  src={friend.avatar}
-                                  alt={friend.name || "User"}
-                                  className="w-12 h-12 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 rounded-full bg-primary-btn/30 flex items-center justify-center text-lg font-semibold">
-                                  {getInitials(friend.name)}
-                                </div>
+                              {friend.avatar && (
+                                <LazyLoadingImage
+                                  dimension={{
+                                    width: "w-12",
+                                    height: "h-12",
+                                  }}
+                                  loading={loaded}
+                                >
+                                  <img
+                                    src={friend.avatar}
+                                    alt="profile image"
+                                    className={`w-12 h-12 rounded-full object-cover ${loaded ? "opacity-100" : "opacity-0"}`}
+                                    loading="lazy"
+                                    onLoad={() => setLoaded(true)}
+                                  />
+                                  {!loaded && (
+                                    <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md shadow-2xl shadow-cyan-500/30 animate-pulse"></div>
+                                  )}
+                                </LazyLoadingImage>
                               )}
                               {friend.onlineStatus && (
                                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-primary-elements"></div>
@@ -1378,16 +1411,25 @@ export function MessagesSection({
                             className="w-full flex items-center gap-3 p-3 rounded-lg border border-white/10 hover:border-primary-btn hover:bg-primary-bg/50 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md hover:shadow-primary-btn/20"
                           >
                             <div className="relative shrink-0">
-                              {friend.avatar ? (
-                                <img
-                                  src={friend.avatar}
-                                  alt={friend.name || "User"}
-                                  className="w-12 h-12 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 rounded-full bg-primary-btn/30 flex items-center justify-center text-lg font-semibold">
-                                  {getInitials(friend.name)}
-                                </div>
+                              {friend.avatar && (
+                                <LazyLoadingImage
+                                  dimension={{
+                                    width: "w-12",
+                                    height: "h-12",
+                                  }}
+                                  loading={loaded}
+                                >
+                                  <img
+                                    src={friend.avatar}
+                                    alt="profile image"
+                                    className={`w-12 h-12 rounded-full object-cover ${loaded ? "opacity-100" : "opacity-0"}`}
+                                    loading="lazy"
+                                    onLoad={() => setLoaded(true)}
+                                  />
+                                  {!loaded && (
+                                    <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md shadow-2xl shadow-cyan-500/30 animate-pulse"></div>
+                                  )}
+                                </LazyLoadingImage>
                               )}
                               {friend.onlineStatus && (
                                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-primary-elements"></div>

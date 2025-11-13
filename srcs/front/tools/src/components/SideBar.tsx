@@ -33,13 +33,16 @@ export function SideBar({
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
-    
+
     setIsLoggingOut(true);
     try {
-      const response = await fetch("http://localhost:3000/api/v1/auth/sign-out", {
-        method: "POST",
-        credentials: "include"
-      });
+      const response = await fetch(
+        "http://localhost:3000/api/v1/auth/sign-out",
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to logout");
@@ -313,11 +316,14 @@ export function SideBar({
               <img
                 src={user_data?.avatar}
                 alt="avatar image"
-                className="w-10 h-10 rounded-full"
+                className={`w-10 h-10 rounded-full transition-opacity duration-300 ${!loading_avatar ? "opacity-100" : "opacity-0"}`}
                 loading="lazy"
                 onLoad={() => setLoadingAvatar(false)}
               />
             </AvatarDot>
+            {loading_avatar && (
+              <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md shadow-2xl shadow-cyan-500/30 animate-pulse"></div>
+            )}
           </LazyLoadingImage>
         </div>
         <div

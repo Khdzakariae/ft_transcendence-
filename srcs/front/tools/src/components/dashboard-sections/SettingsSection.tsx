@@ -2,18 +2,19 @@ import { useState, useEffect } from "react";
 import type { IconType } from "react-icons";
 import { MdOutlinePerson } from "react-icons/md";
 import { RiShieldKeyholeLine } from "react-icons/ri";
-import { 
-  AiOutlineEye, 
+import {
+  AiOutlineEye,
   AiOutlineEyeInvisible,
   AiOutlineDownload,
   AiOutlineCopy,
   AiOutlineClose,
   AiOutlineCheckCircle,
-  AiOutlineWarning
+  AiOutlineWarning,
 } from "react-icons/ai";
 import { UserInter } from "../../interfaces/UserInterfaces";
 import { UserDataInter } from "../../interfaces/UserInterfaces";
 import { Utils } from "../../Utils";
+import { LazyLoadingImage } from "../LazyLoadingImage";
 
 const TABS = [
   {
@@ -96,6 +97,7 @@ export function SettingsSection({
   const [showPassword, setShowPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [profileLoading, setProfileLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const [profileMessage, setProfileMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -135,7 +137,7 @@ export function SettingsSection({
       const nameParts = (user_data.name || "").split(" ");
       const first = nameParts[0] || "";
       const last = nameParts.slice(1).join(" ") || "";
-      
+
       setFirstName(first);
       setLastName(last);
       setTwoFactorEnabled(user_data.twoFactorEnabled || false);
@@ -185,7 +187,7 @@ export function SettingsSection({
     // Validate inputs before making API calls
     const trimmedFirstName = firstName.trim();
     const trimmedLastName = lastName.trim();
-    
+
     // Check if at least one name field has content
     if (!trimmedFirstName && !trimmedLastName) {
       setProfileMessage({
@@ -204,7 +206,7 @@ export function SettingsSection({
       });
       return;
     }
-    
+
     // Check if name would be empty after combining
     const newName = `${trimmedFirstName} ${trimmedLastName}`.trim();
     if (!newName) {
@@ -455,14 +457,6 @@ export function SettingsSection({
       year: "numeric",
     }
   );
-  const initials = user_data.name
-    ? user_data.name
-        .split(" ")
-        .map((n) => n.charAt(0))
-        .join("")
-        .substring(0, 2)
-        .toUpperCase()
-    : user.email.charAt(0).toUpperCase();
   const accentGlow = "shadow-[0_24px_48px_-28px_rgba(0,255,255,0.35)]";
 
   return (
@@ -472,18 +466,24 @@ export function SettingsSection({
           <div className={`${subtleCardClasses} relative ${accentGlow}`}>
             <div className="flex flex-col items-center gap-5 text-center text-white">
               <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl border border-primary-btn bg-primary-bg shadow-inner">
-                {user_data.avatar ? (
+                <LazyLoadingImage
+                  dimension={{
+                    width: "w-24 sm:w-36 md:w-48",
+                    height: "h-24 sm:h-36 md:h-48",
+                  }}
+                  loading={loaded}
+                >
                   <img
                     src={user_data.avatar}
-                    alt={`${user_data.name} avatar`}
-                    className="h-full w-full object-cover"
+                    alt="profile image"
+                    className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
                     loading="lazy"
+                    onLoad={() => setLoaded(true)}
                   />
-                ) : (
-                  <span className="text-3xl font-semibold text-secondary-text">
-                    {initials}
-                  </span>
-                )}
+                </LazyLoadingImage>
+                {/* {!loaded && (
+                  <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md shadow-2xl shadow-cyan-500/30 animate-pulse"></div>
+                )} */}
               </div>
               <div className="space-y-1">
                 <p className="font-secondary text-2xl font-semibold tracking-wide text-secondary-btn">
@@ -620,8 +620,8 @@ export function SettingsSection({
                       Password Refresh
                     </h3>
                     <p className="mt-1 text-sm text-white/75">
-                      Enter a new password to update your account security. Leave
-                      blank to keep your current password.
+                      Enter a new password to update your account security.
+                      Leave blank to keep your current password.
                     </p>
                     <div className="mt-6">
                       <div className="space-y-2">
@@ -649,7 +649,8 @@ export function SettingsSection({
                           </button>
                         </div>
                         <p className="text-xs text-white/50 mt-2">
-                          💡 No need for your old password - just enter your new one!
+                          💡 No need for your old password - just enter your new
+                          one!
                         </p>
                       </div>
                     </div>
@@ -800,7 +801,8 @@ export function SettingsSection({
                         Activity Log
                       </h3>
                       <p className="mt-1 text-sm text-white/70">
-                        Recent authentication events and security-related activities.
+                        Recent authentication events and security-related
+                        activities.
                       </p>
                     </div>
                   </div>
