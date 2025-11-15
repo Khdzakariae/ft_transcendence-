@@ -335,11 +335,6 @@ export function SettingsSection({
       type: "success",
       text: "2FA enabled successfully! Save your backup codes.",
     });
-
-    // Refresh after backup codes modal is closed
-    setTimeout(() => {
-      window.location.reload();
-    }, 2000);
   };
 
   const handleVerify2FA = async () => {
