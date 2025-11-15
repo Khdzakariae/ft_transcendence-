@@ -21,6 +21,43 @@ export function LoadingPage({
         const authResult: AuthResponse = await Utils.checkAuthCookie();
 
         if (authResult.isAuthenticated && authResult.user) {
+          // Check if user came from OAuth flow
+          const oauthProvider = sessionStorage.getItem("auth_provider");
+          
+          if (oauthProvider) {
+            // User came from OAuth, check if 2FA is needed
+            try {
+              const userResponse = await fetch(
+                "http://localhost:3000/api/v1/user/me",
+                {
+                  method: "GET",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "include",
+                },
+              );
+
+              if (userResponse.status === 200) {
+                const userData = await userResponse.json();
+                const is2FAEnabled = userData?.data?.twoFactorEnabled === true;
+
+                if (is2FAEnabled) {
+                  // User has 2FA enabled, redirect to 2FA verification
+                  // Keep auth_provider in sessionStorage as backup (OAuth2FA will clean it up)
+                  navigate(`/oauth-2fa/?provider=${oauthProvider}`, { replace: true });
+                  return;
+                } else {
+                  // No 2FA needed, clean up and proceed
+                  sessionStorage.removeItem("auth_provider");
+                }
+              }
+            } catch (error) {
+              Utils.LogLevel.ERROR &&
+                console.error("Error checking 2FA status:", error);
+              // If check fails, proceed to dashboard anyway
+              sessionStorage.removeItem("auth_provider");
+            }
+          }
+          
           // remove this in case, add more seconds on loading is needed.
           setIsLoading(false); // prepare loading view for dashboard
         } else {
@@ -33,7 +70,7 @@ export function LoadingPage({
       }
     };
     checkAuth();
-  }, []);
+  }, [navigate]);
 
   // add 2s on loading
   // useEffect(() => {

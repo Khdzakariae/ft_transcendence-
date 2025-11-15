@@ -10,6 +10,7 @@ import {
 } from "./Pages/ResetPassword";
 import { NotFoundPage } from "./Pages/NotFound";
 import { LoadingPage } from "./Pages/LoadingPage";
+import { OAuth2FAPage } from "./Pages/OAuth2FA";
 
 // Pages
 export function Views(): JSX.Element {
@@ -60,6 +61,8 @@ export function Views(): JSX.Element {
           </LoadingPage>
         }
       />
+      {/* OAuth 2FA route */}
+      <Route path="/oauth-2fa/" element={<OAuth2FAPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
