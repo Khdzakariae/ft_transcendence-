@@ -108,6 +108,7 @@ export function SettingsSection({
     user_data?.twoFactorEnabled || false
   );
   const [qrCode, setQrCode] = useState<string | null>(null);
+  const [qrCodeLoaded, setQrCodeLoaded] = useState(false);
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [verificationToken, setVerificationToken] = useState("");
   const [twoFactorLoading, setTwoFactorLoading] = useState(false);
@@ -310,6 +311,7 @@ export function SettingsSection({
 
       const data = await response.json();
       setQrCode(data.qrCode);
+      setQrCodeLoaded(false);
       setBackupCodes(data.backupCodes || []);
       setIsSetupModalOpen(true);
       setTwoFactorMessage({
@@ -878,6 +880,7 @@ export function SettingsSection({
         onClose={() => {
           setIsSetupModalOpen(false);
           setQrCode(null);
+          setQrCodeLoaded(false);
           setVerificationToken("");
         }}
         title="Setup Authenticator App"
@@ -889,12 +892,29 @@ export function SettingsSection({
           </p>
 
           {qrCode && (
-            <div className="flex justify-center rounded-2xl border border-primary-btn bg-white p-4">
-              <img
-                src={qrCode}
-                alt="2FA QR Code"
-                className="h-48 w-48 object-contain"
-              />
+            <div className="flex justify-center rounded-2xl border border-primary-btn bg-white p-4 relative">
+              <LazyLoadingImage
+                dimension={{
+                  width: "w-48",
+                  height: "h-48",
+                }}
+                loading={qrCodeLoaded}
+                color="bg-gray-200"
+              >
+                <img
+                  src={qrCode}
+                  alt="2FA QR Code"
+                  className={`h-48 w-48 object-contain transition-opacity duration-300 ${qrCodeLoaded ? "opacity-100" : "opacity-0"}`}
+                  loading="lazy"
+                  onLoad={() => setQrCodeLoaded(true)}
+                  onError={() => setQrCodeLoaded(true)}
+                />
+              </LazyLoadingImage>
+              {!qrCodeLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-200 animate-pulse rounded-2xl">
+                  <div className="w-32 h-32 bg-gray-300 rounded"></div>
+                </div>
+              )}
             </div>
           )}
 
@@ -925,6 +945,7 @@ export function SettingsSection({
               onClick={() => {
                 setIsSetupModalOpen(false);
                 setQrCode(null);
+          setQrCodeLoaded(false);
                 setVerificationToken("");
               }}
               className={secondaryActionClasses}

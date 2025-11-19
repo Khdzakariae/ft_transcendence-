@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { UserInter } from "../../interfaces/UserInterfaces";
 import { SearchBarFriends } from "../searchBarFriends";
 import { MdDelete, MdPerson, MdGroup, MdPersonAdd, MdCheckCircle } from "react-icons/md";
+import { LazyLoadingImage } from "../LazyLoadingImage";
 
 interface Friend {
   id: string;
@@ -25,6 +26,7 @@ export function FriendsSection({
     friendId: string | null;
     friendName: string | null;
   }>({ isOpen: false, friendId: null, friendName: null });
+  const [loadedAvatars, setLoadedAvatars] = useState<Set<string>>(new Set());
 
   const fetchFriends = useCallback(async (abortSignal?: AbortSignal) => {
     setLoading(true);
@@ -264,11 +266,36 @@ export function FriendsSection({
                           <div className="flex items-center gap-3 flex-1 min-w-0">
                             <div className="relative shrink-0">
                               {friend.avatar ? (
-                                <img
-                                  src={friend.avatar}
-                                  alt={friend.name || "Friend"}
-                                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-green-500/30"
-                                />
+                                <>
+                                  <LazyLoadingImage
+                                    dimension={{
+                                      width: "w-12 sm:w-14",
+                                      height: "h-12 sm:h-14",
+                                    }}
+                                    loading={loadedAvatars.has(friend.id)}
+                                    color="bg-primary-btn/30"
+                                  >
+                                    <img
+                                      src={friend.avatar}
+                                      alt={friend.name || "Friend"}
+                                      className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-green-500/30 transition-opacity duration-300 ${loadedAvatars.has(friend.id) ? "opacity-100" : "opacity-0"}`}
+                                      loading="lazy"
+                                      onLoad={() =>
+                                        setLoadedAvatars((prev) =>
+                                          new Set(prev).add(friend.id)
+                                        )
+                                      }
+                                      onError={() =>
+                                        setLoadedAvatars((prev) =>
+                                          new Set(prev).add(friend.id)
+                                        )
+                                      }
+                                    />
+                                  </LazyLoadingImage>
+                                  {!loadedAvatars.has(friend.id) && (
+                                    <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md shadow-2xl shadow-cyan-500/30 animate-pulse"></div>
+                                  )}
+                                </>
                               ) : (
                                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C33] flex items-center justify-center text-lg font-semibold border-2 border-green-500/30">
                                   {getInitials(friend.name)}
@@ -326,11 +353,36 @@ export function FriendsSection({
                           <div className="flex items-center gap-3 flex-1 min-w-0">
                             <div className="relative shrink-0">
                               {friend.avatar ? (
-                                <img
-                                  src={friend.avatar}
-                                  alt={friend.name || "Friend"}
-                                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                                />
+                                <>
+                                  <LazyLoadingImage
+                                    dimension={{
+                                      width: "w-12 sm:w-14",
+                                      height: "h-12 sm:h-14",
+                                    }}
+                                    loading={loadedAvatars.has(friend.id)}
+                                    color="bg-primary-btn/30"
+                                  >
+                                    <img
+                                      src={friend.avatar}
+                                      alt={friend.name || "Friend"}
+                                      className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover transition-opacity duration-300 ${loadedAvatars.has(friend.id) ? "opacity-80 group-hover:opacity-100" : "opacity-0"}`}
+                                      loading="lazy"
+                                      onLoad={() =>
+                                        setLoadedAvatars((prev) =>
+                                          new Set(prev).add(friend.id)
+                                        )
+                                      }
+                                      onError={() =>
+                                        setLoadedAvatars((prev) =>
+                                          new Set(prev).add(friend.id)
+                                        )
+                                      }
+                                    />
+                                  </LazyLoadingImage>
+                                  {!loadedAvatars.has(friend.id) && (
+                                    <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md shadow-2xl shadow-cyan-500/30 animate-pulse"></div>
+                                  )}
+                                </>
                               ) : (
                                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-white/20 to-white/10 flex items-center justify-center text-lg font-semibold opacity-80 group-hover:opacity-100 transition-opacity">
                                   {getInitials(friend.name)}

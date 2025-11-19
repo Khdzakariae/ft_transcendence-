@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { MdSearch, MdPersonAdd } from "react-icons/md";
 import { UserDataInter } from "../interfaces/UserInterfaces";
 import { ProfileSection } from "./dashboard-sections/ProfileSection";
+import { LazyLoadingImage } from "./LazyLoadingImage";
 
 interface SearchedUser {
   id: string;
@@ -21,6 +22,7 @@ export function SearchBarFriends({
   const [selectedUser, setSelectedUser] = useState<UserDataInter | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadedAvatars, setLoadedAvatars] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const delaySearch = setTimeout(async () => {
@@ -184,12 +186,31 @@ export function SearchBarFriends({
                 className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-primary-elements hover:border-primary-btn transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <img
-                      src={user.avatar}
-                      alt={user.name}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
+                  <div className="relative shrink-0">
+                    <LazyLoadingImage
+                      dimension={{
+                        width: "w-12",
+                        height: "h-12",
+                      }}
+                      loading={loadedAvatars.has(user.id)}
+                      color="bg-primary-btn/30"
+                    >
+                      <img
+                        src={user.avatar}
+                        alt={user.name}
+                        className={`w-12 h-12 rounded-full object-cover transition-opacity duration-300 ${loadedAvatars.has(user.id) ? "opacity-100" : "opacity-0"}`}
+                        loading="lazy"
+                        onLoad={() =>
+                          setLoadedAvatars((prev) => new Set(prev).add(user.id))
+                        }
+                        onError={() =>
+                          setLoadedAvatars((prev) => new Set(prev).add(user.id))
+                        }
+                      />
+                    </LazyLoadingImage>
+                    {!loadedAvatars.has(user.id) && (
+                      <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md shadow-2xl shadow-cyan-500/30 animate-pulse"></div>
+                    )}
                     {user.onlineStatus && (
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-primary-elements"></div>
                     )}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { UserInter } from "../../interfaces/UserInterfaces";
 import { MdCheck, MdClose } from "react-icons/md";
 import { FriendRequest } from "../../hooks/useNotifications";
+import { LazyLoadingImage } from "../LazyLoadingImage";
 
 export function NotificationsSection({
   user,
@@ -16,6 +17,7 @@ export function NotificationsSection({
 }): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [loadedAvatars, setLoadedAvatars] = useState<Set<string>>(new Set());
 
   const handleAccept = async (requestId: string) => {
     setProcessingIds((prev) => new Set(prev).add(requestId));
@@ -130,18 +132,42 @@ export function NotificationsSection({
                   className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-primary-elements hover:border-primary-btn transition-colors"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="relative">
+                    <div className="relative shrink-0">
                       {request.from.avatar ? (
-                        <img
-                          src={request.from.avatar}
-                          alt={request.from.name}
-                          className="w-14 h-14 rounded-full object-cover border-2 border-primary-btn"
-                        />
+                        <LazyLoadingImage
+                          dimension={{
+                            width: "w-14",
+                            height: "h-14",
+                          }}
+                          loading={loadedAvatars.has(request.requestId)}
+                          color="bg-primary-btn/30"
+                        >
+                          <img
+                            src={request.from.avatar}
+                            alt={request.from.name}
+                            className={`w-14 h-14 rounded-full object-cover border-2 border-primary-btn transition-opacity duration-300 ${loadedAvatars.has(request.requestId) ? "opacity-100" : "opacity-0"}`}
+                            loading="lazy"
+                            onLoad={() =>
+                              setLoadedAvatars((prev) =>
+                                new Set(prev).add(request.requestId)
+                              )
+                            }
+                            onError={() =>
+                              setLoadedAvatars((prev) =>
+                                new Set(prev).add(request.requestId)
+                              )
+                            }
+                          />
+                        </LazyLoadingImage>
                       ) : (
                         <div className="w-14 h-14 rounded-full bg-primary-btn/30 border-2 border-primary-btn flex items-center justify-center text-lg font-semibold">
                           {initials}
                         </div>
                       )}
+                      {request.from.avatar &&
+                        !loadedAvatars.has(request.requestId) && (
+                          <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md shadow-2xl shadow-cyan-500/30 animate-pulse"></div>
+                        )}
                     </div>
                     <div>
                       <p className="font-semibold text-lg">{request.from.name}</p>
