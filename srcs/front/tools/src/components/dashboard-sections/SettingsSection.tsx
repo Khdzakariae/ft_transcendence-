@@ -8,7 +8,6 @@ import {
   AiOutlineDownload,
   AiOutlineCopy,
   AiOutlineClose,
-  AiOutlineCheckCircle,
   AiOutlineWarning,
 } from "react-icons/ai";
 import { UserInter } from "../../interfaces/UserInterfaces";
@@ -33,15 +32,6 @@ const TABS = [
     heading: "Security Vault",
     description:
       "Add an extra layer of protection with two-factor authentication and backup codes.",
-    icon: RiShieldKeyholeLine as IconType,
-  },
-  {
-    id: "activity",
-    label: "Activity Log",
-    eyebrow: "Security",
-    heading: "Security Activity",
-    description:
-      "Monitor your account security events and authentication history.",
     icon: RiShieldKeyholeLine as IconType,
   },
 ] as const;
@@ -121,10 +111,6 @@ export function SettingsSection({
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   const [showBackupCodesModal, setShowBackupCodesModal] = useState(false);
 
-  // Security Activity state
-  const [securityActivity, setSecurityActivity] = useState<any[]>([]);
-  const [activityLoading, setActivityLoading] = useState(true);
-
   const primaryActionClasses =
     "inline-flex items-center justify-center rounded-xl bg-secondary-btn px-6 py-3 font-semibold text-secondary-text font-secondary shadow-lg shadow-[0_18px_40px_-18px_rgba(255,107,0,0.55)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-secondary-btn/90 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60";
   const secondaryActionClasses =
@@ -144,42 +130,6 @@ export function SettingsSection({
       setTwoFactorEnabled(user_data.twoFactorEnabled || false);
     }
   }, [user_data]);
-
-  // Fetch security activity logs
-  useEffect(() => {
-    const fetchSecurityLogs = async () => {
-      setActivityLoading(true);
-      try {
-        const response = await fetch("http://localhost:3000/api/v1/log/logs", {
-          credentials: "include",
-        });
-
-        if (!response.ok) throw new Error("Failed to fetch logs.");
-
-        const logs = await response.json();
-        const formattedEvents = logs.map((log: any) => ({
-          id: log.id,
-          activity: log.message,
-          date: new Date(log.createdAt).toLocaleString(),
-          status: log.level,
-          statusColor:
-            log.level === "error" || log.level === "ERROR"
-              ? "text-rose-400"
-              : "text-emerald-400",
-        }));
-
-        setSecurityActivity(formattedEvents);
-      } catch (error: any) {
-        Utils.LogLevel.ERROR &&
-          console.error("Error fetching security logs:", error);
-        setSecurityActivity([]);
-      } finally {
-        setActivityLoading(false);
-      }
-    };
-
-    fetchSecurityLogs();
-  }, []);
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -783,91 +733,6 @@ export function SettingsSection({
                     <span>{twoFactorMessage.text}</span>
                   </div>
                 )}
-              </div>
-            )}
-
-            {activeTab === "activity" && (
-              <div className="space-y-8">
-                <div className={subtleCardClasses}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.3em] text-white/55">
-                        Security
-                      </p>
-                      <h3 className="mt-2 font-secondary text-2xl font-semibold text-white">
-                        Activity Log
-                      </h3>
-                      <p className="mt-1 text-sm text-white/70">
-                        Recent authentication events and security-related
-                        activities.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-6">
-                    {activityLoading ? (
-                      <div className="flex justify-center py-8">
-                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-btn border-t-transparent"></div>
-                      </div>
-                    ) : securityActivity.length > 0 ? (
-                      <div className="space-y-3">
-                        {securityActivity.map((item) => (
-                          <div
-                            key={item.id}
-                            className="flex items-center justify-between rounded-xl border border-white/10 bg-primary-bg p-4 transition-colors hover:border-primary-btn/50"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-elements">
-                                {item.status === "error" ||
-                                item.status === "ERROR" ? (
-                                  <AiOutlineWarning
-                                    className="text-rose-400"
-                                    size={20}
-                                  />
-                                ) : (
-                                  <AiOutlineCheckCircle
-                                    className="text-emerald-400"
-                                    size={20}
-                                  />
-                                )}
-                              </div>
-                              <div>
-                                <p className="font-medium text-white">
-                                  {item.activity}
-                                </p>
-                                <p className="text-sm text-white/60">
-                                  {item.date}
-                                </p>
-                              </div>
-                            </div>
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${
-                                item.status === "error" ||
-                                item.status === "ERROR"
-                                  ? "bg-rose-500/20 text-rose-300"
-                                  : "bg-emerald-500/20 text-emerald-300"
-                              }`}
-                            >
-                              {item.status}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-elements">
-                          <AiOutlineCheckCircle
-                            className="text-white/40"
-                            size={32}
-                          />
-                        </div>
-                        <p className="text-white/60">
-                          No security activity recorded yet.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
               </div>
             )}
           </div>
