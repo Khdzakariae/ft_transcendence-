@@ -1,61 +1,21 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { UserInter } from "../../interfaces/UserInterfaces";
 import { MdCheck, MdClose } from "react-icons/md";
-
-interface FriendRequest {
-  requestId: string;
-  from: {
-    id: string;
-    name: string;
-    email: string;
-    avatar: string | null;
-  };
-  createdAt: string;
-}
+import { FriendRequest } from "../../hooks/useNotifications";
 
 export function NotificationsSection({
   user,
+  friendRequests,
+  onMarkAsRead,
+  onRequestUpdate,
 }: {
   user: UserInter | null;
+  friendRequests: FriendRequest[];
+  onMarkAsRead: (requestId: string) => void;
+  onRequestUpdate: () => void;
 }): JSX.Element {
-  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
-
-  const fetchFriendRequests = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(
-        "http://localhost:3000/api/v1/friends/requests",
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch friend requests");
-      }
-
-      const data = await response.json();
-      if (data.data && data.data.incoming) {
-        setFriendRequests(data.data.incoming);
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to load friend requests");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      fetchFriendRequests();
-    }
-  }, [user, fetchFriendRequests]);
 
   const handleAccept = async (requestId: string) => {
     setProcessingIds((prev) => new Set(prev).add(requestId));
@@ -74,10 +34,9 @@ export function NotificationsSection({
         throw new Error(errorData.error || "Failed to accept friend request");
       }
 
-      // Remove the accepted request from the list
-      setFriendRequests((prev) =>
-        prev.filter((req) => req.requestId !== requestId)
-      );
+      // Mark as read and refresh the list
+      onMarkAsRead(requestId);
+      onRequestUpdate();
     } catch (err: any) {
       setError(err.message || "Failed to accept friend request");
     } finally {
@@ -106,10 +65,9 @@ export function NotificationsSection({
         throw new Error(errorData.error || "Failed to decline friend request");
       }
 
-      // Remove the declined request from the list
-      setFriendRequests((prev) =>
-        prev.filter((req) => req.requestId !== requestId)
-      );
+      // Mark as read and refresh the list
+      onMarkAsRead(requestId);
+      onRequestUpdate();
     } catch (err: any) {
       setError(err.message || "Failed to decline friend request");
     } finally {
@@ -143,11 +101,7 @@ export function NotificationsSection({
           </div>
         )}
 
-        {loading ? (
-          <div className="text-center py-12">
-            <p className="text-white/60 animate-pulse">Loading friend requests...</p>
-          </div>
-        ) : friendRequests.length === 0 ? (
+        {friendRequests.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-white/60 text-lg">No pending friend requests</p>
             <p className="text-white/40 text-sm mt-2">

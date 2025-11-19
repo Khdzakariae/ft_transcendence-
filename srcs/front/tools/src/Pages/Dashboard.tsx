@@ -11,6 +11,7 @@ import { MessagesSection } from "../components/dashboard-sections/MessagesSectio
 import { DashboardHooks } from "../hooks/DashboardHooks";
 import { UserDataInter } from "../interfaces/UserInterfaces";
 import { NotificationsSection } from "../components/dashboard-sections/NotificationsSection";
+import { useNotifications } from "../hooks/useNotifications";
 
 // import { UserIcon, SettingsIcon, FilesIcon, ImagesIcon, BellIcon, TrophyIcon, BarChartIcon } from 'lucide-react';
 
@@ -27,6 +28,14 @@ export function Dashboard(): JSX.Element {
     setUserData,
   });
 
+  // Use the notifications hook
+  const {
+    friendRequests,
+    hasUnreadNotifications,
+    markNotificationAsRead,
+    fetchFriendRequests,
+  } = useNotifications(user, section);
+
   return (
     <div className="flex flex-row text-white">
       <SideBar
@@ -34,6 +43,7 @@ export function Dashboard(): JSX.Element {
         user_data={user_data as UserDataInter}
         section={section}
         setSection={setSection}
+        hasUnreadNotifications={hasUnreadNotifications}
       />
       {/* dashboar will be customized later */}
       {section === "dashboard" ? (
@@ -59,7 +69,12 @@ export function Dashboard(): JSX.Element {
         <MessagesSection user={user as UserInter} />
       ) : null}
       {section === "notifications" ? (
-        <NotificationsSection user={user as UserInter} />
+        <NotificationsSection
+          user={user as UserInter}
+          friendRequests={friendRequests}
+          onMarkAsRead={markNotificationAsRead}
+          onRequestUpdate={fetchFriendRequests}
+        />
       ) : null}
     </div>
   );

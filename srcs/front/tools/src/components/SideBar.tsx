@@ -19,11 +19,13 @@ export function SideBar({
   user_data,
   section,
   setSection,
+  hasUnreadNotifications,
 }: {
   active_user: UserInter;
   user_data: UserDataInter | null;
   section: string;
   setSection: (section: string) => void;
+  hasUnreadNotifications?: boolean;
 }): JSX.Element {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [loading_logo, setLoadingLogo] = useState(true);
@@ -257,8 +259,12 @@ export function SideBar({
               onClick={() => {
                 setSection("notifications");
               }}
+              className="relative"
             >
               <IoIosNotificationsOutline className="w-6 h-6" />
+              {hasUnreadNotifications && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full border-2 border-gray-900"></span>
+              )}
             </button>
           </div>
           <button
