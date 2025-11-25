@@ -27,16 +27,15 @@ const canvasRef = useRef<HTMLCanvasElement | null>(null);
   return (
 <div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
 
-    {/* Top overlay  : add some game functionality to this*/}
+    {/* Top overlay  : well add score functionality*/}
     <div className="absolute top-0 left-0 w-full flex items-center justify-center z-10 pointer-events-none">
-      <p className="text-white text-xl font-bold text-center">Game Functions</p>
+      <p className="text-white text-xl font-bold text-center">Score section</p>
   </div>
     {/* Canvas for game*/}
     <canvas
       ref={canvasRef}
       className="block bg-primary-elements p-4 sm:p-6 md:p-8 rounded-lg w-full border border-white/10"
     />
-
 </div>
 
   );

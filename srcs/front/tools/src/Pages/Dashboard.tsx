@@ -38,7 +38,7 @@ export function Dashboard(): JSX.Element {
 
   return (
     <div className="flex flex-row text-white">
-      <SideBar
+      <SideBar 
         active_user={user as UserInter}
         user_data={user_data as UserDataInter}
         section={section}
