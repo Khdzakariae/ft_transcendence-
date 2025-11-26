@@ -1,17 +1,22 @@
 import { UserInter } from "../../interfaces/UserInterfaces";
 import { useEffect, useRef  } from "react";
 import { ScoreBanner } from "./ScoreBanner";
-export function GameSection({ user }: { user: UserInter | null }): JSX.Element {
-const canvasRef = useRef<HTMLCanvasElement | null>(null);
+import { UserDataInter } from "../../interfaces/UserInterfaces";
+
+export function GameSection(
+    {user, user_data,}: {
+      user: UserInter | null;
+      user_data: UserDataInter | null;
+    }): JSX.Element {
+
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas)
             return ;
         // making ccs dims match canvas dims.
         //const rect = canvas.getBoundingClientRect();
-    
         const rect = canvas.getBoundingClientRect();
-
         canvas.width = rect.width * window.devicePixelRatio;
         canvas.height = rect.height * window.devicePixelRatio;
         const ctx = canvas.getContext("2d");
@@ -25,21 +30,11 @@ const canvasRef = useRef<HTMLCanvasElement | null>(null);
         ctx.closePath();
     },[]);
 
-    /*
-  return (
-<div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
-
-    <ScoreBanner/>
-    <canvas
-      ref={canvasRef}
-      className="block bg-primary-elements p-4 sm:p-6 md:p-8 rounded-lg w-full border border-white/10"
-    />
-</div>
-  );*/
   return (
     <div className="bg-black min-h-screen flex flex-col items-center justify-center w-full text-center text-white font-primary px-4 sm:px-6 md:px-8">
       {/*GAME BANNER */}
-    <ScoreBanner user={user as UserInter} />
+    <ScoreBanner user={user as UserInter}
+                  user_data={user_data as UserDataInter} />
     {/*Game canvas */}
     <canvas
       ref={canvasRef}

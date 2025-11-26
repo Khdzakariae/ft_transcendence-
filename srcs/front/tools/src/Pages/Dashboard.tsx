@@ -61,7 +61,9 @@ export function Dashboard(): JSX.Element {
           user_data={user_data as UserDataInter}
         />
       ) : null}
-      {section === "game" ? <GameSection user={user as UserInter} /> : null}
+      {section === "game" ? (<GameSection user={user as UserInter}
+                                        user_data = {user_data as UserDataInter} 
+                                          />) : null}
       {section === "friends" ? (
         <FriendsSection user={user as UserInter} />
       ) : null}
