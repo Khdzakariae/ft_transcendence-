@@ -1,5 +1,6 @@
 import { UserInter } from "../../interfaces/UserInterfaces";
 import { useEffect, useRef  } from "react";
+import { ScoreBanner } from "./ScoreBanner";
 export function GameSection({ user }: { user: UserInter | null }): JSX.Element {
 const canvasRef = useRef<HTMLCanvasElement | null>(null);
     useEffect(() => {
@@ -24,21 +25,35 @@ const canvasRef = useRef<HTMLCanvasElement | null>(null);
         ctx.closePath();
     },[]);
 
+    /*
   return (
 <div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
 
-    {/* Top overlay  : well add score functionality*/}
-    <div className="absolute top-0 left-0 w-full flex items-center justify-center z-10 pointer-events-none">
-      <p className="text-white text-xl font-bold text-center">Score section</p>
-  </div>
-    {/* Canvas for game*/}
+    <ScoreBanner/>
     <canvas
       ref={canvasRef}
       className="block bg-primary-elements p-4 sm:p-6 md:p-8 rounded-lg w-full border border-white/10"
     />
 </div>
-
-  );
+  );*/
+  return (
+    <div className="bg-black min-h-screen flex flex-col items-center justify-center w-full text-center text-white font-primary px-4 sm:px-6 md:px-8">
+      {/*GAME BANNER */}
+    <ScoreBanner user={user as UserInter} />
+    {/*Game canvas */}
+    <canvas
+      ref={canvasRef}
+      className="
+        block 
+        bg-primary-elements 
+        p-4 sm:p-6 md:p-8 
+        rounded-lg 
+        w-full 
+        max-w-lg sm:max-w-2xl md:max-w-3xl lg:max-w-5xl
+        border border-white/10
+    "
+    />
+</div>);
 }
 
 
