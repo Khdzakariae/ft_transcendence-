@@ -11,22 +11,49 @@ export function GameSection(
     }): JSX.Element {
     const [GameState, setGameState] = useState<String>("matchMaking");
  return (
-  <div className="bg-black min-h-screen flex flex-col items-center justify-center w-full text-center text-white font-primary px-4 sm:px-6 md:px-8">
+  <div className=" bg-primary-elements min-h-screen flex flex-col items-center justify-center w-full text-center text-white font-primary px-4 sm:px-6 md:px-8">
     {GameState === "matchMaking" ?
-      <div className ="
-        	flex
-          flex-row
-        	bg-primary-elements 
-        	p-4 sm:p-6 md:p-8
-        	rounded-lg 
-        	w-full 
-        	max-w-lg sm:max-w-2xl md:max-w-3xl lg:max-w-5xl
-        	border border-white/10
-          ">
-        <button onClick={() => {
-          setGameState("playing");}}>Click HERE!</button>
+  <div
+    className="
+      bg-primary-elements
+      p-4 sm:p-6 md:p-8
+      rounded-lg
+      w-2/3
+      h-2/3
+      max-w-4xl
+      mx-auto
+      border border-white/10
+      flex flex-row items-center justify-center
+      ">
+      <button onClick={() => {
+          setGameState("pairing");}}>Find A Game!</button>
       </div>
       : null}
+    {GameState === "pairing" ? 
+    <div
+      className="
+        bg-primary-elements
+        p-4 sm:p-6 md:p-8
+        rounded-lg
+        gap-20
+        w-2/3
+        h-2/3
+        max-w-4xl
+        mx-auto
+        border border-white/10
+        flex flex-col items-center justify-center
+        ">
+          <button className=
+            "border border-green/20 w-1/3 h-24 bg-primary-elements"
+            onClick={() => {
+              setGameState("playing");
+            }}
+              >Play vs A Friend </button>
+          <button className="border border-white/20 w-1/3 h-24 bg-primary-elements"
+            onClick={() => {
+              setGameState("playing");
+            }}>Play vs A random Player</button>
+    </div>  : null}
     { GameState === "playing" ?
       <ScoreBanner user={user as UserInter}
                   user_data={user_data as UserDataInter} />
