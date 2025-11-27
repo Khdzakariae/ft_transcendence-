@@ -8,7 +8,6 @@ import { IoChatbubblesOutline } from "react-icons/io5";
 import { TbLogout2 } from "react-icons/tb";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import Logo from "../assets/ping_pong_logo.png";
 import { UserDataInter, UserInter } from "../interfaces/UserInterfaces";
 import { AvatarDot } from "./AvatarDot";
 import { LazyLoadingImage } from "./LazyLoadingImage";
@@ -24,7 +23,6 @@ export function SideBar({
   hasUnreadNotifications?: boolean;
 }): JSX.Element {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
-  const [loading_logo, setLoadingLogo] = useState(true);
   const [loading_avatar, setLoadingAvatar] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
@@ -71,287 +69,258 @@ export function SideBar({
   return (
     <div
       id="side-bar"
-      className={`flex flex-col max-h-screen sticky top-0 border-r-2 border-gray-800 text-center text-white justify-between py-8 transition-all duration-300 ease-in-out overflow-hidden ${
+      className={`flex flex-col h-screen sticky top-0 border-r-2 border-white/10 bg-gradient-to-b from-primary-bg via-primary-bg to-primary-elements text-center text-white py-4 transition-all duration-300 ease-in-out overflow-hidden ${
         isSidebarExpanded ? "w-64" : "w-24"
       }`}
     >
-      <div className="flex justify-center">
-        <LazyLoadingImage
-          dimension={{
-            width: "w-12 sm:w-16",
-            height: "h-12 sm:h-16",
-          }}
-          loading={!loading_logo}
-          color="bg-primary-btn/30"
-        >
-          <img
-            src={Logo}
-            alt="Logo"
-            className="h-12 w-12 sm:h-16 sm:w-16 transition-all duration-300"
-            loading="lazy"
-            onLoad={() => setLoadingLogo(false)}
-          />
-        </LazyLoadingImage>
-      </div>
-      <button
-        onClick={() => {
-          // setP('user-icon-this-is-a-long-test');
-          setIsSidebarExpanded(!isSidebarExpanded);
-        }}
-        className="bg-secondary-btn hover:bg-secondary-btn/30 text-white px-3 py-1 rounded transition-all duration-300 flex items-center justify-center"
-      >
-        <RxHamburgerMenu className="w-6 h-6 " />
-      </button>
-      <div className="flex flex-col space-y-4 font-secondary font-medium">
-        <div
-          id="nav-bar-section"
-          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "dashboard" ? "current-section" : "default-section"}`}
-        >
-          <div
-            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
-          >
-            <button
-              onClick={() => {
-                navigate("/dashboard");
+      {/* Top Section - Avatar, Name, Hamburger */}
+      <div className="flex-shrink-0 space-y-3">
+        {/* User Avatar at Top */}
+        <div className="flex justify-center">
+          <div className="relative">
+            <LazyLoadingImage
+              dimension={{
+                width: "w-14",
+                height: "h-14",
               }}
+              loading={!loading_avatar}
+              color="bg-primary-btn/30"
             >
-              <LuLayoutDashboard className="w-6 h-6" />
-            </button>
-          </div>
-          <button
-            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
-              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-            }`}
-            onClick={() => {
-              navigate("/dashboard");
-            }}
-          >
-            Dashboard
-          </button>
-        </div>
-        <div
-          id="nav-bar-section"
-          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "game" ? "current-section" : "default-section"}`}
-        >
-          <div
-            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
-          >
-            <button
-              onClick={() => {
-                navigate("/dashboard/game");
-              }}
-            >
-              <RiGamepadLine className="w-6 h-6" />
-            </button>
-          </div>
-          <button
-            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
-              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-            }`}
-            onClick={() => {
-              navigate("/dashboard/game");
-            }}
-          >
-            Game
-          </button>
-        </div>
-        <div
-          id="nav-bar-section"
-          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "profile" ? "current-section" : "default-section"}`}
-        >
-          <div
-            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
-          >
-            <button
-              onClick={() => {
-                navigate("/dashboard/profile");
-              }}
-            >
-              <CgProfile className="w-6 h-6" />
-            </button>
-          </div>
-          <button
-            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
-              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-            }`}
-            onClick={() => {
-              navigate("/dashboard/profile");
-            }}
-          >
-            Profile
-          </button>
-        </div>
-        <div
-          id="nav-bar-section"
-          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "settings" ? "current-section" : "default-section"}`}
-        >
-          <div
-            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
-          >
-            <button
-              onClick={() => {
-                navigate("/dashboard/settings");
-              }}
-            >
-              <IoSettingsOutline className="w-6 h-6" />
-            </button>
-          </div>
-          <button
-            onClick={() => {
-              navigate("/dashboard/settings");
-            }}
-            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
-              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-            }`}
-          >
-            Settings
-          </button>
-        </div>
-        <div
-          id="nav-bar-section"
-          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "friends" ? "current-section" : "default-section"}`}
-        >
-          <div
-            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
-          >
-            <button
-              onClick={() => {
-                navigate("/dashboard/friends");
-              }}
-            >
-              <LiaUserFriendsSolid className="w-6 h-6" />
-            </button>
-          </div>
-          <button
-            onClick={() => {
-              navigate("/dashboard/friends");
-            }}
-            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
-              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-            }`}
-          >
-            Friends
-          </button>
-        </div>
-        <div
-          id="nav-bar-section"
-          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "messages" ? "current-section" : "default-section"}`}
-        >
-          <div
-            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
-          >
-            <button
-              onClick={() => {
-                navigate("/dashboard/messages");
-              }}
-            >
-              <IoChatbubblesOutline className="w-6 h-6" />
-            </button>
-          </div>
-          <button
-            onClick={() => {
-              navigate("/dashboard/messages");
-            }}
-            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
-              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-            }`}
-          >
-            Messages
-          </button>
-        </div>
-        {/* implement notifications section same way as the others */}
-        <div
-          id="nav-bar-section"
-          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "notifications" ? "current-section" : "default-section"}`}
-        >
-          <div
-            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
-          >
-            <button
-              onClick={() => {
-                navigate("/dashboard/notifications");
-              }}
-              className="relative"
-            >
-              <IoIosNotificationsOutline className="w-6 h-6" />
-              {hasUnreadNotifications && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full border-2 border-gray-900"></span>
+              <AvatarDot>
+                <img
+                  src={user_data?.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=pingpong-paddle-1&backgroundColor=FF6B00"}
+                  alt="avatar image"
+                  className={`w-14 h-14 rounded-full transition-opacity duration-300 border-2 border-primary-btn ring-2 ring-primary-btn/30 ${!loading_avatar ? "opacity-100" : "opacity-0"}`}
+                  loading="lazy"
+                  onLoad={() => setLoadingAvatar(false)}
+                />
+              </AvatarDot>
+              {loading_avatar && (
+                <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md animate-pulse"></div>
               )}
-            </button>
+            </LazyLoadingImage>
           </div>
+        </div>
+
+        {/* User Name - Only show when expanded */}
+        {isSidebarExpanded && (
+          <div className="px-4 text-center">
+            <p className="font-secondary font-semibold text-sm text-white truncate">
+              {active_user?.name}
+            </p>
+            <p className="text-xs text-white/60 truncate">
+              @{user_data?.email?.split("@")[0] || "user"}
+            </p>
+          </div>
+        )}
+
+        {/* Hamburger Menu */}
+        <div className="px-3">
           <button
             onClick={() => {
-              navigate("/dashboard/notifications");
+              setIsSidebarExpanded(!isSidebarExpanded);
             }}
-            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
-              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-            }`}
+            className="w-full bg-gradient-to-r from-secondary-btn to-primary-btn hover:from-primary-btn hover:to-secondary-btn text-white px-4 py-2 rounded-xl border-2 border-white/10 transition-all duration-300 flex items-center justify-center hover:scale-105 hover:border-white/30 active:scale-95"
           >
-            Notifications
-          </button>
-        </div>
-        <div
-          id="nav-bar-section"
-          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 default-section`}
-        >
-          <div
-            className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}
-          >
-            <button
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <TbLogout2 className="w-6 h-6" />
-            </button>
-          </div>
-          <button
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            className={`basis-2/3 text-left overflow-hidden whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed ${
-              isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
-            }`}
-          >
-            {isLoggingOut ? "Logging out..." : "Logout"}
+            <RxHamburgerMenu className="w-5 h-5" />
           </button>
         </div>
       </div>
-      <div
-        className={`flex flex-row justify-center items-center gap-2 transition-all duration-300`}
-      >
+
+      {/* Middle Section - Navigation (Flexible) */}
+      <div className="flex-1 flex flex-col justify-center py-2">
+        <div className="flex flex-col space-y-1.5 font-secondary font-medium px-3">
         <div
-          className={`flex transition-all duration-300 ${isSidebarExpanded ? "basis-1/3 justify-end" : "basis-full justify-center items-center"}`}
+          id="nav-bar-section"
+          className={`flex flex-row items-center transition-all duration-300 rounded-xl cursor-pointer ${
+            section === "dashboard" 
+              ? "bg-gradient-to-r from-primary-btn to-secondary-btn border-2 border-primary-btn/40" 
+              : "border-2 border-transparent hover:border-white/20 hover:bg-primary-elements/50"
+          } ${isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"}`}
+          onClick={() => navigate("/dashboard")}
         >
-          <LazyLoadingImage
-            dimension={{
-              width: "w-10",
-              height: "h-10",
-            }}
-            loading={!loading_avatar}
-            color="bg-primary-btn/30"
-          >
-            <AvatarDot>
-              <img
-                src={user_data?.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=pingpong-paddle-1&backgroundColor=FF6B00"}
-                alt="avatar image"
-                className={`w-10 h-10 rounded-full transition-opacity duration-300 ${!loading_avatar ? "opacity-100" : "opacity-0"}`}
-                loading="lazy"
-                onLoad={() => setLoadingAvatar(false)}
-              />
-            </AvatarDot>
-            {loading_avatar && (
-              <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md shadow-2xl shadow-cyan-500/30 animate-pulse"></div>
-            )}
-          </LazyLoadingImage>
+          <div className={`flex items-center justify-center transition-all duration-300 ${
+            section === "dashboard"
+              ? "text-white"
+              : "text-white/70 hover:text-white"
+          }`}>
+            <LuLayoutDashboard className="w-5 h-5" />
+          </div>
+          {isSidebarExpanded && (
+            <span className={`flex-1 text-left transition-all duration-300 ${
+              section === "dashboard" ? "text-white font-semibold" : "text-white/70 hover:text-white"
+            }`}>
+              Dashboard
+            </span>
+          )}
         </div>
         <div
-          className={`basis-2/3 text-left font-secondary font-medium ${
-            isSidebarExpanded
-              ? "opacity-100 max-w-full text-left"
-              : "opacity-0 max-w-0"
-          }`}
+          id="nav-bar-section"
+          className={`flex flex-row items-center transition-all duration-300 rounded-xl cursor-pointer ${
+            section === "game" 
+              ? "bg-gradient-to-r from-primary-btn to-secondary-btn border-2 border-primary-btn/40" 
+              : "border-2 border-transparent hover:border-white/20 hover:bg-primary-elements/50"
+          } ${isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"}`}
+          onClick={() => navigate("/dashboard/game")}
         >
-          <p>{`${active_user?.name}`}</p>
+          <div className={`flex items-center justify-center transition-all duration-300 ${
+            section === "game"
+              ? "text-white"
+              : "text-white/70 hover:text-white"
+          }`}>
+            <RiGamepadLine className="w-5 h-5" />
+          </div>
+          {isSidebarExpanded && (
+            <span className={`flex-1 text-left transition-all duration-300 ${
+              section === "game" ? "text-white font-semibold" : "text-white/70 hover:text-white"
+            }`}>
+              Game
+            </span>
+          )}
+        </div>
+        <div
+          id="nav-bar-section"
+          className={`flex flex-row items-center transition-all duration-300 rounded-xl cursor-pointer ${
+            section === "profile" 
+              ? "bg-gradient-to-r from-primary-btn to-secondary-btn border-2 border-primary-btn/40" 
+              : "border-2 border-transparent hover:border-white/20 hover:bg-primary-elements/50"
+          } ${isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"}`}
+          onClick={() => navigate("/dashboard/profile")}
+        >
+          <div className={`flex items-center justify-center transition-all duration-300 ${
+            section === "profile"
+              ? "text-white"
+              : "text-white/70 hover:text-white"
+          }`}>
+            <CgProfile className="w-5 h-5" />
+          </div>
+          {isSidebarExpanded && (
+            <span className={`flex-1 text-left transition-all duration-300 ${
+              section === "profile" ? "text-white font-semibold" : "text-white/70 hover:text-white"
+            }`}>
+              Profile
+            </span>
+          )}
+        </div>
+        <div
+          id="nav-bar-section"
+          className={`flex flex-row items-center transition-all duration-300 rounded-xl cursor-pointer ${
+            section === "settings" 
+              ? "bg-gradient-to-r from-primary-btn to-secondary-btn border-2 border-primary-btn/40" 
+              : "border-2 border-transparent hover:border-white/20 hover:bg-primary-elements/50"
+          } ${isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"}`}
+          onClick={() => navigate("/dashboard/settings")}
+        >
+          <div className={`flex items-center justify-center transition-all duration-300 ${
+            section === "settings"
+              ? "text-white"
+              : "text-white/70 hover:text-white"
+          }`}>
+            <IoSettingsOutline className="w-5 h-5" />
+          </div>
+          {isSidebarExpanded && (
+            <span className={`flex-1 text-left transition-all duration-300 ${
+              section === "settings" ? "text-white font-semibold" : "text-white/70 hover:text-white"
+            }`}>
+              Settings
+            </span>
+          )}
+        </div>
+        <div
+          id="nav-bar-section"
+          className={`flex flex-row items-center transition-all duration-300 rounded-xl cursor-pointer ${
+            section === "friends" 
+              ? "bg-gradient-to-r from-primary-btn to-secondary-btn border-2 border-primary-btn/40" 
+              : "border-2 border-transparent hover:border-white/20 hover:bg-primary-elements/50"
+          } ${isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"}`}
+          onClick={() => navigate("/dashboard/friends")}
+        >
+          <div className={`flex items-center justify-center transition-all duration-300 ${
+            section === "friends"
+              ? "text-white"
+              : "text-white/70 hover:text-white"
+          }`}>
+            <LiaUserFriendsSolid className="w-5 h-5" />
+          </div>
+          {isSidebarExpanded && (
+            <span className={`flex-1 text-left transition-all duration-300 ${
+              section === "friends" ? "text-white font-semibold" : "text-white/70 hover:text-white"
+            }`}>
+              Friends
+            </span>
+          )}
+        </div>
+        <div
+          id="nav-bar-section"
+          className={`flex flex-row items-center transition-all duration-300 rounded-xl cursor-pointer ${
+            section === "messages" 
+              ? "bg-gradient-to-r from-primary-btn to-secondary-btn border-2 border-primary-btn/40" 
+              : "border-2 border-transparent hover:border-white/20 hover:bg-primary-elements/50"
+          } ${isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"}`}
+          onClick={() => navigate("/dashboard/messages")}
+        >
+          <div className={`flex items-center justify-center transition-all duration-300 ${
+            section === "messages"
+              ? "text-white"
+              : "text-white/70 hover:text-white"
+          }`}>
+            <IoChatbubblesOutline className="w-5 h-5" />
+          </div>
+          {isSidebarExpanded && (
+            <span className={`flex-1 text-left transition-all duration-300 ${
+              section === "messages" ? "text-white font-semibold" : "text-white/70 hover:text-white"
+            }`}>
+              Messages
+            </span>
+          )}
+        </div>
+        <div
+          id="nav-bar-section"
+          className={`flex flex-row items-center transition-all duration-300 rounded-xl cursor-pointer ${
+            section === "notifications" 
+              ? "bg-gradient-to-r from-primary-btn to-secondary-btn border-2 border-primary-btn/40" 
+              : "border-2 border-transparent hover:border-white/20 hover:bg-primary-elements/50"
+          } ${isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"}`}
+          onClick={() => navigate("/dashboard/notifications")}
+        >
+          <div className={`relative flex items-center justify-center transition-all duration-300 ${
+            section === "notifications"
+              ? "text-white"
+              : "text-white/70 hover:text-white"
+          }`}>
+            <IoIosNotificationsOutline className="w-5 h-5" />
+            {hasUnreadNotifications && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-secondary-btn rounded-full border border-primary-bg animate-pulse"></span>
+            )}
+          </div>
+          {isSidebarExpanded && (
+            <span className={`flex-1 text-left transition-all duration-300 ${
+              section === "notifications" ? "text-white font-semibold" : "text-white/70 hover:text-white"
+            }`}>
+              Notifications
+            </span>
+          )}
+        </div>
+        </div>
+      </div>
+
+      {/* Bottom Section - Logout (Fixed) */}
+      <div className="flex-shrink-0 px-3 pt-2 border-t border-white/10 mt-2">
+        <div
+          id="nav-bar-section"
+          className={`flex flex-row items-center transition-all duration-300 rounded-xl cursor-pointer border-2 border-transparent hover:border-rose-400/40 hover:bg-rose-500/10 group ${
+            isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"
+          }`}
+          onClick={handleLogout}
+        >
+          <div className="flex items-center justify-center transition-all duration-300 text-white/70 group-hover:text-rose-300">
+            <TbLogout2 className="w-5 h-5" />
+          </div>
+          {isSidebarExpanded && (
+            <span className="flex-1 text-left transition-all duration-300 text-white/70 group-hover:text-rose-300">
+              {isLoggingOut ? "Logging out..." : "Logout"}
+            </span>
+          )}
         </div>
       </div>
     </div>
