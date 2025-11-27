@@ -332,7 +332,7 @@ export function SideBar({
           >
             <AvatarDot>
               <img
-                src={user_data?.avatar}
+                src={user_data?.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=pingpong-paddle-1&backgroundColor=FF6B00"}
                 alt="avatar image"
                 className={`w-10 h-10 rounded-full transition-opacity duration-300 ${!loading_avatar ? "opacity-100" : "opacity-0"}`}
                 loading="lazy"

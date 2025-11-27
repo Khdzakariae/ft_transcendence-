@@ -418,7 +418,7 @@ export function SettingsSection(): JSX.Element {
                   loading={loaded}
                 >
                   <img
-                    src={user_data.avatar}
+                    src={user_data.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=pingpong-paddle-1&backgroundColor=FF6B00"}
                     alt="profile image"
                     className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
                     loading="lazy"

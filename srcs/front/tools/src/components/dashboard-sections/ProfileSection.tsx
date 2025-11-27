@@ -53,7 +53,7 @@ export function ProfileSection({ user_data: propUserData }: ProfileSectionProps 
             loading={loaded}
           >
             <img
-              src={user_data.avatar}
+              src={user_data.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=pingpong-paddle-1&backgroundColor=FF6B00"}
               alt="profile image"
               className={`w-24 h-24 sm:w-36 sm:h-36 md:w-48 md:h-48 rounded-full transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
               loading="lazy"

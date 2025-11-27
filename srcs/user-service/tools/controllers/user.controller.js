@@ -177,7 +177,7 @@ export const updateUser = async (request, reply) => {
       typeof request.body === "string"
         ? JSON.parse(request.body)
         : (request.body ?? {});
-    const { name, email, password } = body;
+    const { name, email, password, avatar } = body;
 
     const hashedPassword = password
       ? await bcrypt.hash(password, 10)
@@ -189,6 +189,7 @@ export const updateUser = async (request, reply) => {
         ...(name && { name }),
         ...(email && { email }),
         ...(hashedPassword && { password: hashedPassword }),
+        ...(avatar && { avatar }),
       },
     });
 

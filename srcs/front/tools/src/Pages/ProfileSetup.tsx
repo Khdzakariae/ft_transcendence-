@@ -31,6 +31,7 @@ export function ProfileSetupPage(): JSX.Element {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState<string>(AVATAR_OPTIONS[0].url);
+  const [oauthAvatar, setOauthAvatar] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -79,6 +80,20 @@ export function ProfileSetupPage(): JSX.Element {
             Utils.LogLevel.DEBUG && console.log("Profile already complete, redirecting to dashboard");
             navigate("/dashboard", { replace: true });
             return;
+          }
+          
+          // If user has an existing avatar (from OAuth), save it and use as default
+          if (userData?.avatar) {
+            const isOAuthAvatar = !AVATAR_OPTIONS.some(opt => opt.url === userData.avatar);
+            if (isOAuthAvatar) {
+              // This is an OAuth provider avatar, save it separately
+              setOauthAvatar(userData.avatar);
+              setSelectedAvatar(userData.avatar);
+              Utils.LogLevel.DEBUG && console.log("Using existing OAuth avatar from provider:", userData.avatar);
+            } else {
+              // User previously selected one of our avatars
+              setSelectedAvatar(userData.avatar);
+            }
           }
           
           Utils.LogLevel.DEBUG && console.log("Profile incomplete, staying on setup page");
@@ -230,6 +245,63 @@ export function ProfileSetupPage(): JSX.Element {
                 Choose Your Ping-Pong Avatar
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+                {/* OAuth provider avatar if exists */}
+                {oauthAvatar && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedAvatar(oauthAvatar)}
+                    className={`relative group transition-all duration-300 ${
+                      selectedAvatar === oauthAvatar ? "scale-105" : "hover:scale-105"
+                    }`}
+                  >
+                    <div
+                      className={`relative p-5 rounded-2xl border-3 transition-all duration-300 ${
+                        selectedAvatar === oauthAvatar
+                          ? "border-primary-btn bg-gradient-to-br from-green-500 to-emerald-600 shadow-xl shadow-primary-btn/50"
+                          : "border-white/20 bg-gradient-to-br from-primary-bg to-primary-bg/80 hover:border-primary-btn/60 hover:shadow-lg"
+                      }`}
+                    >
+                      <div className="relative">
+                        <img
+                          src={oauthAvatar}
+                          alt="Your provider avatar"
+                          className={`w-full h-auto rounded-full transition-all duration-300 ${
+                            selectedAvatar === oauthAvatar ? "drop-shadow-2xl ring-2 ring-white/20" : ""
+                          }`}
+                        />
+                        {selectedAvatar === oauthAvatar && (
+                          <>
+                            <div className="absolute inset-0 bg-gradient-to-t from-primary-btn/20 to-transparent rounded-full"></div>
+                            <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-primary-btn to-secondary-btn rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                              <svg
+                                className="w-5 h-5 text-white"
+                                fill="none"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="3"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path d="M5 13l4 4L19 7"></path>
+                              </svg>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <p
+                      className={`text-center mt-2 text-sm font-semibold transition-colors duration-300 ${
+                        selectedAvatar === oauthAvatar
+                          ? "text-primary-btn"
+                          : "text-white/60 group-hover:text-white/80"
+                      }`}
+                    >
+                      Your Photo
+                    </p>
+                  </button>
+                )}
+                
+                {/* Predefined avatar options */}
                 {AVATAR_OPTIONS.map((avatar, index) => (
                   <button
                     key={index}
