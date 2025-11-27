@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MdSearch, MdPersonAdd } from "react-icons/md";
 import { UserDataInter } from "../interfaces/UserInterfaces";
 import { ProfileSection } from "./dashboard-sections/ProfileSection";
@@ -23,6 +23,14 @@ export function SearchBarFriends({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadedAvatars, setLoadedAvatars] = useState<Set<string>>(new Set());
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus input when component mounts
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   useEffect(() => {
     const delaySearch = setTimeout(async () => {
@@ -147,25 +155,19 @@ export function SearchBarFriends({
   };
 
   return (
-    <div className="bg-primary-bg min-h-screen w-full text-white font-primary p-4 sm:p-6 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h2 className="text-3xl font-bold mb-2">Find Friends</h2>
-          <p className="text-white/70">
-            Search for users and connect with friends
-          </p>
-        </div>
-
+    <div className="w-full text-white font-primary p-4 sm:p-6">
+      <div className="w-full">
         {/* Search Bar */}
         <div className="relative mb-6">
           <div className="relative">
             <MdSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/50 text-2xl" />
             <input
+              ref={inputRef}
               type="text"
               placeholder="Search by name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-primary-elements pl-14 pr-4 py-4 text-white placeholder:text-white/40 focus:border-primary-btn focus:outline-none focus:ring-2 focus:ring-primary-btn"
+              className="w-full rounded-xl border-2 border-secondary-btn bg-primary-elements pl-14 pr-4 py-4 text-white placeholder:text-white/40 focus:border-secondary-btn focus:outline-none focus:ring-2 focus:ring-secondary-btn/50"
             />
           </div>
         </div>

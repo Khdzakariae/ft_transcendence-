@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { SearchBarFriends } from "../searchBarFriends";
-import { MdDelete, MdPerson, MdGroup, MdPersonAdd, MdCheckCircle } from "react-icons/md";
+import { MdDelete, MdPerson, MdGroup, MdPersonAdd, MdCheckCircle, MdSearch, MdClose } from "react-icons/md";
 import { LazyLoadingImage } from "../LazyLoadingImage";
 import { useDashboardContext } from "../../Pages/Dashboard";
 
@@ -24,6 +24,8 @@ export function FriendsSection(): JSX.Element {
     friendName: string | null;
   }>({ isOpen: false, friendId: null, friendName: null });
   const [loadedAvatars, setLoadedAvatars] = useState<Set<string>>(new Set());
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [showKeyboardHint, setShowKeyboardHint] = useState(true);
 
   const fetchFriends = useCallback(async (abortSignal?: AbortSignal) => {
     setLoading(true);
@@ -144,6 +146,41 @@ export function FriendsSection(): JSX.Element {
     };
   }, [user, fetchFriends]);
 
+  // Keyboard shortcuts for search modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input field
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        confirmModal.isOpen
+      ) {
+        // Allow Esc to close modal even when in input
+        if (e.key === 'Escape' && isSearchModalOpen) {
+          e.preventDefault();
+          setIsSearchModalOpen(false);
+        }
+        return;
+      }
+
+      // Press 'f' to open search modal
+      if (e.key.toLowerCase() === 'f' && !isSearchModalOpen) {
+        e.preventDefault();
+        setIsSearchModalOpen(true);
+        setShowKeyboardHint(false); // Hide hint after first use
+      }
+
+      // Press 'Esc' to close search modal
+      if (e.key === 'Escape' && isSearchModalOpen) {
+        e.preventDefault();
+        setIsSearchModalOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSearchModalOpen, confirmModal.isOpen]);
+
   if (!user) {
     return (
       <div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
@@ -236,11 +273,31 @@ export function FriendsSection(): JSX.Element {
                 </div>
                 <p className="text-white/60 text-lg font-semibold mb-2">No friends yet</p>
                 <p className="text-white/40 text-sm mb-6">
-                  Start building your network by searching and adding friends below
+                  Start building your network by searching and adding friends
                 </p>
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30">
-                  <MdPersonAdd size={20} />
-                  <span className="text-sm font-medium">Search below to add friends</span>
+                <button
+                  onClick={() => {
+                    setIsSearchModalOpen(true);
+                    setShowKeyboardHint(false);
+                  }}
+                  className="inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-gradient-to-r from-secondary-btn to-primary-btn hover:from-primary-btn hover:to-secondary-btn text-white font-semibold border-2 border-white/10 hover:border-white/30 transition-all duration-200 hover:scale-105 active:scale-95 group"
+                >
+                  <MdPersonAdd size={22} className="group-hover:scale-110 transition-transform" />
+                  <span>Search to add friends</span>
+                  <div className="flex items-center gap-1 ml-2 px-2 py-1 rounded bg-white/20 border border-white/30">
+                    <span className="text-xs font-mono">Press</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white/30 text-xs font-mono font-bold">
+                      F
+                    </kbd>
+                  </div>
+                </button>
+                <div className="mt-4 flex items-center justify-center gap-2 text-xs text-white/50">
+                  <span>💡 Pro tip:</span>
+                  <span>Press</span>
+                  <kbd className="px-2 py-0.5 rounded bg-white/10 border border-white/20 text-white/70 font-mono">
+                    F
+                  </kbd>
+                  <span>anytime to quickly find friends</span>
                 </div>
               </div>
             ) : (
@@ -420,24 +477,93 @@ export function FriendsSection(): JSX.Element {
           </div>
         </div>
 
-        {/* Search Friends Section */}
-        <div className="bg-primary-elements rounded-xl border border-white/10 overflow-hidden">
-          <div className="p-4 sm:p-6 border-b border-white/10">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00]">
-                <MdPersonAdd size={24} />
+      </div>
+
+      {/* Floating Keyboard Hint */}
+      {showKeyboardHint && friends.length > 0 && (
+        <div className="fixed bottom-8 right-8 z-40 animate-in slide-in-from-bottom-4 fade-in duration-500">
+          <div className="bg-gradient-to-r from-primary-btn to-secondary-btn p-4 rounded-2xl border-2 border-white/20 max-w-sm relative group hover:scale-105 transition-transform">
+            <button
+              onClick={() => setShowKeyboardHint(false)}
+              className="absolute -top-2 -right-2 w-6 h-6 bg-white/90 hover:bg-white rounded-full flex items-center justify-center text-primary-bg font-bold text-sm transition-colors"
+            >
+              ×
+            </button>
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-white/20 shrink-0">
+                <MdSearch size={24} className="text-white" />
               </div>
-              <div>
-                <h3 className="text-xl sm:text-2xl font-bold">Add New Friends</h3>
-                <p className="text-sm text-white/60">Search and connect with other users</p>
+              <div className="flex-1">
+                <p className="text-white font-bold text-sm mb-1">Quick Tip! 💡</p>
+                <p className="text-white/90 text-xs mb-2">
+                  Press <kbd className="px-2 py-1 rounded bg-white/30 border border-white/40 font-mono font-bold mx-1">F</kbd> anytime to quickly search and add friends
+                </p>
+                <button
+                  onClick={() => setShowKeyboardHint(false)}
+                  className="text-white/80 hover:text-white text-xs underline"
+                >
+                  Got it, don't show again
+                </button>
               </div>
             </div>
           </div>
-          <div className="p-4 sm:p-6">
-            <SearchBarFriends currentUserId={user.id} />
+        </div>
+      )}
+
+      {/* Search Modal */}
+      {isSearchModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 p-4 animate-in fade-in duration-200">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-md"
+            onClick={() => setIsSearchModalOpen(false)}
+          ></div>
+
+          {/* Search Modal Container */}
+          <div className="relative w-full max-w-5xl animate-in slide-in-from-top-4 duration-300">
+            {/* Modal Card */}
+            <div className="bg-primary-elements border-2 border-primary-btn/40 rounded-2xl shadow-2xl overflow-hidden">
+              {/* Header */}
+              <div className="px-6 py-4 border-b border-white/10 bg-gradient-to-r from-primary-btn/10 to-secondary-btn/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary-btn/20 text-primary-btn">
+                      <MdPersonAdd size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">Find & Add Friends</h3>
+                      <p className="text-xs text-white/60">Search for users and connect with friends</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="hidden sm:flex items-center gap-2 text-xs text-white/50">
+                      <kbd className="px-2 py-1 rounded bg-white/10 border border-white/20 text-white/80 font-mono">
+                        F
+                      </kbd>
+                      <span>to open</span>
+                      <kbd className="px-2 py-1 rounded bg-white/10 border border-white/20 text-white/80 font-mono">
+                        ESC
+                      </kbd>
+                      <span>to close</span>
+                    </div>
+                    <button
+                      onClick={() => setIsSearchModalOpen(false)}
+                      className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-all"
+                    >
+                      <MdClose size={24} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Search Component */}
+              <div className="max-h-[70vh] overflow-y-auto">
+                <SearchBarFriends currentUserId={user.id} />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Confirmation Modal */}
       {confirmModal.isOpen && (
