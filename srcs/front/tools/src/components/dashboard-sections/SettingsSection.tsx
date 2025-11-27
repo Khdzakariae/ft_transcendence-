@@ -14,6 +14,30 @@ import { Utils } from "../../Utils";
 import { LazyLoadingImage } from "../LazyLoadingImage";
 import { useDashboardContext } from "../../Pages/Dashboard";
 
+// Ping-pong themed avatar options
+const AVATAR_OPTIONS = [
+  {
+    url: "https://api.dicebear.com/7.x/bottts/svg?seed=pingpong-paddle-1&backgroundColor=FF6B00&primaryColor=FFFFFF",
+    color: "from-orange-500 to-orange-600",
+    name: "Paddle Master",
+  },
+  {
+    url: "https://api.dicebear.com/7.x/bottts/svg?seed=pingpong-champion-2&backgroundColor=00CED1&primaryColor=FFD700",
+    color: "from-cyan-500 to-blue-600",
+    name: "Table Champion",
+  },
+  {
+    url: "https://api.dicebear.com/7.x/bottts/svg?seed=pingpong-spin-3&backgroundColor=FFD700&primaryColor=FF6B00",
+    color: "from-yellow-400 to-amber-500",
+    name: "Spin King",
+  },
+  {
+    url: "https://api.dicebear.com/7.x/bottts/svg?seed=pingpong-ace-4&backgroundColor=9370DB&primaryColor=00CED1",
+    color: "from-purple-500 to-indigo-600",
+    name: "Ace Player",
+  },
+];
+
 const TABS = [
   {
     id: "profile",
@@ -53,7 +77,7 @@ function Modal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-primary-elements p-6 shadow-lg shadow-primary-btn/30">
+      <div className="relative w-full max-w-md rounded-2xl border-2 border-primary-btn/40 bg-primary-elements p-6 ring-2 ring-white/10">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-secondary text-xl font-semibold text-white">
             {title}
@@ -78,6 +102,8 @@ export function SettingsSection(): JSX.Element {
   // Profile update state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [selectedAvatar, setSelectedAvatar] = useState<string>(AVATAR_OPTIONS[0].url);
+  const [oauthAvatar, setOauthAvatar] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [profileLoading, setProfileLoading] = useState(false);
@@ -106,11 +132,11 @@ export function SettingsSection(): JSX.Element {
   const [showBackupCodesModal, setShowBackupCodesModal] = useState(false);
 
   const primaryActionClasses =
-    "inline-flex items-center justify-center rounded-xl bg-secondary-btn px-6 py-3 font-semibold text-secondary-text font-secondary shadow-lg shadow-[0_18px_40px_-18px_rgba(255,107,0,0.55)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-secondary-btn/90 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60";
+    "inline-flex items-center justify-center rounded-xl bg-secondary-btn px-6 py-3 font-semibold text-secondary-text font-secondary border-2 border-secondary-btn/50 transition-all duration-200 hover:-translate-y-0.5 hover:bg-secondary-btn/90 hover:border-secondary-btn disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60";
   const secondaryActionClasses =
-    "inline-flex items-center justify-center rounded-xl border border-white/15 bg-primary-elements px-5 py-2.5 font-medium text-white transition-colors duration-200 hover:bg-primary-elements/80";
+    "inline-flex items-center justify-center rounded-xl border-2 border-white/25 bg-primary-elements px-5 py-2.5 font-medium text-white transition-colors duration-200 hover:bg-primary-elements/80 hover:border-white/40";
   const subtleCardClasses =
-    "rounded-2xl border border-white/10 bg-primary-elements p-5 shadow-lg shadow-[0_26px_60px_-35px_rgba(0,255,255,0.35)]";
+    "rounded-2xl border-2 border-white/20 bg-primary-elements p-5 relative before:absolute before:inset-0 before:rounded-2xl before:border before:border-primary-btn/30 before:pointer-events-none";
 
   useEffect(() => {
     if (user_data) {
@@ -122,6 +148,17 @@ export function SettingsSection(): JSX.Element {
       setFirstName(first);
       setLastName(last);
       setTwoFactorEnabled(user_data.twoFactorEnabled || false);
+      
+      // Set current avatar
+      if (user_data.avatar) {
+        setSelectedAvatar(user_data.avatar);
+        
+        // Check if it's an OAuth avatar (not in our predefined list)
+        const isOAuthAvatar = !AVATAR_OPTIONS.some(opt => opt.url === user_data.avatar);
+        if (isOAuthAvatar) {
+          setOauthAvatar(user_data.avatar);
+        }
+      }
     }
   }, [user_data]);
 
@@ -166,10 +203,10 @@ export function SettingsSection(): JSX.Element {
     setProfileMessage(null);
 
     try {
-      // Prepare update payload - only send name and password
-      // Avatar upload endpoint doesn't exist in the backend, so we skip it for now
+      // Prepare update payload - send name, avatar, and password
       const payload: any = {
         name: newName,
+        avatar: selectedAvatar,
       };
 
       // Add password to payload if provided (already trimmed in validation)
@@ -401,7 +438,7 @@ export function SettingsSection(): JSX.Element {
       year: "numeric",
     }
   );
-  const accentGlow = "shadow-[0_24px_48px_-28px_rgba(0,255,255,0.35)]";
+  const accentGlow = "ring-2 ring-primary-btn/40 ring-offset-2 ring-offset-primary-bg";
 
   return (
     <div className="bg-primary-bg min-h-screen w-full text-white font-primary">
@@ -461,10 +498,10 @@ export function SettingsSection(): JSX.Element {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`group flex w-full items-center justify-between rounded-2xl border px-4 py-4 text-left transition-all duration-200 ${
+                  className={`group flex w-full items-center justify-between rounded-2xl border-2 px-4 py-4 text-left transition-all duration-200 ${
                     isActive
-                      ? "border-primary-btn bg-primary-btn text-white shadow-[0_18px_40px_-22px_rgba(0,255,255,0.55)]"
-                      : "border-white/15 bg-primary-elements text-white/65 hover:border-primary-btn hover:text-white"
+                      ? "border-primary-btn bg-primary-btn text-white ring-2 ring-primary-btn/30 ring-offset-2 ring-offset-primary-elements"
+                      : "border-white/20 bg-primary-elements text-white/65 hover:border-primary-btn hover:text-white"
                   }`}
                 >
                   <span className="flex items-center gap-3">
@@ -501,7 +538,7 @@ export function SettingsSection(): JSX.Element {
           </nav>
         </aside>
 
-        <section className="flex-1 overflow-hidden rounded-3xl border border-white/10 bg-primary-elements shadow-lg shadow-primary-btn/30">
+        <section className="flex-1 overflow-hidden rounded-3xl border-2 border-white/20 bg-primary-elements ring-1 ring-primary-btn/40">
           <header className="border-b border-white/10 px-6 py-6 sm:px-8 sm:py-8 text-white">
             <p className="text-xs uppercase tracking-[0.35em] text-white/55">
               {activeTabMeta.eyebrow}
@@ -517,6 +554,111 @@ export function SettingsSection(): JSX.Element {
           <div className="px-6 py-6 sm:px-8 sm:py-8">
             {activeTab === "profile" && (
               <form onSubmit={handleProfileUpdate} className="space-y-8">
+                {/* Avatar Selection */}
+                <div className={subtleCardClasses}>
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/55">
+                    Appearance
+                  </p>
+                  <h3 className="mt-2 font-secondary text-2xl font-semibold text-white">
+                    Choose Your Avatar
+                  </h3>
+                  <p className="mt-1 text-sm text-white/75">
+                    Select a ping-pong themed avatar to represent you.
+                  </p>
+                  <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {/* OAuth provider avatar if exists */}
+                    {oauthAvatar && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedAvatar(oauthAvatar)}
+                        className={`relative group transition-all duration-300 ${
+                          selectedAvatar === oauthAvatar ? "scale-105" : "hover:scale-105"
+                        }`}
+                      >
+                        <div
+                          className={`relative p-4 rounded-2xl border-2 transition-all duration-300 ${
+                            selectedAvatar === oauthAvatar
+                              ? "border-primary-btn bg-gradient-to-br from-green-500 to-emerald-600 ring-2 ring-primary-btn/50 ring-offset-2 ring-offset-primary-elements"
+                              : "border-white/20 bg-gradient-to-br from-primary-bg to-primary-bg/80 hover:border-primary-btn/60"
+                          }`}
+                        >
+                          <img
+                            src={oauthAvatar}
+                            alt="Your provider avatar"
+                            className="w-full h-auto rounded-full"
+                          />
+                          {selectedAvatar === oauthAvatar && (
+                            <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-primary-btn to-secondary-btn rounded-full flex items-center justify-center">
+                              <svg
+                                className="w-4 h-4 text-white"
+                                fill="none"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="3"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path d="M5 13l4 4L19 7"></path>
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <p className={`text-center mt-2 text-xs font-semibold ${
+                          selectedAvatar === oauthAvatar ? "text-primary-btn" : "text-white/60"
+                        }`}>
+                          Your Photo
+                        </p>
+                      </button>
+                    )}
+                    
+                    {/* Predefined avatar options */}
+                    {AVATAR_OPTIONS.map((avatar, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => setSelectedAvatar(avatar.url)}
+                        className={`relative group transition-all duration-300 ${
+                          selectedAvatar === avatar.url ? "scale-105" : "hover:scale-105"
+                        }`}
+                      >
+                        <div
+                          className={`relative p-4 rounded-2xl border-2 transition-all duration-300 ${
+                            selectedAvatar === avatar.url
+                              ? `border-primary-btn bg-gradient-to-br ${avatar.color} ring-2 ring-primary-btn/50 ring-offset-2 ring-offset-primary-elements`
+                              : "border-white/20 bg-gradient-to-br from-primary-bg to-primary-bg/80 hover:border-primary-btn/60"
+                          }`}
+                        >
+                          <img
+                            src={avatar.url}
+                            alt={avatar.name}
+                            className="w-full h-auto rounded-xl"
+                          />
+                          {selectedAvatar === avatar.url && (
+                            <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-primary-btn to-secondary-btn rounded-full flex items-center justify-center">
+                              <svg
+                                className="w-4 h-4 text-white"
+                                fill="none"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="3"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path d="M5 13l4 4L19 7"></path>
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <p className={`text-center mt-2 text-xs font-semibold ${
+                          selectedAvatar === avatar.url ? "text-primary-btn" : "text-white/60"
+                        }`}>
+                          {avatar.name}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="grid gap-8 lg:grid-cols-2">
                   <div className={subtleCardClasses}>
                     <p className="text-xs uppercase tracking-[0.3em] text-white/55">
@@ -675,7 +817,7 @@ export function SettingsSection(): JSX.Element {
                           <button
                             type="submit"
                             disabled={twoFactorLoading}
-                            className="inline-flex items-center justify-center rounded-xl border border-rose-400 bg-rose-500/10 px-5 py-2.5 font-semibold text-rose-200 transition-colors duration-200 hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex items-center justify-center rounded-xl border-2 border-rose-400 bg-rose-500/10 px-5 py-2.5 font-semibold text-rose-200 transition-colors duration-200 hover:bg-rose-500/20 hover:border-rose-300 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             {twoFactorLoading
                               ? "Disabling..."
@@ -872,7 +1014,7 @@ export function SettingsSection(): JSX.Element {
                     });
                   });
               }}
-              className="flex items-center gap-2 rounded-xl border border-white/15 bg-primary-elements px-5 py-2.5 font-medium text-white transition-colors duration-200 hover:bg-primary-elements/80"
+              className="flex items-center gap-2 rounded-xl border-2 border-white/25 bg-primary-elements px-5 py-2.5 font-medium text-white transition-colors duration-200 hover:bg-primary-elements/80 hover:border-white/40"
             >
               <AiOutlineCopy size={18} /> Copy
             </button>
@@ -887,7 +1029,7 @@ export function SettingsSection(): JSX.Element {
                 a.click();
                 URL.revokeObjectURL(url);
               }}
-              className="flex items-center gap-2 rounded-xl border border-white/15 bg-primary-elements px-5 py-2.5 font-medium text-white transition-colors duration-200 hover:bg-primary-elements/80"
+              className="flex items-center gap-2 rounded-xl border-2 border-white/25 bg-primary-elements px-5 py-2.5 font-medium text-white transition-colors duration-200 hover:bg-primary-elements/80 hover:border-white/40"
             >
               <AiOutlineDownload size={18} /> Download
             </button>
