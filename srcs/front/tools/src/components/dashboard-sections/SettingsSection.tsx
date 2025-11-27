@@ -760,7 +760,7 @@ export function SettingsSection(): JSX.Element {
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-xs uppercase tracking-[0.35em] text-white/55">
-                    Pro tip: refresh your password every few months.
+                  💡Quick tip: refresh your password every few months.
                   </p>
                   <button
                     type="submit"

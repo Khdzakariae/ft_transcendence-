@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { SearchBarFriends } from "../searchBarFriends";
-import { MdDelete, MdPerson, MdGroup, MdPersonAdd, MdCheckCircle, MdSearch, MdClose } from "react-icons/md";
+import { MdDelete, MdPerson, MdGroup, MdPersonAdd, MdCheckCircle, MdSearch, MdClose, MdBlock } from "react-icons/md";
 import { LazyLoadingImage } from "../LazyLoadingImage";
 import { useDashboardContext } from "../../Pages/Dashboard";
 
@@ -10,6 +10,17 @@ interface Friend {
   email: string | null;
   avatar: string | null;
   onlineStatus: boolean;
+}
+
+interface BlockedUser {
+  requestId: string;
+  user: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    avatar: string | null;
+  };
+  createdAt: string;
 }
 
 export function FriendsSection(): JSX.Element {
@@ -26,6 +37,15 @@ export function FriendsSection(): JSX.Element {
   const [loadedAvatars, setLoadedAvatars] = useState<Set<string>>(new Set());
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [showKeyboardHint, setShowKeyboardHint] = useState(true);
+  const [blockingFriendId, setBlockingFriendId] = useState<string | null>(null);
+  const [blockModal, setBlockModal] = useState<{
+    isOpen: boolean;
+    friendId: string | null;
+    friendName: string | null;
+  }>({ isOpen: false, friendId: null, friendName: null });
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  const [unblockingUserId, setUnblockingUserId] = useState<string | null>(null);
+  const [showBlockedSection, setShowBlockedSection] = useState(false);
 
   const fetchFriends = useCallback(async (abortSignal?: AbortSignal) => {
     setLoading(true);
@@ -64,6 +84,35 @@ export function FriendsSection(): JSX.Element {
     } finally {
       if (!abortSignal?.aborted) {
         setLoading(false);
+      }
+    }
+  }, []);
+
+  const fetchBlockedUsers = useCallback(async (abortSignal?: AbortSignal) => {
+    try {
+      const response = await fetch("http://localhost:3000/api/v1/friends/block", {
+        method: "GET",
+        credentials: "include",
+        signal: abortSignal,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch blocked users");
+      }
+
+      const data = await response.json();
+      if (data.data && data.data.outgoing && !abortSignal?.aborted) {
+        // Map outgoing blocked users to our format
+        const blocked = data.data.outgoing.map((b: any) => ({
+          requestId: b.requestId,
+          user: b.to,
+          createdAt: b.createdAt,
+        }));
+        setBlockedUsers(blocked);
+      }
+    } catch (err: any) {
+      if (err.name !== "AbortError" && !abortSignal?.aborted) {
+        console.error("Failed to load blocked users:", err);
       }
     }
   }, []);
@@ -111,6 +160,82 @@ export function FriendsSection(): JSX.Element {
     setConfirmModal({ isOpen: false, friendId: null, friendName: null });
   };
 
+  const handleBlockFriend = (friendId: string, friendName: string | null) => {
+    setBlockModal({
+      isOpen: true,
+      friendId,
+      friendName,
+    });
+  };
+
+  const confirmBlockFriend = async () => {
+    const friendId = blockModal.friendId;
+    if (!friendId) return;
+
+    setBlockModal({ isOpen: false, friendId: null, friendName: null });
+    setBlockingFriendId(friendId);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/v1/friends/block",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId: friendId }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to block friend");
+      }
+
+      // Remove friend from local state after blocking
+      setFriends((prev) => prev.filter((friend) => friend.id !== friendId));
+      // Refresh blocked users list
+      fetchBlockedUsers();
+    } catch (err: any) {
+      setError(err.message || "Failed to block friend");
+    } finally {
+      setBlockingFriendId(null);
+    }
+  };
+
+  const handleUnblockUser = async (userId: string) => {
+    setUnblockingUserId(userId);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/v1/friends/block/${userId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to unblock user");
+      }
+
+      // Remove user from blocked list
+      setBlockedUsers((prev) => prev.filter((blocked) => blocked.user.id !== userId));
+    } catch (err: any) {
+      setError(err.message || "Failed to unblock user");
+    } finally {
+      setUnblockingUserId(null);
+    }
+  };
+
+  const cancelBlockFriend = () => {
+    setBlockModal({ isOpen: false, friendId: null, friendName: null });
+  };
+
   const getInitials = (name?: string | null): string => {
     if (!name || name.trim().length === 0) {
       return "?";
@@ -140,11 +265,12 @@ export function FriendsSection(): JSX.Element {
 
     const controller = new AbortController();
     fetchFriends(controller.signal);
+    fetchBlockedUsers(controller.signal);
 
     return () => {
       controller.abort();
     };
-  }, [user, fetchFriends]);
+  }, [user, fetchFriends, fetchBlockedUsers]);
 
   // Keyboard shortcuts for search modal
   useEffect(() => {
@@ -153,7 +279,8 @@ export function FriendsSection(): JSX.Element {
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement ||
-        confirmModal.isOpen
+        confirmModal.isOpen ||
+        blockModal.isOpen
       ) {
         // Allow Esc to close modal even when in input
         if (e.key === 'Escape' && isSearchModalOpen) {
@@ -179,7 +306,7 @@ export function FriendsSection(): JSX.Element {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSearchModalOpen, confirmModal.isOpen]);
+  }, [isSearchModalOpen, confirmModal.isOpen, blockModal.isOpen]);
 
   if (!user) {
     return (
@@ -254,6 +381,105 @@ export function FriendsSection(): JSX.Element {
           </div>
         )}
 
+        {/* Blocked Users Section */}
+        {blockedUsers.length > 0 && (
+          <div className="bg-primary-elements rounded-xl border border-white/10 overflow-hidden mb-6 sm:mb-8">
+            <button
+              onClick={() => setShowBlockedSection(!showBlockedSection)}
+              className="w-full p-4 sm:p-6 border-b border-white/10 hover:bg-primary-bg/30 transition-colors flex items-center justify-between group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
+                  <MdBlock size={24} />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-xl sm:text-2xl font-bold">Blocked Users</h3>
+                  <p className="text-sm text-white/60">
+                    {blockedUsers.length} {blockedUsers.length === 1 ? 'user' : 'users'} blocked
+                  </p>
+                </div>
+              </div>
+              <div className="text-white/60 group-hover:text-white transition-colors">
+                {showBlockedSection ? '▼' : '▶'}
+              </div>
+            </button>
+
+            {showBlockedSection && (
+              <div className="p-4 sm:p-6">
+                <div className="space-y-3">
+                  {blockedUsers.map((blocked) => (
+                    <div
+                      key={blocked.user.id}
+                      className="flex items-center justify-between p-4 rounded-xl border border-amber-400/20 bg-amber-500/5 hover:border-amber-400/40 transition-all duration-300 group"
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="relative shrink-0">
+                          {blocked.user.avatar ? (
+                            <>
+                              <LazyLoadingImage
+                                dimension={{
+                                  width: "w-12 sm:w-14",
+                                  height: "h-12 sm:h-14",
+                                }}
+                                loading={loadedAvatars.has(blocked.user.id)}
+                                color="bg-primary-btn/30"
+                              >
+                                <img
+                                  src={blocked.user.avatar}
+                                  alt={blocked.user.name || "Blocked user"}
+                                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover opacity-50 transition-opacity duration-300 ${loadedAvatars.has(blocked.user.id) ? "opacity-50" : "opacity-0"}`}
+                                  loading="lazy"
+                                  onLoad={() =>
+                                    setLoadedAvatars((prev) =>
+                                      new Set(prev).add(blocked.user.id)
+                                    )
+                                  }
+                                />
+                              </LazyLoadingImage>
+                              {!loadedAvatars.has(blocked.user.id) && (
+                                <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md animate-pulse"></div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-white/20 to-white/10 flex items-center justify-center text-lg font-semibold opacity-50">
+                              {getInitials(blocked.user.name)}
+                            </div>
+                          )}
+                          <div className="absolute bottom-0 right-0 w-4 h-4 bg-amber-500 rounded-full border-2 border-primary-elements flex items-center justify-center">
+                            <MdBlock size={10} className="text-white" />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-white/80 truncate">
+                            {blocked.user.name || "Unknown User"}
+                          </p>
+                          <p className="text-sm text-white/50 truncate">
+                            {blocked.user.email || "No email"}
+                          </p>
+                          <p className="text-xs text-amber-400/70 mt-0.5">
+                            Blocked {new Date(blocked.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleUnblockUser(blocked.user.id)}
+                        disabled={unblockingUserId === blocked.user.id}
+                        className="ml-2 px-4 py-2 rounded-lg border-2 border-green-400/40 bg-green-500/10 text-green-200 hover:bg-green-500/20 hover:border-green-400/60 hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-green-500/50 shrink-0"
+                        title="Unblock user"
+                      >
+                        <MdCheckCircle size={18} />
+                        <span className="hidden sm:inline text-sm font-medium">
+                          {unblockingUserId === blocked.user.id ? "Unblocking..." : "Unblock"}
+                        </span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Friends List Section */}
         <div className="bg-primary-elements rounded-xl border border-white/10 overflow-hidden mb-6 sm:mb-8">
           <div className="p-4 sm:p-6 border-b border-white/10">
@@ -292,7 +518,7 @@ export function FriendsSection(): JSX.Element {
                   </div>
                 </button>
                 <div className="mt-4 flex items-center justify-center gap-2 text-xs text-white/50">
-                  <span>💡 Pro tip:</span>
+                  <span>💡Quick tip:</span>
                   <span>Press</span>
                   <kbd className="px-2 py-0.5 rounded bg-white/10 border border-white/20 text-white/70 font-mono">
                     F
@@ -372,17 +598,30 @@ export function FriendsSection(): JSX.Element {
                               </p>
                             </div>
                           </div>
+                          <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100">
+                            <button
+                              onClick={() => handleBlockFriend(friend.id, friend.name)}
+                              disabled={blockingFriendId === friend.id}
+                              className="px-3 py-2 rounded-lg border border-amber-400/40 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20 hover:border-amber-400/60 hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                              title="Block friend"
+                            >
+                              <MdBlock size={18} />
+                              <span className="hidden lg:inline text-sm">
+                                {blockingFriendId === friend.id ? "Blocking..." : "Block"}
+                              </span>
+                            </button>
                           <button
                             onClick={() => handleDeleteFriend(friend.id, friend.name)}
                             disabled={deletingFriendId === friend.id}
-                            className="ml-2 px-3 py-2 rounded-lg border border-rose-400/40 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20 hover:border-rose-400/60 hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-rose-500/50 shrink-0"
+                              className="px-3 py-2 rounded-lg border border-rose-400/40 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20 hover:border-rose-400/60 hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-rose-500/50"
                             title="Remove friend"
                           >
                             <MdDelete size={18} />
-                            <span className="hidden sm:inline text-sm">
+                              <span className="hidden lg:inline text-sm">
                               {deletingFriendId === friend.id ? "Removing..." : "Remove"}
                             </span>
                           </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -456,17 +695,30 @@ export function FriendsSection(): JSX.Element {
                               </p>
                             </div>
                           </div>
+                          <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100">
+                            <button
+                              onClick={() => handleBlockFriend(friend.id, friend.name)}
+                              disabled={blockingFriendId === friend.id}
+                              className="px-3 py-2 rounded-lg border border-amber-400/40 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20 hover:border-amber-400/60 hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                              title="Block friend"
+                            >
+                              <MdBlock size={18} />
+                              <span className="hidden lg:inline text-sm">
+                                {blockingFriendId === friend.id ? "Blocking..." : "Block"}
+                              </span>
+                            </button>
                           <button
                             onClick={() => handleDeleteFriend(friend.id, friend.name)}
                             disabled={deletingFriendId === friend.id}
-                            className="ml-2 px-3 py-2 rounded-lg border border-rose-400/40 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20 hover:border-rose-400/60 hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-rose-500/50 shrink-0"
+                              className="px-3 py-2 rounded-lg border border-rose-400/40 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20 hover:border-rose-400/60 hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-rose-500/50"
                             title="Remove friend"
                           >
                             <MdDelete size={18} />
-                            <span className="hidden sm:inline text-sm">
+                              <span className="hidden lg:inline text-sm">
                               {deletingFriendId === friend.id ? "Removing..." : "Remove"}
                             </span>
                           </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -558,10 +810,10 @@ export function FriendsSection(): JSX.Element {
 
               {/* Search Component */}
               <div className="max-h-[70vh] overflow-y-auto">
-                <SearchBarFriends currentUserId={user.id} />
-              </div>
-            </div>
+            <SearchBarFriends currentUserId={user.id} />
           </div>
+        </div>
+      </div>
         </div>
       )}
 
@@ -611,6 +863,58 @@ export function FriendsSection(): JSX.Element {
               >
                 <MdDelete size={20} />
                 Remove Friend
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Block Confirmation Modal */}
+      {blockModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={cancelBlockFriend}
+          ></div>
+
+          {/* Modal */}
+          <div className="relative bg-primary-elements border border-white/20 rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 animate-in zoom-in-95 duration-200">
+            {/* Warning Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="p-4 rounded-full bg-amber-500/20 border-2 border-amber-400/40">
+                <MdBlock className="text-amber-400" size={40} />
+              </div>
+            </div>
+
+            {/* Title */}
+            <h3 className="text-2xl font-bold text-center mb-2 text-white">
+              Block Friend?
+            </h3>
+
+            {/* Message */}
+            <p className="text-center text-white/70 mb-6">
+              Are you sure you want to block{" "}
+              <span className="font-semibold text-[#FF6B00]">
+                {blockModal.friendName || "this user"}
+              </span>
+              ? They won't be able to send you messages or friend requests.
+            </p>
+
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={cancelBlockFriend}
+                className="flex-1 px-6 py-3 rounded-xl border border-white/20 bg-white/5 text-white font-semibold hover:bg-white/10 hover:border-white/30 transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-white/50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmBlockFriend}
+                className="flex-1 px-6 py-3 rounded-xl border border-amber-400/40 bg-amber-500/20 text-amber-200 font-semibold hover:bg-amber-500/30 hover:border-amber-400/60 transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-amber-500/50 flex items-center justify-center gap-2"
+              >
+                <MdBlock size={20} />
+                Block Friend
               </button>
             </div>
           </div>
