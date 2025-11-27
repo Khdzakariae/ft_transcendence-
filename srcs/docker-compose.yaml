@@ -21,8 +21,6 @@ services:
     container_name: front-container
     ports:
       - "8080:8080"
-    env_file:
-      - ./front/.env
     volumes:
       - front_data:/usr/src/app/
     depends_on:
