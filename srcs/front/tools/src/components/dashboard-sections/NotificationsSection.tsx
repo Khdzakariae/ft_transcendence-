@@ -1,20 +1,13 @@
 import { useState } from "react";
-import { UserInter } from "../../interfaces/UserInterfaces";
 import { MdCheck, MdClose } from "react-icons/md";
-import { FriendRequest } from "../../hooks/useNotifications";
 import { LazyLoadingImage } from "../LazyLoadingImage";
+import { useDashboardContext } from "../../Pages/Dashboard";
 
-export function NotificationsSection({
-  user,
-  friendRequests,
-  onMarkAsRead,
-  onRequestUpdate,
-}: {
-  user: UserInter | null;
-  friendRequests: FriendRequest[];
-  onMarkAsRead: (requestId: string) => void;
-  onRequestUpdate: () => void;
-}): JSX.Element {
+export function NotificationsSection(): JSX.Element {
+  const { user, friendRequests, markNotificationAsRead, fetchFriendRequests } =
+    useDashboardContext();
+  const onMarkAsRead = markNotificationAsRead;
+  const onRequestUpdate = fetchFriendRequests;
   const [error, setError] = useState<string | null>(null);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [loadedAvatars, setLoadedAvatars] = useState<Set<string>>(new Set());
@@ -120,7 +113,7 @@ export function NotificationsSection({
               const initials = request.from.name
                 ? request.from.name
                     .split(" ")
-                    .map((n) => n.charAt(0))
+                    .map((n: string) => n.charAt(0))
                     .join("")
                     .substring(0, 2)
                     .toUpperCase()

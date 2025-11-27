@@ -1,6 +1,8 @@
-import { UserInter } from "../../interfaces/UserInterfaces";
+import { useDashboardContext } from "../../Pages/Dashboard";
 
-export function DashSection({ user }: { user: UserInter | null }): JSX.Element {
+export function DashSection(): JSX.Element {
+  const { user } = useDashboardContext();
+
   return (
     <div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
       <h1 className="text-white text-2xl font-bold">

@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { UserInter } from "../../interfaces/UserInterfaces";
 import { SearchBarFriends } from "../searchBarFriends";
 import { MdDelete, MdPerson, MdGroup, MdPersonAdd, MdCheckCircle } from "react-icons/md";
 import { LazyLoadingImage } from "../LazyLoadingImage";
+import { useDashboardContext } from "../../Pages/Dashboard";
 
 interface Friend {
   id: string;
@@ -12,11 +12,8 @@ interface Friend {
   onlineStatus: boolean;
 }
 
-export function FriendsSection({
-  user,
-}: {
-  user: UserInter | null;
-}): JSX.Element {
+export function FriendsSection(): JSX.Element {
+  const { user } = useDashboardContext();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

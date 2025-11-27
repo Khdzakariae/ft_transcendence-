@@ -251,11 +251,6 @@ export function SearchBarFriends({
               ← Back to Search
             </button>
             <ProfileSection
-              user={{
-                id: selectedUser.id,
-                email: selectedUser.email,
-                name: selectedUser.name,
-              }}
               user_data={selectedUser}
             />
           </div>

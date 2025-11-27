@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { UserInter } from "../../interfaces/UserInterfaces";
 import {
   MdSend,
   MdArrowBack,
@@ -9,6 +8,7 @@ import {
   MdMessage,
 } from "react-icons/md";
 import { LazyLoadingImage } from "../LazyLoadingImage";
+import { useDashboardContext } from "../../Pages/Dashboard";
 
 // Interfaces
 interface ChatParticipant {
@@ -60,11 +60,8 @@ interface Friend {
   onlineStatus: boolean;
 }
 
-export function MessagesSection({
-  user,
-}: {
-  user: UserInter | null;
-}): JSX.Element {
+export function MessagesSection(): JSX.Element {
+  const { user } = useDashboardContext();
   const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);

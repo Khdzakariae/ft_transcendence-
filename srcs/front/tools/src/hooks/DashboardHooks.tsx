@@ -6,13 +6,11 @@ import { UserDataInter } from "../interfaces/UserInterfaces";
 
 export function DashboardHooks({
   user,
-  section,
   setUser,
   user_data,
   setUserData,
 }: {
   user: AuthResponse["user"] | null;
-  section: string;
   setUser: (user: AuthResponse["user"] | null) => void;
   user_data: UserDataInter | null;
   setUserData: (data: UserDataInter | null) => void;
@@ -22,10 +20,6 @@ export function DashboardHooks({
   useEffect(() => {
     Utils.LogLevel.DEBUG && console.log("checking on user: ", user);
   }, [user]);
-
-  useEffect(() => {
-    Utils.LogLevel.DEBUG && console.log("Current dashboard section: ", section);
-  }, [section]);
 
   useEffect(() => {
     const checkAuth = async () => {

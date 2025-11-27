@@ -10,10 +10,9 @@ import {
   AiOutlineClose,
   AiOutlineWarning,
 } from "react-icons/ai";
-import { UserInter } from "../../interfaces/UserInterfaces";
-import { UserDataInter } from "../../interfaces/UserInterfaces";
 import { Utils } from "../../Utils";
 import { LazyLoadingImage } from "../LazyLoadingImage";
+import { useDashboardContext } from "../../Pages/Dashboard";
 
 const TABS = [
   {
@@ -72,13 +71,8 @@ function Modal({
   );
 }
 
-export function SettingsSection({
-  user,
-  user_data,
-}: {
-  user: UserInter;
-  user_data: UserDataInter | null;
-}): JSX.Element {
+export function SettingsSection(): JSX.Element {
+  const { user, user_data } = useDashboardContext();
   const [activeTab, setActiveTab] = useState<TabId>("profile");
 
   // Profile update state
@@ -133,7 +127,7 @@ export function SettingsSection({
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user_data) return;
+    if (!user_data || !user) return;
 
     // Validate inputs before making API calls
     const trimmedFirstName = firstName.trim();
@@ -236,6 +230,7 @@ export function SettingsSection({
   };
 
   const handleSetup2FA = async () => {
+    if (!user) return;
     setTwoFactorLoading(true);
     setTwoFactorMessage(null);
 
@@ -290,6 +285,7 @@ export function SettingsSection({
   };
 
   const handleVerify2FA = async () => {
+    if (!user) return;
     setTwoFactorLoading(true);
 
     if (!/^\d{6}$/.test(verificationToken)) {
@@ -338,6 +334,7 @@ export function SettingsSection({
 
   const handleDisable2FA = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     setTwoFactorLoading(true);
     setTwoFactorMessage(null);
 
@@ -437,7 +434,7 @@ export function SettingsSection({
                   {user_data.name}
                 </p>
                 <p className="text-sm uppercase tracking-[0.35em] text-white/60">
-                  @{user_data.email?.split("@")[0] || user.email}
+                  @{user_data.email?.split("@")[0] || user?.email || "user"}
                 </p>
               </div>
               <div className="flex flex-wrap items-center justify-center gap-3 text-[0.65rem] font-medium uppercase tracking-[0.25em] text-white/65">

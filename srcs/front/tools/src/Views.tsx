@@ -11,6 +11,13 @@ import {
 import { NotFoundPage } from "./Pages/NotFound";
 import { LoadingPage } from "./Pages/LoadingPage";
 import { OAuth2FAPage } from "./Pages/OAuth2FA";
+import { DashSection } from "./components/dashboard-sections/DashSection";
+import { ProfileSection } from "./components/dashboard-sections/ProfileSection";
+import { SettingsSection } from "./components/dashboard-sections/SettingsSection";
+import { GameSection } from "./components/dashboard-sections/GameSection";
+import { FriendsSection } from "./components/dashboard-sections/FriendsSection";
+import { MessagesSection } from "./components/dashboard-sections/MessagesSection";
+import { NotificationsSection } from "./components/dashboard-sections/NotificationsSection";
 
 // Pages
 export function Views(): JSX.Element {
@@ -53,14 +60,26 @@ export function Views(): JSX.Element {
         element={<ResetPasswordEmailPage />}
       />
       <Route path="/reset-password/:userId/" element={<ResetPasswordPage />} />
+      
+      {/* Dashboard with nested routes */}
       <Route
-        path="/dashboard/"
+        path="/dashboard/*"
         element={
           <LoadingPage pageName="Dashboard">
             <Dashboard />
           </LoadingPage>
         }
-      />
+      >
+        {/* Default dashboard route */}
+        <Route index element={<DashSection />} />
+        <Route path="profile" element={<ProfileSection />} />
+        <Route path="settings" element={<SettingsSection />} />
+        <Route path="game" element={<GameSection />} />
+        <Route path="friends" element={<FriendsSection />} />
+        <Route path="messages" element={<MessagesSection />} />
+        <Route path="notifications" element={<NotificationsSection />} />
+      </Route>
+
       {/* OAuth 2FA route */}
       <Route path="/oauth-2fa/" element={<OAuth2FAPage />} />
       <Route path="*" element={<NotFoundPage />} />

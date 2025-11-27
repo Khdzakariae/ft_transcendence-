@@ -1,28 +1,45 @@
-import { useState } from "react";
+import { useState, createContext, useContext } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import { AuthResponse } from "../interfaces/AuthResponse";
 import { UserInter } from "../interfaces/UserInterfaces";
 import { SideBar } from "../components/SideBar";
-import { DashSection } from "../components/dashboard-sections/DashSection";
-import { ProfileSection } from "../components/dashboard-sections/ProfileSection";
-import { SettingsSection } from "../components/dashboard-sections/SettingsSection";
-import { GameSection } from "../components/dashboard-sections/GameSection";
-import { FriendsSection } from "../components/dashboard-sections/FriendsSection";
-import { MessagesSection } from "../components/dashboard-sections/MessagesSection";
 import { DashboardHooks } from "../hooks/DashboardHooks";
 import { UserDataInter } from "../interfaces/UserInterfaces";
-import { NotificationsSection } from "../components/dashboard-sections/NotificationsSection";
 import { useNotifications } from "../hooks/useNotifications";
 
-// import { UserIcon, SettingsIcon, FilesIcon, ImagesIcon, BellIcon, TrophyIcon, BarChartIcon } from 'lucide-react';
+// Create a context to share dashboard data with child routes
+interface DashboardContextType {
+  user: AuthResponse["user"] | null;
+  user_data: UserDataInter | null;
+  friendRequests: any[];
+  markNotificationAsRead: (requestId: string) => void;
+  fetchFriendRequests: () => void;
+}
+
+const DashboardContext = createContext<DashboardContextType | null>(null);
+
+// Custom hook to use dashboard context
+export function useDashboardContext() {
+  const context = useContext(DashboardContext);
+  if (!context) {
+    throw new Error(
+      "useDashboardContext must be used within Dashboard component"
+    );
+  }
+  return context;
+}
 
 export function Dashboard(): JSX.Element {
   const [user, setUser] = useState<AuthResponse["user"] | null>(null);
-  const [section, setSection] = useState<string>("dashboard");
   const [user_data, setUserData] = useState<UserDataInter | null>(null);
+  const location = useLocation();
+
+  // Get current section from URL path
+  const currentPath = location.pathname.split("/").filter(Boolean);
+  const section = currentPath[1] || "dashboard";
 
   DashboardHooks({
     user,
-    section,
     setUser,
     user_data,
     setUserData,
@@ -36,46 +53,26 @@ export function Dashboard(): JSX.Element {
     fetchFriendRequests,
   } = useNotifications(user, section);
 
+  // Prepare context value
+  const contextValue: DashboardContextType = {
+    user,
+    user_data,
+    friendRequests,
+    markNotificationAsRead,
+    fetchFriendRequests,
+  };
+
   return (
-    <div className="flex flex-row text-white">
-      <SideBar
-        active_user={user as UserInter}
-        user_data={user_data as UserDataInter}
-        section={section}
-        setSection={setSection}
-        hasUnreadNotifications={hasUnreadNotifications}
-      />
-      {/* dashboar will be customized later */}
-      {section === "dashboard" ? (
-        <DashSection user={user as UserInter} />
-      ) : null}
-      {section === "profile" ? (
-        <ProfileSection
-          user={user as UserInter}
+    <DashboardContext.Provider value={contextValue}>
+      <div className="flex flex-row text-white">
+        <SideBar
+          active_user={user as UserInter}
           user_data={user_data as UserDataInter}
+          hasUnreadNotifications={hasUnreadNotifications}
         />
-      ) : null}
-      {section === "settings" ? (
-        <SettingsSection
-          user={user as UserInter}
-          user_data={user_data as UserDataInter}
-        />
-      ) : null}
-      {section === "game" ? <GameSection user={user as UserInter} /> : null}
-      {section === "friends" ? (
-        <FriendsSection user={user as UserInter} />
-      ) : null}
-      {section === "messages" ? (
-        <MessagesSection user={user as UserInter} />
-      ) : null}
-      {section === "notifications" ? (
-        <NotificationsSection
-          user={user as UserInter}
-          friendRequests={friendRequests}
-          onMarkAsRead={markNotificationAsRead}
-          onRequestUpdate={fetchFriendRequests}
-        />
-      ) : null}
-    </div>
+        {/* Render child routes */}
+        <Outlet />
+      </div>
+    </DashboardContext.Provider>
   );
 }

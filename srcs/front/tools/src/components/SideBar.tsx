@@ -7,7 +7,7 @@ import { LiaUserFriendsSolid } from "react-icons/lia";
 import { IoChatbubblesOutline } from "react-icons/io5";
 import { TbLogout2 } from "react-icons/tb";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Logo from "../assets/ping_pong_logo.png";
 import { UserDataInter, UserInter } from "../interfaces/UserInterfaces";
 import { AvatarDot } from "./AvatarDot";
@@ -17,14 +17,10 @@ import { IoIosNotificationsOutline } from "react-icons/io";
 export function SideBar({
   active_user,
   user_data,
-  section,
-  setSection,
   hasUnreadNotifications,
 }: {
   active_user: UserInter;
   user_data: UserDataInter | null;
-  section: string;
-  setSection: (section: string) => void;
   hasUnreadNotifications?: boolean;
 }): JSX.Element {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
@@ -32,6 +28,22 @@ export function SideBar({
   const [loading_avatar, setLoadingAvatar] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get current section from URL path
+  const getCurrentSection = () => {
+    const path = location.pathname;
+    if (path === "/dashboard" || path === "/dashboard/") return "dashboard";
+    if (path.includes("/dashboard/profile")) return "profile";
+    if (path.includes("/dashboard/settings")) return "settings";
+    if (path.includes("/dashboard/game")) return "game";
+    if (path.includes("/dashboard/friends")) return "friends";
+    if (path.includes("/dashboard/messages")) return "messages";
+    if (path.includes("/dashboard/notifications")) return "notifications";
+    return "dashboard";
+  };
+
+  const section = getCurrentSection();
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -100,7 +112,7 @@ export function SideBar({
           >
             <button
               onClick={() => {
-                setSection("dashboard");
+                navigate("/dashboard");
               }}
             >
               <LuLayoutDashboard className="w-6 h-6" />
@@ -111,7 +123,7 @@ export function SideBar({
               isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
             }`}
             onClick={() => {
-              setSection("dashboard");
+              navigate("/dashboard");
             }}
           >
             Dashboard
@@ -126,7 +138,7 @@ export function SideBar({
           >
             <button
               onClick={() => {
-                setSection("game");
+                navigate("/dashboard/game");
               }}
             >
               <RiGamepadLine className="w-6 h-6" />
@@ -137,7 +149,7 @@ export function SideBar({
               isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
             }`}
             onClick={() => {
-              setSection("game");
+              navigate("/dashboard/game");
             }}
           >
             Game
@@ -152,7 +164,7 @@ export function SideBar({
           >
             <button
               onClick={() => {
-                setSection("profile");
+                navigate("/dashboard/profile");
               }}
             >
               <CgProfile className="w-6 h-6" />
@@ -163,7 +175,7 @@ export function SideBar({
               isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
             }`}
             onClick={() => {
-              setSection("profile");
+              navigate("/dashboard/profile");
             }}
           >
             Profile
@@ -178,7 +190,7 @@ export function SideBar({
           >
             <button
               onClick={() => {
-                setSection("settings");
+                navigate("/dashboard/settings");
               }}
             >
               <IoSettingsOutline className="w-6 h-6" />
@@ -186,7 +198,7 @@ export function SideBar({
           </div>
           <button
             onClick={() => {
-              setSection("settings");
+              navigate("/dashboard/settings");
             }}
             className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
               isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
@@ -204,7 +216,7 @@ export function SideBar({
           >
             <button
               onClick={() => {
-                setSection("friends");
+                navigate("/dashboard/friends");
               }}
             >
               <LiaUserFriendsSolid className="w-6 h-6" />
@@ -212,7 +224,7 @@ export function SideBar({
           </div>
           <button
             onClick={() => {
-              setSection("friends");
+              navigate("/dashboard/friends");
             }}
             className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
               isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
@@ -230,7 +242,7 @@ export function SideBar({
           >
             <button
               onClick={() => {
-                setSection("messages");
+                navigate("/dashboard/messages");
               }}
             >
               <IoChatbubblesOutline className="w-6 h-6" />
@@ -238,7 +250,7 @@ export function SideBar({
           </div>
           <button
             onClick={() => {
-              setSection("messages");
+              navigate("/dashboard/messages");
             }}
             className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
               isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
@@ -257,7 +269,7 @@ export function SideBar({
           >
             <button
               onClick={() => {
-                setSection("notifications");
+                navigate("/dashboard/notifications");
               }}
               className="relative"
             >
@@ -269,7 +281,7 @@ export function SideBar({
           </div>
           <button
             onClick={() => {
-              setSection("notifications");
+              navigate("/dashboard/notifications");
             }}
             className={`basis-2/3 text-left overflow-hidden whitespace-nowrap ${
               isSidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
@@ -280,7 +292,7 @@ export function SideBar({
         </div>
         <div
           id="nav-bar-section"
-          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 ${section === "logout" ? "current-section" : "default-section"}`}
+          className={`flex flex-row justify-center items-center gap-2 transition-all duration-300 default-section`}
         >
           <div
             className={`flex transition-all duration-300 ${isSidebarExpanded ? "justify-end basis-1/3" : "justify-center basis-full"}`}

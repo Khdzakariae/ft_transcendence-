@@ -1,16 +1,23 @@
 import { useEffect, useState } from "react";
-import { UserInter } from "../../interfaces/UserInterfaces";
 import { LazyLoadingImage } from "../LazyLoadingImage";
 import { MdOutlineVerified } from "react-icons/md";
+import { useDashboardContext } from "../../Pages/Dashboard";
 import { UserDataInter } from "../../interfaces/UserInterfaces";
 
-export function ProfileSection({
-  user,
-  user_data,
-}: {
-  user: UserInter | null;
-  user_data: UserDataInter | null;
-}): JSX.Element {
+interface ProfileSectionProps {
+  user_data?: UserDataInter | null;
+}
+
+export function ProfileSection({ user_data: propUserData }: ProfileSectionProps = {}): JSX.Element {
+  // Try to get context, but don't fail if not in Dashboard
+  let contextUserData: UserDataInter | null = null;
+  try {
+    const context = useDashboardContext();
+    contextUserData = context.user_data;
+  } catch {
+    // Not within Dashboard context, use props only
+  }
+  const user_data = propUserData ?? contextUserData;
   const [loaded, setLoaded] = useState(false);
   const total_xp: number = 6000; // mock total xp for testing
   const [xpProgress, setXpProgress] = useState<number>(0);
