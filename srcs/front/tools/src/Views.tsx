@@ -11,6 +11,7 @@ import {
 import { NotFoundPage } from "./Pages/NotFound";
 import { LoadingPage } from "./Pages/LoadingPage";
 import { OAuth2FAPage } from "./Pages/OAuth2FA";
+import { ProfileSetupPage } from "./Pages/ProfileSetup";
 import { DashSection } from "./components/dashboard-sections/DashSection";
 import { ProfileSection } from "./components/dashboard-sections/ProfileSection";
 import { SettingsSection } from "./components/dashboard-sections/SettingsSection";
@@ -60,6 +61,9 @@ export function Views(): JSX.Element {
         element={<ResetPasswordEmailPage />}
       />
       <Route path="/reset-password/:userId/" element={<ResetPasswordPage />} />
+      
+      {/* Profile Setup for first-time users */}
+      <Route path="/profile-setup/" element={<ProfileSetupPage />} />
       
       {/* Dashboard with nested routes */}
       <Route

@@ -14,14 +14,14 @@ export function SignUpPage(): JSX.Element {
   const [is_loading, setIsLoading] = useState(false); // track account creation loading state
   const [creation_msg, setCreationMsg] = useState("Create Account"); // create account button message
 
-  // useEffect for redirect after signup
+  // useEffect for redirect after signup - redirect to sign-in first
   useEffect(() => {
     let timer: NodeJS.Timeout;
 
     if (is_signed_up) {
       timer = setTimeout(() => {
         navigate("/sign-in/");
-      }, 5000);
+      }, 2000);
     }
     return () => clearTimeout(timer);
   }, [is_signed_up, navigate]);

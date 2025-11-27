@@ -26,7 +26,56 @@ export function SignInPage(): JSX.Element {
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isSignedIn && !show2FA) {
-      timer = setTimeout(() => {
+      timer = setTimeout(async () => {
+        // Check if this is a first-time user who just registered
+        try {
+          const response = await fetch("http://localhost:3000/api/v1/user/me", {
+            method: "GET",
+            credentials: "include",
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const userData = data.data;
+            
+            // Check if account was created very recently (within last 5 minutes)
+            // This indicates a first-time sign-in right after registration
+            const accountCreatedAt = new Date(userData?.createdAt);
+            const now = new Date();
+            const minutesSinceCreation = (now.getTime() - accountCreatedAt.getTime()) / (1000 * 60);
+            
+            Utils.LogLevel.DEBUG && console.log("First-time user check:", {
+              createdAt: userData?.createdAt,
+              minutesSinceCreation: minutesSinceCreation.toFixed(2),
+              isNewAccount: minutesSinceCreation < 5
+            });
+            
+            // Only redirect to profile setup if account was created in last 5 minutes
+            // AND profile is incomplete (no avatar or no name)
+            if (minutesSinceCreation < 5) {
+              const hasValidName = userData?.name && 
+                                   typeof userData.name === 'string' && 
+                                   userData.name.trim() !== "";
+              const hasAvatar = !!userData?.avatar;
+              
+              // If missing avatar OR valid name, redirect to profile setup
+              if (!hasAvatar || !hasValidName) {
+                Utils.LogLevel.DEBUG && console.log("New account with incomplete profile, redirecting to setup");
+                navigate("/profile-setup/");
+                return;
+              }
+            }
+            
+            Utils.LogLevel.DEBUG && console.log("Returning user or profile complete, redirecting to dashboard");
+          } else {
+            Utils.LogLevel.WARN && console.warn("Failed to fetch user profile, status:", response.status);
+          }
+        } catch (error) {
+          Utils.LogLevel.ERROR && console.error("Error checking profile status:", error);
+          // On error, still try to navigate to dashboard (fail-open for better UX)
+        }
+        
+        // User is returning user or error occurred, go to dashboard
         navigate("/dashboard/");
       }, 2000);
     }
