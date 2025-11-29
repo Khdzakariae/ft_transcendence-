@@ -60,6 +60,6 @@ export function PlayerGameProfile({
 			<div>{`level ${level}`}</div>
 			{/*Game score */}
 			<div>Score</div>
-			</div>
+				</div>
 	);
 }
