@@ -9,7 +9,6 @@ import { TbLogout2 } from "react-icons/tb";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserDataInter, UserInter } from "../interfaces/UserInterfaces";
-import { AvatarDot } from "./AvatarDot";
 import { LazyLoadingImage } from "./LazyLoadingImage";
 import { IoIosNotificationsOutline } from "react-icons/io";
 
@@ -88,7 +87,7 @@ export function SideBar({
               loading={!loading_avatar}
               color="bg-primary-btn/30"
             >
-              <AvatarDot>
+              <div className="relative inline-block">
                 <img
                   src={user_data?.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=pingpong-paddle-1&backgroundColor=FF6B00"}
                   alt="avatar image"
@@ -96,7 +95,11 @@ export function SideBar({
                   loading="lazy"
                   onLoad={() => setLoadingAvatar(false)}
                 />
-              </AvatarDot>
+                {/* Discord-style status dot at bottom-right */}
+                {active_user?.onlineStatus !== false && (
+                  <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-[3px] border-primary-bg shadow-lg"></span>
+                )}
+              </div>
               {loading_avatar && (
                 <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md animate-pulse"></div>
               )}
