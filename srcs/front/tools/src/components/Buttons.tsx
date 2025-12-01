@@ -12,15 +12,26 @@ export function PrimaryButton({
     <button
       onClick={() => func()}
       className="
+				relative
 				font-secondary
 				w-auto
-				px-8 py-3 
-				bg-primary-btn text-gray-900 font-bold 
+				px-10 py-4 
+				bg-gradient-to-br from-cyan-500/80 via-cyan-600/70 to-cyan-700/80
+				text-white font-bold text-sm tracking-wide uppercase
 				rounded-full 
-				shadow-lg shadow-cyan-400/50 
-				transition duration-500 transform hover:scale-105
-				hover:bg-cyan-400
-				focus:outline-none focus:ring-4 focus:ring-cyan-400/50
+				border border-cyan-400/20
+				shadow-[0_8px_30px_rgb(0,0,0,0.4),0_2px_8px_rgba(6,182,212,0.15)]
+				transition-all duration-300 transform 
+				hover:shadow-[0_8px_40px_rgb(0,0,0,0.5),0_4px_12px_rgba(6,182,212,0.25)]
+				hover:translate-y-[-2px]
+				hover:from-cyan-500/90 hover:via-cyan-600/80 hover:to-cyan-700/90
+				active:translate-y-[0px]
+				focus:outline-none focus:ring-2 focus:ring-cyan-500/30
+				backdrop-blur-sm
+				overflow-hidden
+				before:absolute before:inset-0 
+				before:bg-gradient-to-t before:from-transparent before:via-white/5 before:to-white/10
+				before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300
 			"
       {...props.props}
     >
@@ -40,15 +51,26 @@ export function SecondaryButton({
     <button
       onClick={() => func()}
       className="
+				relative
 				font-secondary
 				w-full sm:w-auto 
-				px-8 py-3 
-				bg-secondary-btn text-white font-bold 
+				px-10 py-4 
+				bg-gradient-to-br from-orange-600/80 via-orange-700/70 to-orange-800/80
+				text-white font-bold text-sm tracking-wide uppercase
 				rounded-full 
-				shadow-lg shadow-orange-600/50 
-				transition duration-500 transform hover:scale-105
-				hover:bg-orange-400
-				focus:outline-none focus:ring-4 focus:ring-orange-600/50
+				border border-orange-500/20
+				shadow-[0_8px_30px_rgb(0,0,0,0.4),0_2px_8px_rgba(249,115,22,0.15)]
+				transition-all duration-300 transform 
+				hover:shadow-[0_8px_40px_rgb(0,0,0,0.5),0_4px_12px_rgba(249,115,22,0.25)]
+				hover:translate-y-[-2px]
+				hover:from-orange-600/90 hover:via-orange-700/80 hover:to-orange-800/90
+				active:translate-y-[0px]
+				focus:outline-none focus:ring-2 focus:ring-orange-600/30
+				backdrop-blur-sm
+				overflow-hidden
+				before:absolute before:inset-0 
+				before:bg-gradient-to-t before:from-transparent before:via-white/5 before:to-white/10
+				before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300
 			"
       {...props.props}
     >
