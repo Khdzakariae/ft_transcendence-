@@ -266,7 +266,6 @@ export function MessagesSection(): JSX.Element {
   const [groupName, setGroupName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [selectedAvatar, setSelectedAvatar] = useState<string>(groupAvatars[0]);
-  const [groupPassword, setGroupPassword] = useState("");
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -544,7 +543,6 @@ export function MessagesSection(): JSX.Element {
         setGroupName("");
         setSelectedMembers([]);
         setSelectedAvatar(groupAvatars[0]);
-        setGroupPassword("");
         setGroupError(null);
       } else {
         setGroupError("Failed to create group. Please try again.");
@@ -886,7 +884,6 @@ export function MessagesSection(): JSX.Element {
           setGroupName("");
           setSelectedMembers([]);
           setSelectedAvatar(groupAvatars[0]);
-          setGroupPassword("");
           setGroupError(null);
           setCreatingGroup(false);
         } else if (showNewChatModal) {
@@ -1545,7 +1542,6 @@ export function MessagesSection(): JSX.Element {
                   setGroupName("");
                   setSelectedMembers([]);
                   setSelectedAvatar(groupAvatars[0]);
-                  setGroupPassword("");
                   setGroupError(null);
                   setCreatingGroup(false);
                 }}
@@ -1628,24 +1624,6 @@ export function MessagesSection(): JSX.Element {
                   <p className="text-xs text-rose-400 mt-1.5">{groupNameError}</p>
                 )}
               </div>
-
-              {/* Optional Password */}
-              <div>
-                <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                  <MdLock size={16} className="text-yellow-500" />
-                  Password (Optional)
-                </label>
-                <input
-                  type="password"
-                  value={groupPassword}
-                  onChange={(e) => setGroupPassword(e.target.value)}
-                  placeholder="Set a password to protect this group..."
-                  className="w-full rounded-lg border border-white/10 bg-primary-bg px-4 py-2 text-white placeholder:text-white/40 focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all duration-200"
-                />
-                <p className="text-xs text-white/50 mt-1.5">
-                  If set, members will need this password to join the group
-                          </p>
-                        </div>
 
               <div>
                 <label className="block text-sm font-medium mb-2">
