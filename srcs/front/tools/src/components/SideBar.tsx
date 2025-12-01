@@ -96,7 +96,7 @@ export function SideBar({
                   onLoad={() => setLoadingAvatar(false)}
                 />
                 {/* Discord-style status dot at bottom-right */}
-                {active_user?.onlineStatus !== false && (
+                {user_data?.onlineStatus === true && (
                   <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-[3px] border-primary-bg shadow-lg"></span>
                 )}
               </div>
