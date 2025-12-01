@@ -92,7 +92,7 @@ const api = {
     return json.data || [];
   },
 
-  getMessages: async (chatId: string, limit = 50) => {
+  getMessages: async (chatId: string, limit = 500) => {
     const res = await fetch(
       `http://localhost:3000/api/v1/chats/${chatId}/messages?limit=${limit}`,
       { credentials: "include" }
@@ -268,6 +268,8 @@ export function MessagesSection(): JSX.Element {
   const currentChatIdRef = useRef<string | null>(null);
   const isInitialLoadRef = useRef<boolean>(false);
   const [loaded, setLoaded] = useState(false);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastMessageTimestampRef = useRef<string | null>(null);
 
   // Typing indicator
   const [typingUsers] = useState<{ [chatId: string]: string[] }>(
@@ -318,6 +320,12 @@ export function MessagesSection(): JSX.Element {
               new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
           );
           setMessages(sortedMessages);
+          
+          // Update last message timestamp for polling comparison
+          if (sortedMessages.length > 0) {
+            const latestMessage = sortedMessages[sortedMessages.length - 1];
+            lastMessageTimestampRef.current = latestMessage.createdAt;
+          }
         } else {
           setMessages([]);
         }
@@ -342,6 +350,83 @@ export function MessagesSection(): JSX.Element {
     },
     []
   );
+
+  // Poll for new messages and update both messages and chats list
+  const pollForNewMessages = useCallback(async () => {
+    if (!selectedChat || !currentChatIdRef.current) return;
+    if (isSendingRef.current) return; // Don't poll while sending a message
+
+    const chatId = selectedChat.id;
+    
+    // Verify this is still the current chat before proceeding
+    if (currentChatIdRef.current !== chatId) {
+      return;
+    }
+    
+    try {
+      const data = await api.getMessages(chatId);
+
+      // Double-check chat hasn't changed during the async operation
+      if (currentChatIdRef.current !== chatId) {
+        return;
+      }
+
+      if (Array.isArray(data) && data.length > 0) {
+        const sortedMessages: Message[] = data.sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+
+        const latestMessage = sortedMessages[sortedMessages.length - 1];
+        
+        // Check if there are new messages by comparing with current messages
+        setMessages((prevMessages) => {
+          // Verify chat hasn't changed
+          if (currentChatIdRef.current !== chatId) {
+            return prevMessages;
+          }
+
+          const existingMessageIds = new Set(prevMessages.map((m) => m.id));
+          const newMessages = sortedMessages.filter(
+            (m) => !existingMessageIds.has(m.id)
+          );
+
+          // If there are new messages, update the state
+          if (newMessages.length > 0 || prevMessages.length !== sortedMessages.length) {
+            lastMessageTimestampRef.current = latestMessage.createdAt;
+            return sortedMessages;
+          }
+
+          return prevMessages;
+        });
+
+        // Update chats list with the latest message if messages were updated
+        // We always update the chats list to ensure sidebar stays in sync
+        if (currentChatIdRef.current === chatId) {
+          setChats((prevChats) =>
+            prevChats.map((chat) =>
+              chat.id === chatId
+                ? {
+                    ...chat,
+                    lastMessage: {
+                      content: latestMessage.content,
+                      createdAt: latestMessage.createdAt,
+                      senderId: latestMessage.senderId,
+                    },
+                    lastMessageAt: latestMessage.createdAt,
+                  }
+                : chat
+            )
+          );
+        }
+      }
+    } catch (err: any) {
+      // Silently fail for polling errors to avoid disrupting the UI
+      if (err.name !== "AbortError" && currentChatIdRef.current === chatId) {
+        console.error("Polling error:", err);
+      }
+    }
+  }, [selectedChat]);
 
   const fetchFriends = useCallback(async () => {
     try {
@@ -576,8 +661,15 @@ export function MessagesSection(): JSX.Element {
       return;
     }
 
+    // Clear existing polling interval
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+
     currentChatIdRef.current = chat.id;
     isInitialLoadRef.current = true; // Mark as initial load for instant scroll
+    lastMessageTimestampRef.current = null; // Reset timestamp for new chat
     setMessages([]);
     setMessagesError(null);
     setSendError(null);
@@ -619,6 +711,11 @@ export function MessagesSection(): JSX.Element {
 
     return () => {
       controller.abort();
+      // Clean up polling interval on unmount
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
     };
   }, [user, fetchChats, fetchFriends]);
 
@@ -663,6 +760,46 @@ export function MessagesSection(): JSX.Element {
     }
     return undefined;
   }, [selectedChat]);
+
+  // Polling effect: Set up polling when a chat is selected
+  useEffect(() => {
+    // Clear any existing polling interval
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+
+    // Only start polling if a chat is selected
+    if (selectedChat && currentChatIdRef.current === selectedChat.id) {
+      // Reset last message timestamp when switching chats
+      lastMessageTimestampRef.current = null;
+
+      // Start polling every 3 seconds
+      pollingIntervalRef.current = setInterval(() => {
+        pollForNewMessages();
+      }, 3000);
+
+      // Also poll immediately after a short delay to catch any missed messages
+      const immediatePoll = setTimeout(() => {
+        pollForNewMessages();
+      }, 1000);
+
+      return () => {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+        clearTimeout(immediatePoll);
+      };
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, [selectedChat, pollForNewMessages]);
 
   // ESC key to close modals
   useEffect(() => {
