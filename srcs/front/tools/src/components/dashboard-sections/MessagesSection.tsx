@@ -4,7 +4,6 @@ import {
   MdArrowBack,
   MdAdd,
   MdClose,
-  MdSearch,
   MdMessage,
   MdGroup,
   MdBlock,
@@ -238,11 +237,8 @@ export function MessagesSection(): JSX.Element {
     null
   );
 
-  // Friends & Search
+  // Friends
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState<Friend[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
 
   // Predefined stylish avatars for groups
   const groupAvatars = [
@@ -448,43 +444,6 @@ export function MessagesSection(): JSX.Element {
     }
   }, []);
 
-  const searchUsers = useCallback(
-    async (term: string, abortSignal?: AbortSignal) => {
-      if (!term.trim()) {
-        setSearchResults([]);
-        setIsSearching(false);
-        return;
-      }
-
-      setIsSearching(true);
-
-      try {
-        const data = await api.searchUsers(term);
-        if (!abortSignal?.aborted && Array.isArray(data)) {
-          const results = data
-            .filter((u: any) => u && u.id && u.id !== user?.id)
-            .map((u: any) => ({
-              id: u.id,
-              name: u.name || null,
-              email: u.email || null,
-              avatar: u.avatar || null,
-              onlineStatus: u.onlineStatus || false,
-            }));
-          setSearchResults(results);
-        }
-      } catch (err: any) {
-        if (!abortSignal?.aborted) {
-          console.error("Search failed:", err);
-          setSearchResults([]);
-        }
-      } finally {
-        if (!abortSignal?.aborted) {
-          setIsSearching(false);
-        }
-      }
-    },
-    [user]
-  );
 
   // ============== CHAT ACTIONS ==============
   const createChat = async (friendId: string) => {
@@ -737,19 +696,6 @@ export function MessagesSection(): JSX.Element {
     }
   }, [messages]);
 
-  useEffect(() => {
-    if (!showNewChatModal) return;
-
-    const controller = new AbortController();
-    const delaySearch = setTimeout(() => {
-      searchUsers(searchTerm, controller.signal);
-    }, 300);
-
-    return () => {
-      clearTimeout(delaySearch);
-      controller.abort();
-    };
-  }, [searchTerm, showNewChatModal, searchUsers]);
 
   useEffect(() => {
     if (selectedChat && messageInputRef.current) {
@@ -821,9 +767,7 @@ export function MessagesSection(): JSX.Element {
           setSelectedAvatar(groupAvatars[0]);
           setGroupPassword("");
         } else if (showNewChatModal) {
-    setShowNewChatModal(false);
-    setSearchTerm("");
-    setSearchResults([]);
+          setShowNewChatModal(false);
         }
       }
     };
@@ -896,18 +840,35 @@ export function MessagesSection(): JSX.Element {
   }, []);
 
   const chatsWithMessages = useMemo(() => {
+    // Create a set of friend IDs for quick lookup
+    const friendIds = new Set(friends.map((f) => f.id));
+    
     return chats
-      .filter((chat) => chat.lastMessage !== null)
+      .filter((chat) => {
+        // Must have a last message
+        if (chat.lastMessage === null) return false;
+        
+        // Always include groups and channels
+        if (chat.isGroup || chat.isChannel) return true;
+        
+        // For 1-on-1 chats, only include if the other participant is a friend
+        if (!chat.participants || chat.participants.length === 0) return false;
+        
+        const otherParticipant = chat.participants.find((p) => !p.isSelf);
+        if (!otherParticipant) return false;
+        
+        return friendIds.has(otherParticipant.id);
+      })
       .sort((a, b) => {
         const dateA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
         const dateB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
         return dateB - dateA;
       });
-  }, [chats]);
+  }, [chats, friends]);
 
   const displayFriends = useMemo(() => {
-    return searchTerm.trim() ? searchResults : friends;
-  }, [searchTerm, searchResults, friends]);
+    return friends;
+  }, [friends]);
 
   if (!user) {
     return (
@@ -1354,8 +1315,6 @@ export function MessagesSection(): JSX.Element {
               <button
                 onClick={() => {
                   setShowNewChatModal(false);
-                  setSearchTerm("");
-                  setSearchResults([]);
                 }}
                 className="p-2 rounded-lg hover:bg-primary-bg/50 transition-colors"
               >
@@ -1363,45 +1322,20 @@ export function MessagesSection(): JSX.Element {
               </button>
             </div>
 
-            <div className="p-4 border-b border-white/10">
-              <div className="relative">
-                <MdSearch
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50"
-                  size={20}
-                />
-                <input
-                  type="text"
-                  placeholder="Search friends by name..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-primary-bg pl-10 pr-4 py-2 text-white placeholder:text-white/40 focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/50 transition-all duration-200"
-                  autoFocus
-                />
-              </div>
-              {!searchTerm && friends.length > 0 && (
-                <p className="text-xs text-white/50 mt-2">
+            {friends.length > 0 && (
+              <div className="p-4 border-b border-white/10">
+                <p className="text-xs text-white/50">
                   {friends.length} friend{friends.length !== 1 ? "s" : ""} available
                 </p>
-              )}
-              {searchTerm && (
-                <p className="text-xs text-white/50 mt-2">
-                  {isSearching
-                    ? "Searching..."
-                    : `${displayFriends.length} result${displayFriends.length !== 1 ? "s" : ""} found`}
-                </p>
-              )}
-            </div>
+              </div>
+            )}
 
             <div className="flex-1 overflow-y-auto p-4">
               {displayFriends.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-white/60">
-                    {searchTerm ? "No friends found" : "No friends yet"}
-                  </p>
+                  <p className="text-white/60">No friends yet</p>
                   <p className="text-white/40 text-sm mt-2">
-                    {searchTerm
-                      ? "Try a different search term"
-                      : "Add friends to start chatting"}
+                    Add friends to start chatting
                   </p>
                 </div>
               ) : (
