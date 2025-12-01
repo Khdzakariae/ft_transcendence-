@@ -17,10 +17,12 @@ export function SideBar({
   active_user,
   user_data,
   hasUnreadNotifications,
+  hasUnreadMessages,
 }: {
   active_user: UserInter;
   user_data: UserDataInter | null;
   hasUnreadNotifications?: boolean;
+  hasUnreadMessages?: boolean;
 }): JSX.Element {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [loading_avatar, setLoadingAvatar] = useState(true);
@@ -259,12 +261,15 @@ export function SideBar({
           } ${isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"}`}
           onClick={() => navigate("/dashboard/messages")}
         >
-          <div className={`flex items-center justify-center transition-all duration-300 ${
+          <div className={`relative flex items-center justify-center transition-all duration-300 ${
             section === "messages"
               ? "text-white"
               : "text-white/70 hover:text-white"
           }`}>
             <IoChatbubblesOutline className="w-5 h-5" />
+            {hasUnreadMessages && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-orange-500 rounded-full border border-primary-bg animate-pulse"></span>
+            )}
           </div>
           {isSidebarExpanded && (
             <span className={`flex-1 text-left transition-all duration-300 ${

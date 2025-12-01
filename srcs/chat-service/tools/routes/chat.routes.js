@@ -7,6 +7,7 @@ import {
   removeParticipant,
   getMessages,
   sendMessage,
+  markChatAsRead,
 } from "../controllers/chat.controller.js";
 
 export default async function chatRouter(fastify, opts) {
@@ -18,4 +19,5 @@ export default async function chatRouter(fastify, opts) {
   fastify.delete("/:chatId/participants/:userId", removeParticipant);
   fastify.get("/:chatId/messages", getMessages);
   fastify.post("/:chatId/messages", sendMessage);
+  fastify.post("/:chatId/read", markChatAsRead);
 }

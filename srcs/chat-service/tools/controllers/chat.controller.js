@@ -32,17 +32,45 @@ export const getChats = async (req, reply) => {
       },
     });
 
-    const data = chats.map((c) => ({
-      id: c.id,
-      name: c.name,
-      avatar: c.avatar,
-      isGroup: c.isGroup,
-      lastMessageAt: c.lastMessageAt,
-      participants: c.participants.map((p) => ({
-        ...p.user,
-        isSelf: p.user.id === userId,
-      })),
-      lastMessage: c.messages[0] || null,
+    const data = await Promise.all(chats.map(async (c) => {
+      // Find the current user's participant record
+      const userParticipant = c.participants.find(p => p.userId === userId);
+      const lastReadAt = userParticipant?.lastReadAt;
+      
+      // Count unread messages (messages after lastReadAt)
+      let unreadCount = 0;
+      if (lastReadAt && c.lastMessageAt && c.lastMessageAt > lastReadAt) {
+        // Count messages created after lastReadAt
+        unreadCount = await prisma.message.count({
+          where: {
+            chatId: c.id,
+            createdAt: { gt: lastReadAt },
+            senderId: { not: userId }, // Don't count own messages
+          },
+        });
+      } else if (!lastReadAt && c.messages[0] && c.messages[0].senderId !== userId) {
+        // If never read and has messages from others
+        unreadCount = await prisma.message.count({
+          where: {
+            chatId: c.id,
+            senderId: { not: userId },
+          },
+        });
+      }
+
+      return {
+        id: c.id,
+        name: c.name,
+        avatar: c.avatar,
+        isGroup: c.isGroup,
+        lastMessageAt: c.lastMessageAt,
+        participants: c.participants.map((p) => ({
+          ...p.user,
+          isSelf: p.user.id === userId,
+        })),
+        lastMessage: c.messages[0] || null,
+        unreadCount,
+      };
     }));
 
     return reply.send({ data });
@@ -304,6 +332,35 @@ export const sendMessage = async (req, reply) => {
     );
 
     return reply.code(201).send({ data: msg });
+  } catch (e) {
+    req.log.error(e);
+    return reply.code(500).send({ error: "Internal Server Error" });
+  }
+};
+
+// POST /api/v1/chats/:chatId/read
+export const markChatAsRead = async (req, reply) => {
+  const userId = getAuthUserId(req);
+  if (!userId) return reply.code(401).send({ error: "Unauthorized" });
+  const { chatId } = req.params;
+  
+  try {
+    // Verify user is a participant of the chat
+    const membership = await prisma.chatParticipant.findUnique({
+      where: { userId_chatId: { userId, chatId } },
+    });
+    
+    if (!membership) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    // Update the lastReadAt timestamp for this participant
+    await prisma.chatParticipant.update({
+      where: { userId_chatId: { userId, chatId } },
+      data: { lastReadAt: new Date() },
+    });
+
+    return reply.send({ message: "OK" });
   } catch (e) {
     req.log.error(e);
     return reply.code(500).send({ error: "Internal Server Error" });

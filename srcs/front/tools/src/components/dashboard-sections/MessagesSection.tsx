@@ -218,6 +218,26 @@ const api = {
     );
     return res.json();
   },
+
+  markAsRead: async (chatId: string) => {
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/v1/chats/${chatId}/read`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+      if (!res.ok) {
+        console.error("Failed to mark chat as read");
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Error marking chat as read:", error);
+      return false;
+    }
+  },
 };
 
 // ============== MAIN COMPONENT ==============
@@ -277,6 +297,7 @@ export function MessagesSection(): JSX.Element {
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const chatsPollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastMessageTimestampRef = useRef<string | null>(null);
+  const lastViewedTimestampsRef = useRef<{ [chatId: string]: string }>({});
 
   // Typing indicator
   const [typingUsers] = useState<{ [chatId: string]: string[] }>(
@@ -332,6 +353,15 @@ export function MessagesSection(): JSX.Element {
           if (sortedMessages.length > 0) {
             const latestMessage = sortedMessages[sortedMessages.length - 1];
             lastMessageTimestampRef.current = latestMessage.createdAt;
+            
+            // Mark chat as read when messages are loaded (user is viewing it)
+            if (currentChatIdRef.current === chatId && latestMessage.createdAt) {
+              lastViewedTimestampsRef.current[chatId] = latestMessage.createdAt;
+              // Notify backend
+              if (!silent) {
+                api.markAsRead(chatId);
+              }
+            }
           }
         } else {
           setMessages([]);
@@ -401,6 +431,14 @@ export function MessagesSection(): JSX.Element {
           // If there are new messages, update the state
           if (newMessages.length > 0 || prevMessages.length !== sortedMessages.length) {
             lastMessageTimestampRef.current = latestMessage.createdAt;
+            
+            // Mark chat as read when new messages are loaded (user is actively viewing)
+            if (currentChatIdRef.current === chatId && latestMessage.createdAt) {
+              lastViewedTimestampsRef.current[chatId] = latestMessage.createdAt;
+              // Notify backend
+              api.markAsRead(chatId);
+            }
+            
             return sortedMessages;
           }
 
@@ -588,6 +626,13 @@ export function MessagesSection(): JSX.Element {
           if (messageExists) return prev;
           return [...prev, response.data];
         });
+ 
+        // Mark chat as read when user sends a message (user is actively viewing)
+        if (response.data.createdAt) {
+          lastViewedTimestampsRef.current[selectedChat.id] = response.data.createdAt;
+          // Notify backend
+          api.markAsRead(selectedChat.id);
+        }
 
         setChats((prevChats) =>
           prevChats.map((chat) =>
@@ -675,6 +720,15 @@ export function MessagesSection(): JSX.Element {
     currentChatIdRef.current = chat.id;
     isInitialLoadRef.current = true; // Mark as initial load for instant scroll
     lastMessageTimestampRef.current = null; // Reset timestamp for new chat
+    
+    // Mark chat as read by updating last viewed timestamp
+    if (chat.lastMessageAt) {
+      lastViewedTimestampsRef.current[chat.id] = chat.lastMessageAt;
+    }
+    
+    // Notify backend that chat is being read
+    api.markAsRead(chat.id);
+    
     setMessages([]);
     setMessagesError(null);
     setSendError(null);
@@ -947,6 +1001,32 @@ export function MessagesSection(): JSX.Element {
     return otherParticipant?.onlineStatus || false;
   }, []);
 
+  // Calculate unread count for a chat
+  const getUnreadCount = useCallback((chat: Chat): number => {
+    if (!user || !chat.lastMessage || !chat.lastMessageAt) return 0;
+    
+    // Prioritize backend's unreadCount if available
+    if (typeof chat.unreadCount === 'number') {
+      return chat.unreadCount;
+    }
+    
+    // If last message is from current user, no unread
+    if (chat.lastMessage.senderId === user.id) return 0;
+    
+    // Get last viewed timestamp for this chat
+    const lastViewed = lastViewedTimestampsRef.current[chat.id];
+    if (!lastViewed) {
+      // If never viewed, count as unread if there's a last message from someone else
+      return 1;
+    }
+    
+    // If last message is newer than last viewed, it's unread
+    const lastMessageTime = new Date(chat.lastMessageAt).getTime();
+    const lastViewedTime = new Date(lastViewed).getTime();
+    
+    return lastMessageTime > lastViewedTime ? 1 : 0;
+  }, [user]);
+
   const formatTimestamp = useCallback((timestamp: string): string => {
     try {
       const date = new Date(timestamp);
@@ -997,6 +1077,36 @@ export function MessagesSection(): JSX.Element {
         return dateB - dateA;
       });
   }, [chats, friends]);
+
+  // Calculate if there are any unread messages across all chats
+  const hasUnreadMessages = useMemo(() => {
+    if (!user) return false;
+    
+    return chats.some((chat) => {
+      // Prioritize backend's unreadCount if available
+      if (typeof chat.unreadCount === 'number') {
+        return chat.unreadCount > 0;
+      }
+      
+      if (!chat.lastMessage || !chat.lastMessageAt) return false;
+      if (chat.lastMessage.senderId === user.id) return false;
+      
+      const lastViewed = lastViewedTimestampsRef.current[chat.id];
+      if (!lastViewed) return true;
+      
+      const lastMessageTime = new Date(chat.lastMessageAt).getTime();
+      const lastViewedTime = new Date(lastViewed).getTime();
+      return lastMessageTime > lastViewedTime;
+    });
+  }, [chats, user]);
+
+  // Notify parent about unread messages via custom event
+  useEffect(() => {
+    const event = new CustomEvent('unreadMessagesChanged', { 
+      detail: { hasUnreadMessages } 
+    });
+    window.dispatchEvent(event);
+  }, [hasUnreadMessages]);
 
   const displayFriends = useMemo(() => {
     return friends;
@@ -1137,11 +1247,14 @@ export function MessagesSection(): JSX.Element {
                         )}
                       </LazyLoadingImage>
                     )}
+                    {getUnreadCount(chat) > 0 && (
+                      <div className="absolute top-0 right-0 w-3 h-3 bg-orange-500 rounded-full border-2 border-primary-elements animate-pulse"></div>
+                    )}
                     {!chat.isGroup && !chat.isChannel && isOnline(chat) && (
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-primary-elements"></div>
+                      <div className={`absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-primary-elements ${getUnreadCount(chat) > 0 ? 'bottom-3 right-3' : ''}`}></div>
                     )}
                     {(chat.isGroup || chat.isChannel) && (
-                      <div className="absolute bottom-0 right-0 w-6 h-6 bg-primary-elements rounded-full flex items-center justify-center border-2 border-primary-elements">
+                      <div className={`absolute bottom-0 right-0 w-6 h-6 bg-primary-elements rounded-full flex items-center justify-center border-2 border-primary-elements ${getUnreadCount(chat) > 0 ? 'bottom-3 right-3' : ''}`}>
                         {chat.isChannel ? (
                           <MdGroup size={14} className="text-secondary-btn" />
                         ) : (

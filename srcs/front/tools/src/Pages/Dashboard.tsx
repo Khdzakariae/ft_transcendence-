@@ -1,4 +1,4 @@
-import { useState, createContext, useContext } from "react";
+import { useState, createContext, useContext, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AuthResponse } from "../interfaces/AuthResponse";
 import { UserInter } from "../interfaces/UserInterfaces";
@@ -32,6 +32,7 @@ export function useDashboardContext() {
 export function Dashboard(): JSX.Element {
   const [user, setUser] = useState<AuthResponse["user"] | null>(null);
   const [user_data, setUserData] = useState<UserDataInter | null>(null);
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const location = useLocation();
 
   // Get current section from URL path
@@ -53,6 +54,51 @@ export function Dashboard(): JSX.Element {
     fetchFriendRequests,
   } = useNotifications(user, section);
 
+  // Listen for unread messages changes from MessagesSection
+  useEffect(() => {
+    const handleUnreadMessagesChange = (event: CustomEvent) => {
+      setHasUnreadMessages(event.detail.hasUnreadMessages);
+    };
+
+    window.addEventListener('unreadMessagesChanged', handleUnreadMessagesChange as EventListener);
+    return () => {
+      window.removeEventListener('unreadMessagesChanged', handleUnreadMessagesChange as EventListener);
+    };
+  }, []);
+
+  // Poll for unread messages when not in the messages section
+  useEffect(() => {
+    if (!user || section === 'messages') return;
+
+    const checkUnreadMessages = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/v1/chats", {
+          credentials: "include",
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        const chats = json.data || [];
+        
+        // Check if any chat has unread messages
+        const hasUnread = chats.some((chat: any) => 
+          chat.unreadCount && chat.unreadCount > 0
+        );
+        
+        setHasUnreadMessages(hasUnread);
+      } catch (error) {
+        console.error("Error checking unread messages:", error);
+      }
+    };
+
+    // Initial check
+    checkUnreadMessages();
+
+    // Poll every 5 seconds when not in messages section
+    const interval = setInterval(checkUnreadMessages, 5000);
+
+    return () => clearInterval(interval);
+  }, [user, section]);
+
   // Prepare context value
   const contextValue: DashboardContextType = {
     user,
@@ -69,6 +115,7 @@ export function Dashboard(): JSX.Element {
           active_user={user as UserInter}
           user_data={user_data as UserDataInter}
           hasUnreadNotifications={hasUnreadNotifications}
+          hasUnreadMessages={hasUnreadMessages}
         />
         {/* Render child routes */}
         <Outlet />
