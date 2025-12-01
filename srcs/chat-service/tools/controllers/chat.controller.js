@@ -227,7 +227,37 @@ export const getMessages = async (req, reply) => {
       take: Number(limit),
       include: { sender: { select: { id: true, name: true, avatar: true } } },
     });
-    return reply.send({ data: messages });
+
+    // Deduplicate messages: first by ID, then by content + senderId + createdAt (within 1 second)
+    const seenIds = new Set();
+    const seenContent = new Map(); // key: "content|senderId", value: { message, timestamp }
+    
+    const uniqueMessages = messages.filter((message) => {
+      // Skip if we've already seen this exact message ID
+      if (seenIds.has(message.id)) {
+        return false;
+      }
+      seenIds.add(message.id);
+
+      // Check for duplicate content from same sender within 1 second
+      const messageTime = new Date(message.createdAt).getTime();
+      const contentKey = `${message.content}|${message.senderId}`;
+      const existing = seenContent.get(contentKey);
+      
+      if (existing) {
+        const timeDiff = Math.abs(messageTime - existing.timestamp);
+        // If same content from same sender within 1 second, it's likely a duplicate
+        if (timeDiff < 1000) {
+          return false;
+        }
+      }
+      
+      // Store this message as the reference for this content key
+      seenContent.set(contentKey, { message, timestamp: messageTime });
+      return true;
+    });
+
+    return reply.send({ data: uniqueMessages });
   } catch (e) {
     req.log.error(e);
     return reply.code(500).send({ error: "Internal Server Error" });
