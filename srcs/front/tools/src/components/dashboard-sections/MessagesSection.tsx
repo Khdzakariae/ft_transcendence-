@@ -906,7 +906,7 @@ export function MessagesSection(): JSX.Element {
       if (!controller.signal.aborted) {
         fetchChats(controller.signal, true); // Skip loading state for polling
       }
-    }, 5000); // Poll every 5 seconds for chats list
+    }, 1500); // Poll every 1.5 seconds for faster notification
 
     return () => {
       controller.abort();
@@ -970,15 +970,15 @@ export function MessagesSection(): JSX.Element {
       // Reset last message timestamp when switching chats
       lastMessageTimestampRef.current = null;
 
-      // Start polling every 3 seconds
+      // Start polling every 1.5 seconds for faster message updates
       pollingIntervalRef.current = setInterval(() => {
         pollForNewMessages();
-      }, 3000);
+      }, 1500);
 
       // Also poll immediately after a short delay to catch any missed messages
       const immediatePoll = setTimeout(() => {
         pollForNewMessages();
-      }, 1000);
+      }, 500);
 
       return () => {
         if (pollingIntervalRef.current) {

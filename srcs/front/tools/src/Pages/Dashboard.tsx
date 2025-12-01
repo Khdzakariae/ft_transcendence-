@@ -93,8 +93,8 @@ export function Dashboard(): JSX.Element {
     // Initial check
     checkUnreadMessages();
 
-    // Poll every 5 seconds when not in messages section
-    const interval = setInterval(checkUnreadMessages, 5000);
+    // Poll every 1.5 seconds when not in messages section for faster notification
+    const interval = setInterval(checkUnreadMessages, 1500);
 
     return () => clearInterval(interval);
   }, [user, section]);
