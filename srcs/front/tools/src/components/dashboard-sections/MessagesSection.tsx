@@ -266,6 +266,7 @@ export function MessagesSection(): JSX.Element {
   const messageInputRef = useRef<HTMLInputElement>(null);
   const isSendingRef = useRef(false);
   const currentChatIdRef = useRef<string | null>(null);
+  const isInitialLoadRef = useRef<boolean>(false);
   const [loaded, setLoaded] = useState(false);
 
   // Typing indicator
@@ -570,7 +571,13 @@ export function MessagesSection(): JSX.Element {
   };
 
   const handleSelectChat = (chat: Chat) => {
+    // If the same chat is already selected, don't fetch messages again
+    if (selectedChat?.id === chat.id) {
+      return;
+    }
+
     currentChatIdRef.current = chat.id;
+    isInitialLoadRef.current = true; // Mark as initial load for instant scroll
     setMessages([]);
     setMessagesError(null);
     setSendError(null);
@@ -622,8 +629,14 @@ export function MessagesSection(): JSX.Element {
   }, [showNewChatModal, fetchFriends, friends.length]);
 
   useEffect(() => {
-    if (messages.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > 0 && messagesEndRef.current) {
+      // Scroll instantly when opening a chat, smoothly for new messages
+      const scrollBehavior = isInitialLoadRef.current ? "auto" : "smooth";
+      messagesEndRef.current.scrollIntoView({ behavior: scrollBehavior });
+      // Reset the initial load flag after first scroll
+      if (isInitialLoadRef.current) {
+        isInitialLoadRef.current = false;
+      }
     }
   }, [messages]);
 
