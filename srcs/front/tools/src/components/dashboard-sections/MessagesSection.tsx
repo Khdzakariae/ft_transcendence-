@@ -357,9 +357,23 @@ export function MessagesSection(): JSX.Element {
             // Mark chat as read when messages are loaded (user is viewing it)
             if (currentChatIdRef.current === chatId && latestMessage.createdAt) {
               lastViewedTimestampsRef.current[chatId] = latestMessage.createdAt;
-              // Notify backend
+              
+              // Immediately update local state to remove orange dot
               if (!silent) {
+                setChats((prevChats) =>
+                  prevChats.map((c) =>
+                    c.id === chatId ? { ...c, unreadCount: 0 } : c
+                  )
+                );
+                // Notify backend
                 api.markAsRead(chatId);
+                
+                // After 1.5s, refresh chats to ensure backend state is synced
+                setTimeout(async () => {
+                  if (currentChatIdRef.current === chatId) {
+                    await fetchChats();
+                  }
+                }, 1500);
               }
             }
           }
@@ -435,6 +449,14 @@ export function MessagesSection(): JSX.Element {
             // Mark chat as read when new messages are loaded (user is actively viewing)
             if (currentChatIdRef.current === chatId && latestMessage.createdAt) {
               lastViewedTimestampsRef.current[chatId] = latestMessage.createdAt;
+              
+              // Immediately update local state to remove orange dot
+              setChats((prevChats) =>
+                prevChats.map((c) =>
+                  c.id === chatId ? { ...c, unreadCount: 0 } : c
+                )
+              );
+              
               // Notify backend
               api.markAsRead(chatId);
             }
@@ -721,13 +743,27 @@ export function MessagesSection(): JSX.Element {
     isInitialLoadRef.current = true; // Mark as initial load for instant scroll
     lastMessageTimestampRef.current = null; // Reset timestamp for new chat
     
-    // Mark chat as read by updating last viewed timestamp
+    // Mark chat as read by updating last viewed timestamp immediately
     if (chat.lastMessageAt) {
       lastViewedTimestampsRef.current[chat.id] = chat.lastMessageAt;
     }
     
+    // Immediately update local state to remove orange dot
+    setChats((prevChats) =>
+      prevChats.map((c) =>
+        c.id === chat.id ? { ...c, unreadCount: 0 } : c
+      )
+    );
+    
     // Notify backend that chat is being read
     api.markAsRead(chat.id);
+    
+    // After 1.5s, refresh chats to ensure backend state is synced
+    setTimeout(async () => {
+      if (currentChatIdRef.current === chat.id) {
+        await fetchChats();
+      }
+    }, 1500);
     
     setMessages([]);
     setMessagesError(null);
