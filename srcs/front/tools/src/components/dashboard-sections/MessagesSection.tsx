@@ -1320,9 +1320,6 @@ export function MessagesSection(): JSX.Element {
                     {getUnreadCount(chat) > 0 && (
                       <div className="absolute top-0 right-0 w-3 h-3 bg-orange-500 rounded-full border-2 border-primary-elements animate-pulse"></div>
                     )}
-                    {!chat.isGroup && !chat.isChannel && isOnline(chat) && (
-                      <div className={`absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-primary-elements ${getUnreadCount(chat) > 0 ? 'bottom-3 right-3' : ''}`}></div>
-                    )}
                     {(chat.isGroup || chat.isChannel) && (
                       <div className={`absolute bottom-0 right-0 w-6 h-6 bg-primary-elements rounded-full flex items-center justify-center border-2 border-primary-elements ${getUnreadCount(chat) > 0 ? 'bottom-3 right-3' : ''}`}>
                         {chat.isChannel ? (
