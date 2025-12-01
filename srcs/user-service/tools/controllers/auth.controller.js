@@ -144,7 +144,14 @@ export const callbackGoogle = async (request, reply) => {
           password: "null", // since Google handles auth
           verified: googleUser.email_verified,
           avatar: googleUser.picture,
+          onlineStatus: true, // Set online status on creation
         },
+      });
+    } else {
+      // Update existing user's online status
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { onlineStatus: true },
       });
     }
 
@@ -223,7 +230,14 @@ export const callback42 = async (request, reply) => {
           password: "null",
           verified: true,
           avatar: profileImage,
+          onlineStatus: true, // Set online status on creation
         },
+      });
+    } else {
+      // Update existing user's online status
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { onlineStatus: true },
       });
     }
 
@@ -439,6 +453,12 @@ export const signIn = async (request, reply) => {
       return reply.status(401).send({ error: "Invalid credentials." });
     }
 
+    // Update user's online status to true
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { onlineStatus: true },
+    });
+
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET || "secret",
@@ -474,6 +494,22 @@ export const signIn = async (request, reply) => {
 
 export const signOut = async (request, reply) => {
   try {
+    // Get user ID from JWT token before clearing cookie
+    const token = request.cookies.auth;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
+        // Update user's online status to false
+        await prisma.user.update({
+          where: { id: decoded.id },
+          data: { onlineStatus: false },
+        });
+      } catch (error) {
+        console.error("Error updating online status on logout:", error);
+        // Continue with sign out even if status update fails
+      }
+    }
+
     reply
       .clearCookie("auth", {
         path: "/",

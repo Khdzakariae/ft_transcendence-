@@ -47,8 +47,10 @@ export function FriendsSection(): JSX.Element {
   const [unblockingUserId, setUnblockingUserId] = useState<string | null>(null);
   const [showBlockedSection, setShowBlockedSection] = useState(false);
 
-  const fetchFriends = useCallback(async (abortSignal?: AbortSignal) => {
-    setLoading(true);
+  const fetchFriends = useCallback(async (abortSignal?: AbortSignal, skipLoadingState: boolean = false) => {
+    if (!skipLoadingState) {
+      setLoading(true);
+    }
     setError(null);
 
     try {
@@ -75,14 +77,31 @@ export function FriendsSection(): JSX.Element {
             avatar: f.user.avatar || null,
             onlineStatus: f.user.onlineStatus || false,
           }));
-        setFriends(validatedFriends);
+        
+        // Only update state if there are actual changes to prevent unnecessary re-renders
+        setFriends((prevFriends) => {
+          // Compare if anything changed
+          if (prevFriends.length !== validatedFriends.length) return validatedFriends;
+          
+          const hasChanges = prevFriends.some((prevFriend, index) => {
+            const newFriend = validatedFriends[index];
+            return (
+              prevFriend.id !== newFriend.id ||
+              prevFriend.onlineStatus !== newFriend.onlineStatus ||
+              prevFriend.name !== newFriend.name ||
+              prevFriend.avatar !== newFriend.avatar
+            );
+          });
+          
+          return hasChanges ? validatedFriends : prevFriends;
+        });
       }
     } catch (err: any) {
       if (err.name !== "AbortError" && !abortSignal?.aborted) {
         setError(err.message || "Failed to load friends");
       }
     } finally {
-      if (!abortSignal?.aborted) {
+      if (!abortSignal?.aborted && !skipLoadingState) {
         setLoading(false);
       }
     }
@@ -267,8 +286,16 @@ export function FriendsSection(): JSX.Element {
     fetchFriends(controller.signal);
     fetchBlockedUsers(controller.signal);
 
+    // Set up polling to keep friends' online status updated
+    const pollingInterval = setInterval(() => {
+      if (!controller.signal.aborted) {
+        fetchFriends(controller.signal, true); // Skip loading state for polling
+      }
+    }, 1500); // Poll every 1.5 seconds to match MessagesSection
+
     return () => {
       controller.abort();
+      clearInterval(pollingInterval);
     };
   }, [user, fetchFriends, fetchBlockedUsers]);
 

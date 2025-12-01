@@ -32,10 +32,10 @@ export const getFriends = async (request, reply) => {
       },
       include: {
         requester: {
-          select: { id: true, name: true, email: true, avatar: true },
+          select: { id: true, name: true, email: true, avatar: true, onlineStatus: true },
         },
         addressee: {
-          select: { id: true, name: true, email: true, avatar: true },
+          select: { id: true, name: true, email: true, avatar: true, onlineStatus: true },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -68,7 +68,7 @@ export const getPendingRequests = async (request, reply) => {
         where: { addresseeId: userId, status: "pending" },
         include: {
           requester: {
-            select: { id: true, name: true, email: true, avatar: true },
+            select: { id: true, name: true, email: true, avatar: true, onlineStatus: true },
           },
         },
         orderBy: { createdAt: "desc" },
@@ -77,7 +77,7 @@ export const getPendingRequests = async (request, reply) => {
         where: { requesterId: userId, status: "pending" },
         include: {
           addressee: {
-            select: { id: true, name: true, email: true, avatar: true },
+            select: { id: true, name: true, email: true, avatar: true, onlineStatus: true },
           },
         },
         orderBy: { createdAt: "desc" },
@@ -115,7 +115,7 @@ export const getBlockRequests = async (request, reply) => {
         where: { addresseeId: userId, status: "blocked" },
         include: {
           requester: {
-            select: { id: true, name: true, email: true, avatar: true },
+            select: { id: true, name: true, email: true, avatar: true, onlineStatus: true },
           },
         },
         orderBy: { createdAt: "desc" },
@@ -124,7 +124,7 @@ export const getBlockRequests = async (request, reply) => {
         where: { requesterId: userId, status: "blocked" },
         include: {
           addressee: {
-            select: { id: true, name: true, email: true, avatar: true },
+            select: { id: true, name: true, email: true, avatar: true, onlineStatus: true },
           },
         },
         orderBy: { createdAt: "desc" },
