@@ -305,14 +305,48 @@ export function MessagesSection(): JSX.Element {
   );
 
   // ============== FETCH FUNCTIONS ==============
-  const fetchChats = useCallback(async (abortSignal?: AbortSignal) => {
-      setLoading(true);
+  const fetchChats = useCallback(async (abortSignal?: AbortSignal, skipLoadingState: boolean = false) => {
+      if (!skipLoadingState) {
+        setLoading(true);
+      }
       setChatsError(null);
 
       try {
       const data = await api.getChats();
       if (!abortSignal?.aborted && Array.isArray(data)) {
-        setChats(data);
+        // Only update state if there are actual changes
+        setChats((prevChats) => {
+          // Create maps for quick lookup
+          const prevChatsMap = new Map(prevChats.map(chat => [chat.id, chat]));
+          const newChatsMap = new Map(data.map(chat => [chat.id, chat]));
+          
+          // Check if there are new chats
+          const hasNewChats = data.some(chat => !prevChatsMap.has(chat.id));
+          
+          // Check if any existing chat has changed (new message, unread count, etc.)
+          const hasChanges = prevChats.some(prevChat => {
+            const newChat = newChatsMap.get(prevChat.id);
+            if (!newChat) return false;
+            
+            // Compare key properties that indicate changes
+            return (
+              prevChat.lastMessageAt !== newChat.lastMessageAt ||
+              prevChat.unreadCount !== newChat.unreadCount ||
+              (prevChat.lastMessage?.content !== newChat.lastMessage?.content) ||
+              (prevChat.lastMessage?.createdAt !== newChat.lastMessage?.createdAt) ||
+              (prevChat.lastMessage?.senderId !== newChat.lastMessage?.senderId) ||
+              prevChat.participants?.length !== newChat.participants?.length
+            );
+          });
+          
+          // Only update if there are actual changes
+          if (hasNewChats || hasChanges) {
+            return data;
+          }
+          
+          // No changes, return previous state to avoid re-render
+          return prevChats;
+        });
         return data;
         }
         return [];
@@ -322,7 +356,7 @@ export function MessagesSection(): JSX.Element {
         }
         return [];
       } finally {
-        if (!abortSignal?.aborted) {
+        if (!abortSignal?.aborted && !skipLoadingState) {
           setLoading(false);
         }
       }
@@ -870,7 +904,7 @@ export function MessagesSection(): JSX.Element {
     // Set up continuous polling for chats list to keep sidebar updated
     chatsPollingIntervalRef.current = setInterval(() => {
       if (!controller.signal.aborted) {
-        fetchChats(controller.signal);
+        fetchChats(controller.signal, true); // Skip loading state for polling
       }
     }, 5000); // Poll every 5 seconds for chats list
 
