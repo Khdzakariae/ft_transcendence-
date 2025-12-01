@@ -171,7 +171,7 @@ export const callbackGoogle = async (request, reply) => {
         path: "/",
         maxAge: 60 * 60 * 24 * 7,
       })
-      .redirect(`${process.env.FRONTEND_URL}/Profile`);
+      .redirect(`${process.env.FRONTEND_URL}/dashboard`);
   } catch (err) {
     console.error("Google OAuth error:", err.response?.data || err.message);
     return reply.code(500).send({ error: "Authentication failed" });
@@ -254,7 +254,7 @@ export const callback42 = async (request, reply) => {
         path: "/",
         maxAge: 60 * 60 * 24 * 7,
       })
-      .redirect(`${process.env.FRONTEND_URL}/Profile`);
+      .redirect(`${process.env.FRONTEND_URL}/dashboard`);
   } catch (err) {
     console.error("42 OAuth error:", err.response?.data || err.message);
     return reply.code(500).send({ error: "Authentication failed" });
