@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   MdSend,
   MdArrowBack,
-  MdAdd,
   MdClose,
   MdMessage,
   MdGroup,
@@ -172,6 +171,14 @@ const api = {
     return res.json();
   },
 
+  deleteChat: async (chatId: string) => {
+    const res = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    return res.json();
+  },
+
   searchUsers: async (searchTerm: string) => {
     const res = await fetch(
       `http://localhost:3000/api/v1/user/search?name=${encodeURIComponent(searchTerm)}`,
@@ -226,13 +233,20 @@ export function MessagesSection(): JSX.Element {
   const [chatsError, setChatsError] = useState<string | null>(null);
   const [messagesError, setMessagesError] = useState<string | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [creatingGroup, setCreatingGroup] = useState(false);
+  const [groupError, setGroupError] = useState<string | null>(null);
+  
+  // Add members to group
+  const [selectedMembersToAdd, setSelectedMembersToAdd] = useState<string[]>([]);
+  const [addingMembers, setAddingMembers] = useState(false);
+  const [addMembersError, setAddMembersError] = useState<string | null>(null);
 
   // Modals
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [showGroupSettingsModal, setShowGroupSettingsModal] = useState(false);
+  const [showAddMembersModal, setShowAddMembersModal] = useState(false);
   const [showUserProfileModal, setShowUserProfileModal] = useState(false);
-  const [showJoinChannelModal, setShowJoinChannelModal] = useState(false);
   const [selectedUserProfile, setSelectedUserProfile] = useState<Friend | null>(
     null
   );
@@ -253,9 +267,6 @@ export function MessagesSection(): JSX.Element {
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [selectedAvatar, setSelectedAvatar] = useState<string>(groupAvatars[0]);
   const [groupPassword, setGroupPassword] = useState("");
-
-  // Channel features
-  const [channelPassword, setChannelPassword] = useState("");
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -481,34 +492,70 @@ export function MessagesSection(): JSX.Element {
   const createGroup = async () => {
     if (!groupName.trim() || selectedMembers.length === 0) return;
 
+    setCreatingGroup(true);
+    setGroupError(null);
+
     try {
-      const response = await api.createGroup(groupName.trim(), selectedMembers);
-      if (response.data) {
-        // Update group avatar and password if provided
-        const updates: { avatar?: string; password?: string } = {};
-        if (selectedAvatar) {
-          updates.avatar = selectedAvatar;
-        }
-        // Note: Password handling would need backend support
-        // This is a placeholder for when the backend implements password-protected groups
-        if (groupPassword.trim()) {
-          console.log("Group password set:", groupPassword);
-          // updates.password = groupPassword; // Uncomment when backend supports it
-        }
+      // Validate: Check for duplicate group names (case-insensitive)
+      const trimmedName = groupName.trim();
+      
+      if (isDuplicateGroupName(trimmedName)) {
+        setGroupError(
+          `A group with the name "${trimmedName}" already exists. Please choose a different name.`
+        );
+        setCreatingGroup(false);
+        return;
+      }
+
+      // Create the group
+      const response = await api.createGroup(trimmedName, selectedMembers);
+      
+      if (response.error) {
+        setGroupError(response.error || "Failed to create group");
+        setCreatingGroup(false);
+        return;
+      }
+
+      if (response.data && response.data.id) {
+        const groupId = response.data.id;
         
-        if (Object.keys(updates).length > 0) {
-          await api.updateChat(response.data.id, updates);
+        // Update group avatar if provided
+        if (selectedAvatar) {
+          try {
+            await api.updateChat(groupId, { avatar: selectedAvatar });
+          } catch (avatarErr: any) {
+            console.error("Failed to update group avatar:", avatarErr);
+            // Continue even if avatar update fails
+          }
         }
 
-        await fetchChats();
+        // Refresh chats list to get the full group data with participants
+        const updatedChats = await fetchChats();
+        
+        // Find the newly created group and select it
+        const newGroup = updatedChats.find((chat) => chat.id === groupId);
+        
+        if (newGroup) {
+          handleSelectChat(newGroup);
+        }
+
+        // Reset form and close modal
         setShowCreateGroupModal(false);
         setGroupName("");
         setSelectedMembers([]);
         setSelectedAvatar(groupAvatars[0]);
         setGroupPassword("");
+        setGroupError(null);
+      } else {
+        setGroupError("Failed to create group. Please try again.");
       }
     } catch (err: any) {
       console.error("Failed to create group:", err);
+      setGroupError(
+        err.message || err.error || "Failed to create group. Please try again."
+      );
+    } finally {
+      setCreatingGroup(false);
     }
   };
 
@@ -642,8 +689,57 @@ export function MessagesSection(): JSX.Element {
     try {
       await api.removeParticipant(selectedChat.id, memberId);
       await fetchChats();
+      // Update selected chat if it's still selected
+      if (selectedChat.id === currentChatIdRef.current) {
+        const updatedChats = await fetchChats();
+        const updatedChat = updatedChats.find((chat) => chat.id === selectedChat.id);
+        if (updatedChat) {
+          setSelectedChat(updatedChat);
+        }
+      }
     } catch (err) {
       console.error("Failed to remove member:", err);
+    }
+  };
+
+  const handleAddMembers = async () => {
+    if (!selectedChat || selectedMembersToAdd.length === 0) return;
+
+    setAddingMembers(true);
+    setAddMembersError(null);
+
+    try {
+      const response = await api.addParticipants(selectedChat.id, selectedMembersToAdd);
+      
+      if (response.error) {
+        setAddMembersError(response.error || "Failed to add members");
+        setAddingMembers(false);
+        return;
+      }
+
+      // Refresh chats to get updated participant list
+      await fetchChats();
+      
+      // Update selected chat if it's still selected
+      if (selectedChat.id === currentChatIdRef.current) {
+        const updatedChats = await fetchChats();
+        const updatedChat = updatedChats.find((chat) => chat.id === selectedChat.id);
+        if (updatedChat) {
+          setSelectedChat(updatedChat);
+        }
+      }
+
+      // Reset and close modal
+      setShowAddMembersModal(false);
+      setSelectedMembersToAdd([]);
+      setAddMembersError(null);
+    } catch (err: any) {
+      console.error("Failed to add members:", err);
+      setAddMembersError(
+        err.message || err.error || "Failed to add members. Please try again."
+      );
+    } finally {
+      setAddingMembers(false);
     }
   };
 
@@ -657,6 +753,20 @@ export function MessagesSection(): JSX.Element {
       setShowGroupSettingsModal(false);
     } catch (err) {
       console.error("Failed to leave channel:", err);
+    }
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!selectedChat || !user) return;
+
+    try {
+      await api.deleteChat(selectedChat.id);
+      setSelectedChat(null);
+      await fetchChats();
+      setShowGroupSettingsModal(false);
+    } catch (err: any) {
+      console.error("Failed to delete group:", err);
+      alert(err.message || "Failed to delete group. Please try again.");
     }
   };
 
@@ -683,6 +793,12 @@ export function MessagesSection(): JSX.Element {
 
     fetchFriends();
   }, [showNewChatModal, fetchFriends, friends.length]);
+
+  useEffect(() => {
+    if (!showAddMembersModal || friends.length > 0) return;
+
+    fetchFriends();
+  }, [showAddMembersModal, fetchFriends, friends.length]);
 
   useEffect(() => {
     if (messages.length > 0 && messagesEndRef.current) {
@@ -755,17 +871,24 @@ export function MessagesSection(): JSX.Element {
         if (showUserProfileModal) {
           setShowUserProfileModal(false);
           setSelectedUserProfile(null);
+        } else if (showAddMembersModal) {
+          setShowAddMembersModal(false);
+          setSelectedMembersToAdd([]);
+          setAddMembersError(null);
+        } else if (showAddMembersModal) {
+          setShowAddMembersModal(false);
+          setSelectedMembersToAdd([]);
+          setAddMembersError(null);
         } else if (showGroupSettingsModal) {
           setShowGroupSettingsModal(false);
-        } else if (showJoinChannelModal) {
-          setShowJoinChannelModal(false);
-          setChannelPassword("");
         } else if (showCreateGroupModal) {
           setShowCreateGroupModal(false);
           setGroupName("");
           setSelectedMembers([]);
           setSelectedAvatar(groupAvatars[0]);
           setGroupPassword("");
+          setGroupError(null);
+          setCreatingGroup(false);
         } else if (showNewChatModal) {
           setShowNewChatModal(false);
         }
@@ -778,8 +901,8 @@ export function MessagesSection(): JSX.Element {
     showNewChatModal,
     showCreateGroupModal,
     showGroupSettingsModal,
+    showAddMembersModal,
     showUserProfileModal,
-    showJoinChannelModal,
   ]);
 
   // ============== HELPER FUNCTIONS ==============
@@ -870,6 +993,41 @@ export function MessagesSection(): JSX.Element {
     return friends;
   }, [friends]);
 
+  // Filter friends who are not already members of the selected group
+  const availableFriendsToAdd = useMemo(() => {
+    if (!selectedChat || !selectedChat.isGroup) return [];
+    
+    const existingMemberIds = new Set(
+      selectedChat.participants?.map((p) => p.id) || []
+    );
+    
+    return friends.filter((friend) => !existingMemberIds.has(friend.id));
+  }, [friends, selectedChat]);
+
+  // Check if a group name already exists (case-insensitive)
+  const isDuplicateGroupName = useCallback(
+    (name: string): boolean => {
+      if (!name || !name.trim()) return false;
+      const trimmedName = name.trim().toLowerCase();
+      return chats.some(
+        (chat) =>
+          chat.isGroup &&
+          chat.name &&
+          chat.name.trim().toLowerCase() === trimmedName
+      );
+    },
+    [chats]
+  );
+
+  // Real-time validation for group name
+  const groupNameError = useMemo(() => {
+    if (!groupName.trim()) return null;
+    if (isDuplicateGroupName(groupName)) {
+      return `A group with the name "${groupName.trim()}" already exists. Please choose a different name.`;
+    }
+    return null;
+  }, [groupName, isDuplicateGroupName]);
+
   if (!user) {
     return (
       <div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
@@ -891,14 +1049,11 @@ export function MessagesSection(): JSX.Element {
             <h2 className="text-2xl font-bold">Messages</h2>
             <div className="flex gap-2">
               <button
-                onClick={() => setShowJoinChannelModal(true)}
-                className="p-2 rounded-lg bg-secondary-btn/20 text-secondary-btn hover:bg-secondary-btn hover:text-primary-bg transition-all duration-300 hover:scale-110"
-                title="Join Channel"
-              >
-                <MdAdd size={24} />
-              </button>
-              <button
-                onClick={() => setShowCreateGroupModal(true)}
+                onClick={() => {
+                  setShowCreateGroupModal(true);
+                  setGroupError(null);
+                  setCreatingGroup(false);
+                }}
                 className="p-2 rounded-lg bg-primary-btn/20 text-primary-btn hover:bg-primary-btn hover:text-primary-bg transition-all duration-300 hover:scale-110"
                 title="Create Group"
               >
@@ -1391,6 +1546,8 @@ export function MessagesSection(): JSX.Element {
                   setSelectedMembers([]);
                   setSelectedAvatar(groupAvatars[0]);
                   setGroupPassword("");
+                  setGroupError(null);
+                  setCreatingGroup(false);
                 }}
                 className="p-2 rounded-lg hover:bg-primary-bg/50 transition-colors"
               >
@@ -1399,6 +1556,11 @@ export function MessagesSection(): JSX.Element {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {(groupError || groupNameError) && (
+                <div className="p-3 rounded-lg bg-rose-500/20 border border-rose-400/50 text-rose-200 text-sm">
+                  {groupError || groupNameError}
+                </div>
+              )}
               {/* Avatar Selection */}
               <div>
                 <label className="block text-sm font-medium mb-3">
@@ -1410,11 +1572,12 @@ export function MessagesSection(): JSX.Element {
                       key={index}
                       type="button"
                       onClick={() => setSelectedAvatar(avatar)}
+                      disabled={creatingGroup}
                       className={`relative aspect-square rounded-2xl overflow-hidden transition-all duration-300 ${
                         selectedAvatar === avatar
                           ? "ring-4 ring-primary-btn shadow-lg shadow-primary-btn/50 scale-110"
                           : "ring-2 ring-white/20 hover:ring-primary-btn/60 hover:scale-105 hover:shadow-md"
-                      }`}
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       <img
                         src={avatar}
@@ -1445,10 +1608,25 @@ export function MessagesSection(): JSX.Element {
                 <input
                   type="text"
                   value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
+                  onChange={(e) => {
+                    setGroupName(e.target.value);
+                    if (groupError) setGroupError(null);
+                  }}
                   placeholder="Enter group name..."
-                  className="w-full rounded-lg border border-white/10 bg-primary-bg px-4 py-2 text-white placeholder:text-white/40 focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/50 transition-all duration-200"
+                  disabled={creatingGroup}
+                  className={`w-full rounded-lg border ${
+                    groupNameError
+                      ? "border-rose-400 focus:border-rose-400"
+                      : "border-white/10 focus:border-[#FF6B00]"
+                  } bg-primary-bg px-4 py-2 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 ${
+                    groupNameError
+                      ? "focus:ring-rose-400/50"
+                      : "focus:ring-[#FF6B00]/50"
+                  } transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
                 />
+                {groupNameError && (
+                  <p className="text-xs text-rose-400 mt-1.5">{groupNameError}</p>
+                )}
               </div>
 
               {/* Optional Password */}
@@ -1500,7 +1678,8 @@ export function MessagesSection(): JSX.Element {
                               );
                             }
                           }}
-                          className="w-4 h-4"
+                          disabled={creatingGroup}
+                          className="w-4 h-4 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                         <img
                           src={friend.avatar || ""}
@@ -1520,13 +1699,27 @@ export function MessagesSection(): JSX.Element {
             </div>
 
             <div className="p-4 border-t border-white/10">
-                          <button
+              <button
                 onClick={createGroup}
-                disabled={!groupName.trim() || selectedMembers.length === 0}
+                disabled={
+                  !groupName.trim() ||
+                  selectedMembers.length === 0 ||
+                  creatingGroup ||
+                  !!groupNameError
+                }
                 className="w-full px-4 py-3 rounded-xl bg-primary-btn text-primary-bg hover:bg-[#FF6B00] hover:text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-bold"
               >
-                <MdGroup size={20} />
-                Create Group
+                {creatingGroup ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-primary-bg border-t-transparent rounded-full animate-spin"></div>
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <MdGroup size={20} />
+                    Create Group
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -1572,11 +1765,15 @@ export function MessagesSection(): JSX.Element {
                     <MdGroup size={18} />
                     Members
                   </h4>
-                  {selectedChat.ownerId === user?.id && (
+                  {user && 
+                   selectedChat && 
+                   selectedChat.isGroup && 
+                   selectedChat.participants?.some((p) => p.id === user.id || p.isSelf) && (
                     <button
                       onClick={() => {
-                        // TODO: Implement add members
-                        alert("Add members feature coming soon!");
+                        setShowAddMembersModal(true);
+                        setSelectedMembersToAdd([]);
+                        setAddMembersError(null);
                       }}
                       className="p-1.5 rounded-lg bg-primary-btn/20 text-primary-btn hover:bg-primary-btn hover:text-primary-bg transition-all"
                       title="Add members"
@@ -1600,30 +1797,18 @@ export function MessagesSection(): JSX.Element {
                         <div>
                           <p className="text-sm font-medium">
                             {participant.name || "Unknown"}
-                            {participant.isSelf && (
-                              <span className="text-xs text-white/60 ml-1">(You)</span>
-                            )}
                           </p>
-                          {participant.role && participant.role !== "member" && (
+                          {participant.role && participant.role === "admin" && (
                             <p className="text-xs text-secondary-btn flex items-center gap-1">
-                              {participant.role === "owner" && (
-                                <>
-                                  <MdAdminPanelSettings size={12} />
-                                  Owner
-                                </>
-                              )}
-                              {participant.role === "admin" && (
-                                <>
-                                  <MdAdminPanelSettings size={12} />
-                                  Admin
-                                </>
-                              )}
-                                </p>
-                              )}
+                              <MdAdminPanelSettings size={12} />
+                              Admin
+                            </p>
+                          )}
                             </div>
                             </div>
-                      {selectedChat.ownerId === user?.id &&
-                        !participant.isSelf && (
+                      {user &&
+                       selectedChat.participants?.some((p) => p.id === user.id || p.isSelf) &&
+                       !participant.isSelf && (
                           <div className="flex gap-1">
                             <button
                               onClick={() =>
@@ -1664,7 +1849,9 @@ export function MessagesSection(): JSX.Element {
               </div>
 
               {/* Channel-specific actions */}
-              {selectedChat.isChannel && selectedChat.ownerId === user?.id && (
+              {selectedChat.isChannel && 
+               user && 
+               selectedChat.participants?.some((p) => p.id === user.id || p.isSelf) && (
                 <div className="space-y-2">
                   <h4 className="font-bold mb-2">Channel Settings</h4>
                   <button
@@ -1692,40 +1879,169 @@ export function MessagesSection(): JSX.Element {
 
               {/* Leave/Delete actions */}
               <div className="space-y-2 pt-4 border-t border-white/10">
-                {selectedChat.ownerId === user?.id ? (
+                {selectedChat.isGroup && (
                   <button
                     onClick={() => {
                       if (
                         confirm(
-                          `Are you sure you want to delete this ${selectedChat.isChannel ? "channel" : "group"}?`
+                          `Are you sure you want to delete this group? This action cannot be undone.`
                         )
                       ) {
-                        alert("Delete feature coming soon!");
+                        handleDeleteGroup();
                       }
                     }}
                     className="w-full p-3 rounded-lg bg-rose-500/20 text-rose-500 hover:bg-rose-500/30 transition-all flex items-center justify-center gap-2 font-medium"
                   >
                     <MdDelete size={18} />
-                    Delete {selectedChat.isChannel ? "Channel" : "Group"}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      if (
-                        confirm(
-                          `Are you sure you want to leave this ${selectedChat.isChannel ? "channel" : "group"}?`
-                        )
-                      ) {
-                        handleLeaveChannel();
-                      }
-                    }}
-                    className="w-full p-3 rounded-lg bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30 transition-all flex items-center justify-center gap-2 font-medium"
-                  >
-                    <MdExitToApp size={18} />
-                    Leave {selectedChat.isChannel ? "Channel" : "Group"}
+                    Delete Group
                   </button>
                 )}
+                <button
+                  onClick={() => {
+                    if (
+                      confirm(
+                        `Are you sure you want to leave this ${selectedChat.isChannel ? "channel" : "group"}?`
+                      )
+                    ) {
+                      handleLeaveChannel();
+                    }
+                  }}
+                  className="w-full px-4 py-3 rounded-xl bg-[#00B8E6] text-white hover:bg-secondary-btn hover:text-primary-bg transition-all duration-300 flex items-center justify-center gap-2 font-bold hover:scale-[1.02] border-2 border-transparent hover:border-secondary-btn/50"
+                >
+                  <MdExitToApp size={20} />
+                  Leave {selectedChat.isChannel ? "Channel" : "Group"}
+                </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Members Modal */}
+      {showAddMembersModal && selectedChat && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-primary-elements rounded-2xl border border-white/10 w-full max-w-md max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+              <h3 className="text-xl font-bold">Add Members</h3>
+              <button
+                onClick={() => {
+                  setShowAddMembersModal(false);
+                  setSelectedMembersToAdd([]);
+                  setAddMembersError(null);
+                }}
+                className="p-2 rounded-lg hover:bg-primary-bg/50 transition-colors"
+              >
+                <MdClose size={24} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {addMembersError && (
+                <div className="p-3 rounded-lg bg-rose-500/20 border border-rose-400/50 text-rose-200 text-sm">
+                  {addMembersError}
+                </div>
+              )}
+
+              <div>
+                <p className="text-sm text-white/70 mb-3">
+                  Select friends to add to "{getChatDisplayName(selectedChat)}"
+                </p>
+              </div>
+
+              {availableFriendsToAdd.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-white/60">No friends available to add</p>
+                  <p className="text-white/40 text-sm mt-2">
+                    All your friends are already members of this group
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Select Friends to Add
+                  </label>
+                  <div className="max-h-64 overflow-y-auto space-y-2 border border-white/10 rounded-lg p-2 bg-primary-bg">
+                    {availableFriendsToAdd.map((friend) => (
+                      <label
+                        key={friend.id}
+                        className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all ${
+                          selectedMembersToAdd.includes(friend.id)
+                            ? "bg-primary-btn/20 border border-primary-btn/50"
+                            : "hover:bg-white/5"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedMembersToAdd.includes(friend.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedMembersToAdd([
+                                ...selectedMembersToAdd,
+                                friend.id,
+                              ]);
+                            } else {
+                              setSelectedMembersToAdd(
+                                selectedMembersToAdd.filter((id) => id !== friend.id)
+                              );
+                            }
+                          }}
+                          disabled={addingMembers}
+                          className="w-4 h-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        <div className="relative shrink-0">
+                          {friend.avatar && (
+                            <img
+                              src={friend.avatar}
+                              alt={friend.name || "User"}
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          )}
+                          {friend.onlineStatus && (
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-primary-bg"></div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {friend.name || "Unknown"}
+                          </p>
+                          {friend.onlineStatus && (
+                            <p className="text-xs text-green-400">Online</p>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-white/50 mt-2">
+                    {selectedMembersToAdd.length} friend
+                    {selectedMembersToAdd.length !== 1 ? "s" : ""} selected
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-white/10">
+              <button
+                onClick={handleAddMembers}
+                disabled={
+                  selectedMembersToAdd.length === 0 ||
+                  addingMembers ||
+                  availableFriendsToAdd.length === 0
+                }
+                className="w-full px-4 py-3 rounded-xl bg-primary-btn text-primary-bg hover:bg-[#FF6B00] hover:text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-bold"
+              >
+                {addingMembers ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-primary-bg border-t-transparent rounded-full animate-spin"></div>
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <MdPersonAdd size={20} />
+                    Add {selectedMembersToAdd.length > 0 && `${selectedMembersToAdd.length} `}
+                    Member{selectedMembersToAdd.length !== 1 ? "s" : ""}
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -1814,68 +2130,6 @@ export function MessagesSection(): JSX.Element {
         </div>
       )}
 
-      {/* Join Channel Modal */}
-      {showJoinChannelModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-primary-elements rounded-2xl border border-white/10 w-full max-w-md">
-            <div className="p-4 border-b border-white/10 flex items-center justify-between">
-              <h3 className="text-xl font-bold">Join Channel</h3>
-              <button
-                onClick={() => {
-                  setShowJoinChannelModal(false);
-                  setChannelPassword("");
-                }}
-                className="p-2 rounded-lg hover:bg-primary-bg/50 transition-colors"
-              >
-                <MdClose size={24} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <p className="text-white/60 text-sm">
-                Enter the channel name to join. If it's password-protected, you'll
-                need to provide the password.
-              </p>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Channel Name *
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter channel name..."
-                  className="w-full rounded-lg border border-white/10 bg-primary-bg px-4 py-2 text-white placeholder:text-white/40 focus:border-secondary-btn focus:outline-none focus:ring-2 focus:ring-secondary-btn/50 transition-all duration-200"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                  <MdLock size={16} />
-                  Password (if required)
-                </label>
-                <input
-                  type="password"
-                  value={channelPassword}
-                  onChange={(e) => setChannelPassword(e.target.value)}
-                  placeholder="Enter password..."
-                  className="w-full rounded-lg border border-white/10 bg-primary-bg px-4 py-2 text-white placeholder:text-white/40 focus:border-secondary-btn focus:outline-none focus:ring-2 focus:ring-secondary-btn/50 transition-all duration-200"
-                />
-              </div>
-
-              <button
-                onClick={() => {
-                  alert("Join channel feature coming soon!");
-                  setShowJoinChannelModal(false);
-                }}
-                className="w-full p-3 rounded-xl bg-secondary-btn text-primary-bg hover:bg-[#FF8C33] hover:text-white transition-all duration-300 flex items-center justify-center gap-2 font-bold"
-              >
-                <MdAdd size={20} />
-                Join Channel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
