@@ -275,6 +275,7 @@ export function MessagesSection(): JSX.Element {
   const isInitialLoadRef = useRef<boolean>(false);
   const [loaded, setLoaded] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const chatsPollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastMessageTimestampRef = useRef<string | null>(null);
 
   // Typing indicator
@@ -776,12 +777,23 @@ export function MessagesSection(): JSX.Element {
     fetchChats(controller.signal);
     fetchFriends();
 
+    // Set up continuous polling for chats list to keep sidebar updated
+    chatsPollingIntervalRef.current = setInterval(() => {
+      if (!controller.signal.aborted) {
+        fetchChats(controller.signal);
+      }
+    }, 5000); // Poll every 5 seconds for chats list
+
     return () => {
       controller.abort();
-      // Clean up polling interval on unmount
+      // Clean up polling intervals on unmount
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
+      }
+      if (chatsPollingIntervalRef.current) {
+        clearInterval(chatsPollingIntervalRef.current);
+        chatsPollingIntervalRef.current = null;
       }
     };
   }, [user, fetchChats, fetchFriends]);
