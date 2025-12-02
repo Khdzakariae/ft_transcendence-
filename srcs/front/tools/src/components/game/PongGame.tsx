@@ -52,6 +52,7 @@ export function PongGame({
   const keysPressed = useRef<Set<string>>(new Set());
   const isConnectedRef = useRef(true);
   const pauseReasonRef = useRef<string | null>(null);
+  const gameEndedRef = useRef(false); // Track if onGameEnd has been called
   const [isConnected, setIsConnected] = useState(true);
   const [lagWarning, setLagWarning] = useState(false);
 
@@ -162,6 +163,23 @@ export function PongGame({
             setIsConnected(true);
             isConnectedRef.current = true;
             setLagWarning(false);
+            
+            // If game is over in game_state message, trigger onGameEnd
+            // This handles cases where game_over message might be delayed or lost
+            if (data.isGameOver && data.pauseReason === "Game Over" && !gameEndedRef.current) {
+              // Determine winner from scores if not provided
+              const winner = data.winner || 
+                (data.player1Score >= 11 ? "Player 1" : 
+                 data.player2Score >= 11 ? "Player 2" : "Draw");
+              const playerScore = isPlayer1 ? data.player1Score : data.player2Score;
+              const opponentScore = isPlayer1 ? data.player2Score : data.player1Score;
+              
+              gameEndedRef.current = true;
+              // Use setTimeout to ensure state is updated first
+              setTimeout(() => {
+                onGameEnd(winner, playerScore, opponentScore);
+              }, 100);
+            }
             break;
 
           case "game_over":
@@ -172,7 +190,13 @@ export function PongGame({
               player1Score: data.player1Score,
               player2Score: data.player2Score,
             }));
-            onGameEnd(data.winner, data.player1Score, data.player2Score);
+            // Only call onGameEnd if not already called (prevent duplicate calls)
+            if (!gameEndedRef.current) {
+              gameEndedRef.current = true;
+              const playerScore = isPlayer1 ? data.player1Score : data.player2Score;
+              const opponentScore = isPlayer1 ? data.player2Score : data.player1Score;
+              onGameEnd(data.winner, playerScore, opponentScore);
+            }
             break;
 
           case "opponent_disconnected":

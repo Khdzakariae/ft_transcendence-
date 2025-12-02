@@ -1,6 +1,22 @@
 // User data interface for the profile section (may be used for other sections as well)
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  tier: string;
+  unlockedAt?: string;
+  count?: number;
+}
+
+export interface RecentActivity {
+  id: string;
+  type: string;
+  text: string;
+  createdAt: string;
+}
+
 export interface UserDataInter {
-  achievements: string[];
+  achievements: Achievement[] | string[]; // Can be array of objects or strings for backward compatibility
   avatar: string;
   createdAt: string;
   email: string;
@@ -9,7 +25,7 @@ export interface UserDataInter {
   medals: { gold: number; silver: number; bronze: number };
   name: string;
   onlineStatus: boolean;
-  recentActivities: string[];
+  recentActivities: RecentActivity[] | string[]; // Can be array of objects or strings
   totalAchievements: number;
   twoFactorEnabled: boolean;
   updatedAt: string;
@@ -19,6 +35,7 @@ export interface UserDataInter {
   lastName: string;
   bio?: string;
   error?: string | null;
+  Games?: Array<{ id: string; title: string; createdAt: string }>; // Game records
 }
 
 export interface UserInter {

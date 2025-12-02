@@ -14,6 +14,7 @@ interface DashboardContextType {
   friendRequests: any[];
   markNotificationAsRead: (requestId: string) => void;
   fetchFriendRequests: () => void;
+  refreshUserData: () => Promise<void>;
 }
 
 const DashboardContext = createContext<DashboardContextType | null>(null);
@@ -99,6 +100,38 @@ export function Dashboard(): JSX.Element {
     return () => clearInterval(interval);
   }, [user, section]);
 
+  // Function to refresh user data
+  const refreshUserData = async () => {
+    try {
+      console.log("[refreshUserData] Fetching updated user data...");
+      const response = await fetch("http://localhost:3000/api/v1/user/me", {
+        method: "GET",
+        credentials: "include",
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const updatedUserData = data.data as UserDataInter;
+        if (updatedUserData && !updatedUserData.error) {
+          console.log("[refreshUserData] User data updated:", {
+            xp: updatedUserData.xp,
+            level: updatedUserData.level,
+            wins: updatedUserData.Games?.length || 0,
+            achievements: updatedUserData.achievements?.length || 0,
+            medals: updatedUserData.medals,
+          });
+          setUserData(updatedUserData);
+        } else {
+          console.warn("[refreshUserData] Invalid user data received:", updatedUserData);
+        }
+      } else {
+        console.error(`[refreshUserData] Failed to fetch user data: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("[refreshUserData] Error refreshing user data:", error);
+    }
+  };
+
   // Prepare context value
   const contextValue: DashboardContextType = {
     user,
@@ -106,6 +139,7 @@ export function Dashboard(): JSX.Element {
     friendRequests,
     markNotificationAsRead,
     fetchFriendRequests,
+    refreshUserData,
   };
 
   return (

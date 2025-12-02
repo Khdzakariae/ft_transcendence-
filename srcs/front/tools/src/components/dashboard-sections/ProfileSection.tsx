@@ -2,11 +2,39 @@ import { useEffect, useState } from "react";
 import { LazyLoadingImage } from "../LazyLoadingImage";
 import { MdOutlineVerified } from "react-icons/md";
 import { useDashboardContext } from "../../Pages/Dashboard";
-import { UserDataInter } from "../../interfaces/UserInterfaces";
+import { UserDataInter, Achievement, RecentActivity } from "../../interfaces/UserInterfaces";
 
 interface ProfileSectionProps {
   user_data?: UserDataInter | null;
 }
+
+// Helper function to get tier color
+const getTierColor = (tier: string) => {
+  switch (tier?.toUpperCase()) {
+    case "GOLD":
+      return "from-amber-400 to-yellow-600 border-amber-400/40";
+    case "SILVER":
+      return "from-gray-300 to-gray-500 border-gray-400/40";
+    case "BRONZE":
+      return "from-orange-400 to-amber-700 border-orange-400/40";
+    default:
+      return "from-primary-btn to-secondary-btn border-primary-btn/40";
+  }
+};
+
+// Helper function to get tier emoji
+const getTierEmoji = (tier: string) => {
+  switch (tier?.toUpperCase()) {
+    case "GOLD":
+      return "🥇";
+    case "SILVER":
+      return "🥈";
+    case "BRONZE":
+      return "🥉";
+    default:
+      return "🏆";
+  }
+};
 
 export function ProfileSection({ user_data: propUserData }: ProfileSectionProps = {}): JSX.Element {
   // Try to get context, but don't fail if not in Dashboard
@@ -19,17 +47,66 @@ export function ProfileSection({ user_data: propUserData }: ProfileSectionProps 
   }
   const user_data = propUserData ?? contextUserData;
   const [loaded, setLoaded] = useState(false);
-  const total_xp: number = 6000; // mock total xp for testing
   const [xpProgress, setXpProgress] = useState<number>(0);
-  const total_achievements: number = 10; // mock total achievements for testing
+
+  // Calculate XP for next level (100 XP per level)
+  // Level 1: 0-99 XP, Level 2: 100-199 XP, etc.
+  const currentLevel = user_data?.level || 1;
+  const currentXP = user_data?.xp || 0;
+  const currentLevelXP = currentLevel * 100; // XP needed to reach this level
+  const previousLevelXP = (currentLevel - 1) * 100; // XP at start of current level
+  const xpForCurrentLevel = Math.max(0, currentXP - previousLevelXP); // XP progress in current level
+  const xpNeededForLevel = 100; // Always 100 XP needed for next level
+  const nextLevelXP = currentLevelXP; // Total XP needed for next level
+
+  // Parse achievements - handle both old (string[]) and new (Achievement[]) formats
+  const achievements: Achievement[] = user_data?.achievements
+    ? user_data.achievements.map((ach) => {
+        if (typeof ach === "string") {
+          return { id: "", name: ach, description: "", tier: "" };
+        }
+        return ach as Achievement;
+      })
+    : [];
+
+  // Parse recent activities - handle both formats
+  const recentActivities: RecentActivity[] = user_data?.recentActivities
+    ? user_data.recentActivities.map((act) => {
+        if (typeof act === "string") {
+          return { id: "", type: "", text: act, createdAt: "" };
+        }
+        return act as RecentActivity;
+      })
+    : [];
+
+  // Calculate game statistics
+  const totalWins = user_data?.Games?.length || 0;
+  const totalAchievements = user_data?.totalAchievements || achievements.length;
+
+  // Calculate tier-based achievement counts once (avoid redundant filtering)
+  const goldAchievements = achievements.filter(a => a.tier?.toUpperCase() === "GOLD");
+  const silverAchievements = achievements.filter(a => a.tier?.toUpperCase() === "SILVER");
+  const bronzeAchievements = achievements.filter(a => a.tier?.toUpperCase() === "BRONZE");
+  const goldCount = goldAchievements.length;
+  const silverCount = silverAchievements.length;
+  const bronzeCount = bronzeAchievements.length;
 
   // need user_data to be fetch first so this useEffect can run
   useEffect(() => {
     if (!user_data) return;
-    const target = Math.min(100, Math.round((user_data.xp / total_xp) * 100));
-    const t = setTimeout(() => setXpProgress(target), 100);
+    
+    // Debug log to verify data
+    console.log("[ProfileSection] User data received:", {
+      xp: user_data.xp,
+      level: user_data.level,
+      wins: user_data.Games?.length || 0,
+      achievements: user_data.achievements?.length || 0,
+    });
+    
+    const progress = Math.min(100, Math.round((xpForCurrentLevel / xpNeededForLevel) * 100));
+    const t = setTimeout(() => setXpProgress(progress), 100);
     return () => clearTimeout(t);
-  }, [user_data]);
+  }, [user_data, xpForCurrentLevel, xpNeededForLevel]);
 
   if (!user_data) {
     return (
@@ -100,8 +177,14 @@ export function ProfileSection({ user_data: propUserData }: ProfileSectionProps 
               </span>
               <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-amber-400/60 bg-gradient-to-br from-amber-500/20 to-amber-500/10 text-amber-300 text-sm font-bold backdrop-blur-sm transition-all duration-300 hover:scale-105">
                 <span className="text-base">⚡</span>
-                Level {user_data.level}
+                Level {user_data.level ?? 1}
               </span>
+              {totalWins > 0 && (
+                <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-green-400/60 bg-gradient-to-br from-green-500/20 to-green-500/10 text-green-300 text-sm font-bold backdrop-blur-sm transition-all duration-300 hover:scale-105">
+                  <span className="text-base">🎮</span>
+                  {totalWins} {totalWins === 1 ? "Win" : "Wins"}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -135,15 +218,15 @@ export function ProfileSection({ user_data: propUserData }: ProfileSectionProps 
               
               <div className="flex items-center justify-between mt-3">
                 <span className="text-2xl font-bold text-white">
-                  {user_data.xp}
+                  {user_data.xp ?? 0}
                 </span>
                 <span className="text-sm text-white/50">
-                  / <span className="text-primary-btn font-semibold">{total_xp}</span> XP
+                  / <span className="text-primary-btn font-semibold">{nextLevelXP}</span> XP
                 </span>
               </div>
               
               <div className="mt-2 text-xs text-white/60">
-                {xpProgress}% Complete
+                {xpForCurrentLevel} / {xpNeededForLevel} XP to Level {(user_data.level ?? 1) + 1}
               </div>
             </div>
           </div>
@@ -169,7 +252,7 @@ export function ProfileSection({ user_data: propUserData }: ProfileSectionProps 
                 <div
                   className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-600 transition-[width] duration-700 ease-out shadow-lg"
                   style={{
-                    width: `${(user_data.achievements.length / total_achievements) * 100}%`,
+                    width: `${totalAchievements > 0 ? Math.min(100, (achievements.length / totalAchievements) * 100) : 0}%`,
                   }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent animate-pulse"></div>
@@ -178,19 +261,62 @@ export function ProfileSection({ user_data: propUserData }: ProfileSectionProps 
               
               <div className="flex items-center justify-between mt-3">
                 <span className="text-2xl font-bold text-white">
-                  {user_data.achievements.length}
+                  {achievements.length}
                 </span>
                 <span className="text-sm text-white/50">
-                  / <span className="text-amber-400 font-semibold">{total_achievements}</span> Unlocked
+                  {totalAchievements > 0 && (
+                    <>
+                      / <span className="text-amber-400 font-semibold">{totalAchievements}</span> Unlocked
+                    </>
+                  )}
                 </span>
               </div>
               
               <div className="mt-2 text-xs text-white/60">
-                {Math.round((user_data.achievements.length / total_achievements) * 100)}% Complete
+                {totalAchievements > 0
+                  ? `${achievements.length} / ${totalAchievements} Achievements`
+                  : "Start playing to unlock achievements!"}
               </div>
             </div>
           </div>
         </div>
+
+        {/* Medals Info Section */}
+        <div className="relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-6 rounded-2xl border-2 border-white/10 shadow-xl overflow-hidden">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-2xl shadow-lg shrink-0">
+              💡
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold font-secondary text-white mb-2">
+                How Medals Are Earned
+              </h2>
+              <p className="text-sm text-white/80 leading-relaxed mb-3">
+                Medals are automatically awarded when you unlock achievements in the game. Each achievement has a tier (Gold, Silver, or Bronze), and unlocking an achievement of that tier grants you a medal of the same tier.
+              </p>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-start gap-2">
+                  <span className="text-amber-400 font-bold">🥇 Gold Medals:</span>
+                  <span className="text-white/70">Earned by unlocking <strong className="text-amber-300">GOLD tier achievements</strong>. These are the most prestigious achievements, like "Perfect Game" (winning 11-0) or "100 Wins".</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-gray-300 font-bold">🥈 Silver Medals:</span>
+                  <span className="text-white/70">Earned by unlocking <strong className="text-gray-200">SILVER tier achievements</strong>. These represent significant milestones, such as "50 Wins".</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-orange-400 font-bold">🥉 Bronze Medals:</span>
+                  <span className="text-white/70">Earned by unlocking <strong className="text-orange-300">BRONZE tier achievements</strong>. These are your first steps, like "First Win" or "10 Wins".</span>
+                </div>
+              </div>
+              <div className="mt-4 p-3 bg-white/5 rounded-lg border border-primary-btn/20">
+                <p className="text-xs text-white/60">
+                  <strong className="text-white/80">Tip:</strong> Win games to unlock achievements and earn medals! Each achievement you unlock contributes to your medal count based on its tier.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Medals Section */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Gold Medal Card */}
@@ -207,7 +333,17 @@ export function ProfileSection({ user_data: propUserData }: ProfileSectionProps 
               <p className="text-3xl font-bold font-secondary text-white">
                 {user_data.medals.gold}
               </p>
-              <p className="text-xs text-white/50 mt-1">First Place</p>
+              <p className="text-xs text-white/50 mt-1 mb-2">From Gold Achievements</p>
+              <div className="mt-3 pt-3 border-t border-amber-400/20">
+                <p className="text-xs text-white/60 leading-relaxed">
+                  Earned by unlocking <strong className="text-amber-300">GOLD tier</strong> achievements like "Perfect Game" or "100 Wins"
+                </p>
+                {goldCount > 0 && (
+                  <p className="text-xs text-amber-300 mt-2 font-semibold">
+                    {goldCount} Gold Achievement{goldCount !== 1 ? "s" : ""} Unlocked
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -225,7 +361,17 @@ export function ProfileSection({ user_data: propUserData }: ProfileSectionProps 
               <p className="text-3xl font-bold font-secondary text-white">
                 {user_data.medals.silver}
               </p>
-              <p className="text-xs text-white/50 mt-1">Second Place</p>
+              <p className="text-xs text-white/50 mt-1 mb-2">From Silver Achievements</p>
+              <div className="mt-3 pt-3 border-t border-gray-400/20">
+                <p className="text-xs text-white/60 leading-relaxed">
+                  Earned by unlocking <strong className="text-gray-200">SILVER tier</strong> achievements like "50 Wins"
+                </p>
+                {silverCount > 0 && (
+                  <p className="text-xs text-gray-300 mt-2 font-semibold">
+                    {silverCount} Silver Achievement{silverCount !== 1 ? "s" : ""} Unlocked
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -243,42 +389,152 @@ export function ProfileSection({ user_data: propUserData }: ProfileSectionProps 
               <p className="text-3xl font-bold font-secondary text-white">
                 {user_data.medals.bronze}
               </p>
-              <p className="text-xs text-white/50 mt-1">Third Place</p>
+              <p className="text-xs text-white/50 mt-1 mb-2">From Bronze Achievements</p>
+              <div className="mt-3 pt-3 border-t border-orange-400/20">
+                <p className="text-xs text-white/60 leading-relaxed">
+                  Earned by unlocking <strong className="text-orange-300">BRONZE tier</strong> achievements like "First Win" or "10 Wins"
+                </p>
+                {bronzeCount > 0 && (
+                  <p className="text-xs text-orange-300 mt-2 font-semibold">
+                    {bronzeCount} Bronze Achievement{bronzeCount !== 1 ? "s" : ""} Unlocked
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Game Statistics Section */}
+        {totalWins > 0 && (
+          <div className="relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-6 rounded-2xl border-2 border-white/10 shadow-xl overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-2xl shadow-lg">
+                  🎮
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold font-secondary text-white">
+                    Game Statistics
+                  </h2>
+                  <p className="text-xs text-white/60">Your Pong Performance</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                <div className="bg-white/5 rounded-xl p-4 border border-green-400/20">
+                  <div className="text-3xl font-bold text-green-400">{totalWins}</div>
+                  <div className="text-sm text-white/70 mt-1">Total Wins</div>
+                </div>
+                <div className="bg-white/5 rounded-xl p-4 border border-primary-btn/20">
+                  <div className="text-3xl font-bold text-primary-btn">{user_data.xp ?? 0}</div>
+                  <div className="text-sm text-white/70 mt-1">Total XP</div>
+                </div>
+                <div className="bg-white/5 rounded-xl p-4 border border-amber-400/20">
+                  <div className="text-3xl font-bold text-amber-400">{user_data.level ?? 1}</div>
+                  <div className="text-sm text-white/70 mt-1">Current Level</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Achievements List Section */}
+        {achievements.length > 0 && (
+          <div className="relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-6 rounded-2xl border-2 border-white/10 shadow-xl overflow-hidden">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-2xl shadow-lg">
+                🏆
+              </div>
+              <div>
+                <h2 className="text-xl font-bold font-secondary text-white">
+                  Unlocked Achievements
+                </h2>
+                <p className="text-xs text-white/60">Your gaming milestones</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {achievements.map((achievement, index) => {
+                const tier = achievement.tier || "";
+                const tierColor = getTierColor(tier);
+                const tierEmoji = getTierEmoji(tier);
+                
+                return (
+                  <div
+                    key={achievement.id || index}
+                    className={`relative bg-gradient-to-br ${tierColor} backdrop-blur-sm p-4 rounded-xl border-2 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl overflow-hidden group`}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative z-10">
+                      <div className="flex items-start gap-3">
+                        <div className="text-3xl">{tierEmoji}</div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-white text-sm truncate">
+                            {achievement.name || "Achievement"}
+                          </h3>
+                          {achievement.description && (
+                            <p className="text-xs text-white/70 mt-1 line-clamp-2">
+                              {achievement.description}
+                            </p>
+                          )}
+                          {achievement.count && achievement.count > 1 && (
+                            <div className="mt-2 text-xs text-white/60">
+                              Count: {achievement.count}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Activities Section */}
+        {recentActivities.length > 0 && (
+          <div className="relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-6 rounded-2xl border-2 border-white/10 shadow-xl overflow-hidden">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-btn to-secondary-btn flex items-center justify-center text-2xl shadow-lg">
+                📜
+              </div>
+              <div>
+                <h2 className="text-xl font-bold font-secondary text-white">
+                  Recent Activities
+                </h2>
+                <p className="text-xs text-white/60">Your latest achievements and milestones</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              {recentActivities.slice(0, 5).map((activity, index) => (
+                <div
+                  key={activity.id || index}
+                  className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-primary-btn/40 transition-all duration-300 hover:bg-white/10"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="text-xl">
+                      {activity.type === "ACHIEVEMENT" ? "🏆" : "📝"}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-white text-sm">{activity.text}</p>
+                      {activity.createdAt && (
+                        <p className="text-xs text-white/50 mt-1">
+                          {new Date(activity.createdAt).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-//  <img
-//                                   src={friend.avatar}
-//                                   alt={friend.name || "User"}
-//                                   className="w-12 h-12 rounded-full object-cover"
-//                                 />
-//                               ) : (
-//                                 <div className="w-12 h-12 rounded-full bg-primary-btn/30 flex items-center justify-center text-lg font-semibold">
-//                                   {getInitials(friend.name)}
-//                                 </div>
-
-{
-  /* <LazyLoadingImage
-                        dimension={{
-                          width: "w-10",
-                          height: "h-10",
-                        }}
-                        loading={loaded}
-                      >
-                        <img
-                          src={getChatAvatar(chat)}
-                          alt="profile image"
-                          className={`w-10 h-10 rounded-full object-cover ${loaded ? "opacity-100" : "opacity-0"}`}
-                          loading="lazy"
-                          onLoad={() => setLoaded(true)}
-                        />
-                        {!loaded && (
-                          <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/40 to-blue-900/60 opacity-90 blur-md shadow-2xl shadow-cyan-500/30 animate-pulse"></div>
-                        )}
-                      </LazyLoadingImage> */
-}

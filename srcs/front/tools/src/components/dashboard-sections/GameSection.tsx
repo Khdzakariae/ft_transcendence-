@@ -24,7 +24,7 @@ interface EndGameData {
 }
 
 export function GameSection(): JSX.Element {
-  const { user } = useDashboardContext();
+  const { user, refreshUserData } = useDashboardContext();
   const [currentView, setCurrentView] = useState<GameView>("menu");
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [gameSession, setGameSession] = useState<GameSession | null>(null);
@@ -165,19 +165,40 @@ export function GameSection(): JSX.Element {
 
   // Handle game end
   const handleGameEnd = useCallback(
-    (winner: string, playerScore: number, opponentScore: number) => {
+    async (winner: string, playerScore: number, opponentScore: number) => {
       setEndGameData({
         winner,
         playerScore,
         opponentScore,
       });
       setCurrentView("endGame");
+      
+      // Refresh user data after delays to ensure backend has processed
+      // First refresh after 1.5 seconds (backend should be done by then)
+      setTimeout(async () => {
+        try {
+          console.log("[handleGameEnd] First refresh attempt...");
+          await refreshUserData();
+        } catch (error) {
+          console.error("Error refreshing user data after game end:", error);
+        }
+      }, 1500);
+      
+      // Second refresh after 3 seconds as backup
+      setTimeout(async () => {
+        try {
+          console.log("[handleGameEnd] Second refresh attempt (backup)...");
+          await refreshUserData();
+        } catch (error) {
+          console.error("Error in backup refresh:", error);
+        }
+      }, 3000);
     },
-    []
+    [refreshUserData]
   );
 
   // Handle disconnect/leave game
-  const handleDisconnect = useCallback(() => {
+  const handleDisconnect = useCallback(async () => {
     if (socket && socket.readyState === WebSocket.OPEN && gameSession) {
       // Notify backend that user is leaving the game
       try {
@@ -194,7 +215,17 @@ export function GameSection(): JSX.Element {
     }
     setCurrentView("menu");
     setGameSession(null);
-  }, [socket, gameSession]);
+    
+    // Refresh user data after leaving game (in case game was forfeited)
+    setTimeout(async () => {
+      try {
+        await refreshUserData();
+        console.log("User data refreshed after leaving game");
+      } catch (error) {
+        console.error("Error refreshing user data after leaving game:", error);
+      }
+    }, 1000);
+  }, [socket, gameSession, refreshUserData]);
 
   // Start matchmaking
   const startMatchmaking = () => {
@@ -240,24 +271,44 @@ export function GameSection(): JSX.Element {
   };
 
   // Play again
-  const handlePlayAgain = () => {
+  const handlePlayAgain = async () => {
     setEndGameData(null);
     setGameSession(null);
     setCurrentView("matchmaking");
+    
+    // Refresh user data after exiting end game screen
+    setTimeout(async () => {
+      try {
+        await refreshUserData();
+        console.log("User data refreshed after play again");
+      } catch (error) {
+        console.error("Error refreshing user data after play again:", error);
+      }
+    }, 500);
   };
 
   // Exit to menu
-  const handleExit = () => {
+  const handleExit = async () => {
     setEndGameData(null);
     setGameSession(null);
     setSpectatorGame(null);
     setCurrentView("menu");
+    
+    // Refresh user data after exiting end game screen
+    setTimeout(async () => {
+      try {
+        await refreshUserData();
+        console.log("User data refreshed after exit");
+      } catch (error) {
+        console.error("Error refreshing user data after exit:", error);
+      }
+    }, 500);
   };
 
   if (!user) {
-    return (
-      <div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
-        <h1 className="text-white text-2xl font-bold">
+  return (
+    <div className="min-h-screen bg-primary-bg flex items-center justify-center w-full text-center">
+      <h1 className="text-white text-2xl font-bold">
           Please log in to play
         </h1>
       </div>
@@ -284,7 +335,7 @@ export function GameSection(): JSX.Element {
             backgroundClip: 'text'
           }}>
             Pong Game
-          </h1>
+      </h1>
           <p className="text-white/70 text-lg font-primary">
             Challenge players and compete in real-time matches
           </p>

@@ -255,29 +255,48 @@ export class GameManager {
         return;
       }
 
+      // Check for game over BEFORE update to prevent unnecessary processing
       if (game.isGameOver) {
+        // If already processed (pauseReason is "Game Over"), just keep broadcasting state
+        if (game.pauseReason === "Game Over") {
+          this.broadcastGameState(gameId);
+          return;
+        }
+        // If isGameOver is true but not processed yet, process it now
         clearInterval(interval);
         this.gameUpdateIntervals.delete(gameId);
-        // End game if not already ended
-        if (!game.isPaused || game.pauseReason !== "Game Over") {
-          this.endGame(gameId);
-        }
+        // Broadcast final state before ending
+        this.broadcastGameState(gameId);
+        // Call endGame to process and send game_over message
+        this.endGame(gameId);
         return;
       }
 
       if (!game.isPaused) {
+        // Check if game is already over before updating
+        if (game.isGameOver && game.pauseReason === "Game Over") {
+          // Game already ended and processed, just keep broadcasting state
+          this.broadcastGameState(gameId);
+          return;
+        }
+        
         game.update();
+        
+        // Check for game over immediately after update
+        if (game.isGameOver) {
+          // Clear interval immediately to prevent further updates
+          clearInterval(interval);
+          this.gameUpdateIntervals.delete(gameId);
+          // Broadcast final game state with isGameOver = true
+          this.broadcastGameState(gameId);
+          // Call endGame immediately (synchronously) - this will set pauseReason
+          this.endGame(gameId);
+          return;
+        }
       }
 
       // Broadcast game state to players
       this.broadcastGameState(gameId);
-
-      // Check for game over after update
-      if (game.isGameOver) {
-        clearInterval(interval);
-        this.gameUpdateIntervals.delete(gameId);
-        this.endGame(gameId);
-      }
     }, GAME_UPDATE_INTERVAL);
 
     this.gameUpdateIntervals.set(gameId, interval);
@@ -369,12 +388,20 @@ export class GameManager {
     // Clear user's gameId
     user.gameId = null;
 
-    // If game is not over, end it with the opponent as winner
+    // If game is not over, end it with the opponent as winner (forfeit)
+    // This ensures data is persisted even when a user cancels
     if (!game.isGameOver) {
       const winnerId = game.player1.userId === userId 
         ? game.player2.userId 
         : game.player1.userId;
+      
+      // Set current scores before ending (forfeit counts as a loss)
+      // The winner gets the win, loser gets a forfeit loss
+      console.log(`User ${userId} left game ${gameId}. Ending game with winner: ${winnerId}`);
       this.endGame(gameId, winnerId);
+    } else {
+      // Game is already over, but ensure data was persisted
+      console.log(`User ${userId} left game ${gameId} which is already over.`);
     }
   }
 
@@ -432,11 +459,20 @@ export class GameManager {
 
   endGame(gameId, winnerId = null) {
     const game = this.games.get(gameId);
-    if (!game) return;
+    if (!game) {
+      console.log(`[endGame] Game ${gameId} not found, cannot end game`);
+      return;
+    }
 
-    // Prevent multiple endGame calls
-    if (game.isGameOver) return;
+    // Check if endGame was already called (prevent duplicate processing)
+    // But allow it if pauseReason is not "Game Over" (meaning it was set by update() but endGame wasn't called yet)
+    if (game.isGameOver && game.pauseReason === "Game Over") {
+      console.log(`[endGame] Game ${gameId} is already ended and processed, skipping endGame call`);
+      return;
+    }
 
+    console.log(`[endGame] Ending game ${gameId}, winnerId: ${winnerId || 'determined by score'}, scores: P1=${game.player1Score}, P2=${game.player2Score}`);
+    
     game.isGameOver = true;
     game.isPaused = true;
     game.pauseReason = "Game Over";
@@ -486,12 +522,22 @@ export class GameManager {
       user2.gameId = null;
     }
 
-    // Notify players
+    // Notify players immediately with game_over message
     if (user1 && user1.ws && user1.ws.readyState === 1) {
-      user1.ws.send(JSON.stringify(endGameData));
+      try {
+        user1.ws.send(JSON.stringify(endGameData));
+        console.log(`[endGame] Sent game_over to player1: ${game.player1.userName}`);
+      } catch (err) {
+        console.error(`[endGame] Error sending game_over to player1:`, err);
+      }
     }
     if (user2 && user2.ws && user2.ws.readyState === 1) {
-      user2.ws.send(JSON.stringify(endGameData));
+      try {
+        user2.ws.send(JSON.stringify(endGameData));
+        console.log(`[endGame] Sent game_over to player2: ${game.player2.userName}`);
+      } catch (err) {
+        console.error(`[endGame] Error sending game_over to player2:`, err);
+      }
     }
 
     // Notify spectators
@@ -514,11 +560,100 @@ export class GameManager {
       gameId,
     });
 
+    // Persist game results to backend (XP, achievements, medals)
+    // Always persist if there's a winner (either from score or forfeit)
+    if (winner) {
+      const loser = winner.userId === game.player1.userId ? game.player2 : game.player1;
+      const winnerScore = winner.userId === game.player1.userId ? game.player1Score : game.player2Score;
+      const loserScore = winner.userId === game.player1.userId ? game.player2Score : game.player1Score;
+
+      console.log(`[endGame] Persisting game result for game ${gameId}: Winner=${winner.userName} (${winnerScore}), Loser=${loser.userName} (${loserScore})`);
+      
+      this.persistGameResult(
+        winner.userId,
+        loser.userId,
+        winnerScore,
+        loserScore,
+        gameId
+      ).then((result) => {
+        console.log(`[endGame] Successfully persisted game result for game ${gameId}`);
+      }).catch((error) => {
+        console.error(`[endGame] Error persisting game result for game ${gameId}:`, error);
+      });
+    } else {
+      console.log(`[endGame] No winner determined for game ${gameId} (Draw or incomplete game)`);
+    }
+
     // Clean up game data after delay (gameId already cleared above)
     setTimeout(() => {
       this.games.delete(gameId);
       this.spectators.delete(gameId);
     }, 60000); // Keep game data for 1 minute after end
+  }
+
+  async persistGameResult(winnerId, loserId, winnerScore, loserScore, gameId) {
+    try {
+      // Determine the correct URL for user-service
+      // In Docker, use the container name; otherwise use localhost
+      // Priority: 1. Environment variable, 2. Docker container name, 3. localhost
+      let USER_SERVICE_URL;
+      if (process.env.USER_SERVICE_URL) {
+        USER_SERVICE_URL = process.env.USER_SERVICE_URL;
+      } else {
+        // Use container name for Docker (service name also works, but container name is more explicit)
+        // Check if we're running in Docker by checking for container name resolution
+        // Default to container name for Docker, localhost for local dev
+        USER_SERVICE_URL = "http://user-service-container:4000";  // Docker container name (works in Docker network)
+        // Fallback to localhost only if explicitly set (for local development outside Docker)
+        if (process.env.USE_LOCALHOST === "true") {
+          USER_SERVICE_URL = "http://localhost:4000";
+        }
+      }
+      
+      console.log(`[persistGameResult] Attempting to persist game result for game ${gameId}`);
+      console.log(`[persistGameResult] Using USER_SERVICE_URL: ${USER_SERVICE_URL}`);
+      console.log(`[persistGameResult] Request payload:`, {
+        winnerId,
+        loserId,
+        winnerScore,
+        loserScore,
+        gameId,
+      });
+      
+      const response = await fetch(`${USER_SERVICE_URL}/api/v1/user/game-result`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          winnerId,
+          loserId,
+          winnerScore,
+          loserScore,
+          gameId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[persistGameResult] Failed to persist game result for game ${gameId}: ${response.status} - ${errorText}`);
+        console.error(`[persistGameResult] Response headers:`, Object.fromEntries(response.headers.entries()));
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log(`[persistGameResult] Successfully persisted game result for game ${gameId}`);
+      console.log(`[persistGameResult] Response data:`, JSON.stringify(result, null, 2));
+      return result;
+    } catch (error) {
+      console.error(`[persistGameResult] Error calling user-service to persist game result for game ${gameId}:`, error);
+      console.error(`[persistGameResult] Error details:`, {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
+      throw error; // Re-throw to allow caller to handle
+    }
   }
 
   addSpectator(gameId, ws, userId) {
@@ -640,15 +775,20 @@ class Game {
     // Ball out of bounds - score
     if (this.ballX - BALL_SIZE < 0) {
       this.player2Score++;
+      // Check for winner immediately after scoring
+      if (this.player2Score >= WINNING_SCORE) {
+        this.isGameOver = true;
+        return; // Don't reset ball if game is over
+      }
       this.resetBall();
     } else if (this.ballX + BALL_SIZE > CANVAS_WIDTH) {
       this.player1Score++;
+      // Check for winner immediately after scoring
+      if (this.player1Score >= WINNING_SCORE) {
+        this.isGameOver = true;
+        return; // Don't reset ball if game is over
+      }
       this.resetBall();
-    }
-
-    // Check for winner
-    if (this.player1Score >= WINNING_SCORE || this.player2Score >= WINNING_SCORE) {
-      this.isGameOver = true;
     }
   }
 

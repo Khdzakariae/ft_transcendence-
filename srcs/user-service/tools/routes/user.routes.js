@@ -8,6 +8,7 @@ import {
   deleteUser,
   searchUsersByName,
   userInfo,
+  processGameResult,
 } from "../controllers/user.controller.js";
 
 export default async function userRouter(fastify, opts) {
@@ -17,6 +18,7 @@ export default async function userRouter(fastify, opts) {
   fastify.get("/me", userInfo);
   fastify.get("/search", searchUsersByName);
   fastify.get("/leaderboard", leaderboard);
+  fastify.post("/game-result", processGameResult);
 
   // Parameterized routes come last
   fastify.get("/:id", getUser);
