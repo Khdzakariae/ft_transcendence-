@@ -10,5 +10,3 @@ EXPOSE 4000
 CMD ["sh", "-c", "npm install && npx prisma db push && npx prisma generate && npm run dev"]
 
 # CMD ["tail", "-f", "/dev/null"]
-
-

@@ -2,6 +2,7 @@ import {
   getFriends,
   getPendingRequests,
   sendFriendRequest,
+  sendGameRequest,
   acceptFriendRequest,
   declineFriendRequest,
   removeFriend,
@@ -19,6 +20,7 @@ export default async function friendsRouter(fastify, opts) {
 
   // Send request
   fastify.post("/request", sendFriendRequest);
+  fastify.post("/gamerequest", sendGameRequest);
   // Accept/Decline by requestId
   fastify.put("/:requestId/accept", acceptFriendRequest);
   fastify.put("/:requestId/decline", declineFriendRequest);

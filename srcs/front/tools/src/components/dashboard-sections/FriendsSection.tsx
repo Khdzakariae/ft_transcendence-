@@ -58,6 +58,7 @@ export function FriendsSection({
           }));
         setFriends(validatedFriends);
       }
+      
     } catch (err: any) {
       if (err.name !== "AbortError" && !abortSignal?.aborted) {
         setError(err.message || "Failed to load friends");
@@ -68,7 +69,7 @@ export function FriendsSection({
       }
     }
   }, []);
-
+  
   const handleDeleteFriend = (friendId: string, friendName: string | null) => {
     setConfirmModal({
       isOpen: true,

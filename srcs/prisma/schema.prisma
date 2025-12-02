@@ -35,6 +35,11 @@ model User {
   Games           Game[]
   sentFriendships    Friendship[] @relation("Requester")
   receivedFriendships Friendship[] @relation("Addressee")
+  
+  // new code by hicham for gamerequest
+  sentGameRequests      GameRequest[] @relation("GameRequester")
+  receivedGameRequests  GameRequest[] @relation("GameAddressee")
+  
   chatParticipants ChatParticipant[]
   sentMessages     Message[]
   reactions        Reaction[]
@@ -74,6 +79,21 @@ model Friendship {
   @@unique([requesterId, addresseeId])
   @@map("friendships")
 }
+
+model GameRequest {
+  id           String   @id @default(cuid())
+  requesterId  String
+  addresseeId  String
+  status       String   @default("pending") // "pending", "accepted", "rejected"
+  createdAt    DateTime @default(now())
+
+  requester    User     @relation("GameRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee    User     @relation("GameAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@map("game_requests")
+}
+
 
 model PasswordReset {
   id        String   @id @default(cuid())

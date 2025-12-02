@@ -12,6 +12,17 @@ export interface FriendRequest {
   createdAt: string;
 }
 
+export interface GameRequest {
+  requestId: string;
+  from: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string | null;
+  };
+  createdAt: string;
+}
+
 const STORAGE_KEY = "read_notifications";
 const POLLING_INTERVAL = 5000; // 5 seconds
 
@@ -23,6 +34,7 @@ export function useNotifications(
   const [readNotificationIds, setReadNotificationIds] = useState<Set<string>>(
     new Set()
   );
+  const [gameRequests, setGameRequests] = useState<GameRequest[]>([]);
 
   // Load read notifications from localStorage on mount
   useEffect(() => {
@@ -72,7 +84,27 @@ export function useNotifications(
       console.error("Error fetching friend requests:", err);
     }
   }, [user]);
-
+  //  code by hicham for fetching game request
+  const fetchGameRequest = useCallback(async () => {
+    if (!user) return;
+    try{
+      const response = await fetch(
+        "http://localhost:3000/api/v1/friends/gamerequests",
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+    
+    if (!response.ok)
+      throw new Error("Failed to fetch friends request");
+    const data = await response.json();
+    if (data.data && data.data.incoming) /*what is data.data */ 
+      setGameRequests(data.data.incoming);
+  } catch (err: any){
+    console.error("Error fetching game request: ", err);
+  }
+  }, [user]);
   // Initial fetch and periodic polling
   useEffect(() => {
     if (user) {

@@ -137,8 +137,6 @@ export function SearchBarFriends({
             "Failed to send friend request"
         );
       }
-
-      alert("Friend request sent successfully!");
     } catch (err: any) {
       setError(err.message || "Failed to send friend request");
     } finally {

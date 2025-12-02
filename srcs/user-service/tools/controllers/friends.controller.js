@@ -56,12 +56,56 @@ export const getFriends = async (request, reply) => {
     return reply.code(500).send({ error: "Internal Server Error" });
   }
 };
+// new code by hicham for gamerequests (incoming/outgoing)
+export const getPendingGameRequests = async (request, reply) => {
+  const userId = getAuthUserId(request);
+  if (!user)
+    return reply.code(401).send({error : "Unauthorized"});
+  try {
+    const [incoming, outgoing] = await Promise.all([
+      prisma.GameRequest.findMany({
+        where: { addresseeId: userId, status: "pending" },
+        include: {
+          requester: {
+            select: { id: true, name: true, email: true, avatar: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.GameRequest.findMany({
+        where: { requesterId: userId, status: "pending" },
+        include: {
+          addressee: {
+            select: { id: true, name: true, email: true, avatar: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
+    return reply.code(200).send({
+      data: {
+        incoming: incoming.map((r) => ({
+          requestId: r.id,
+          from: r.requester,
+          createdAt: r.createdAt,
+        })),
+        outgoing: outgoing.map((r) => ({
+          requestId: r.id,
+          to: r.addressee,
+          createdAt: r.createdAt,
+        })),
+      },
+    });
+  } catch (error) {
+    request.log.error(error, "Error fetching pending friend requests");
+    return reply.code(500).send({ error: "Internal Server Error" });
+  }
+};
 
 // GET /api/v1/friends/requests -> pending requests (incoming/outgoing)
 export const getPendingRequests = async (request, reply) => {
   const userId = getAuthUserId(request);
   if (!userId) return reply.code(401).send({ error: "Unauthorized" });
-
   try {
     const [incoming, outgoing] = await Promise.all([
       prisma.friendship.findMany({
@@ -151,6 +195,75 @@ export const getBlockRequests = async (request, reply) => {
   }
 };
 
+// TO ADD /api/v1/friends/gamerequest {userID}
+export const sendGameRequest = async (request, reply) => {
+  console.log('new game request');
+  const userId = getAuthUserId(request);
+  if (!userId) return reply.code(401).send({error : "Unauthorized"});
+  const body =
+    typeof request.body === "string"
+      ? JSON.parse(request.body)
+      : (request.body ?? {});
+  const { userId: toUserId } = body;
+  if (!toUserId) return reply.code(400).send({ error: "userId is required" });
+  if (toUserId === userId)
+    return reply
+      .code(400)
+      .send({ error: "You can't send a Game request to yourself" });
+  try{
+    const target = await prisma.user.findUnique({where : { id: toUserId}});
+    if (!target)
+    {
+      console.log('user not found');
+      return reply.code(404).send({ error: "Target user not found" });
+    }
+    const existing = await prisma.gameRequest.findFirst({
+      where: {
+        OR: [
+          { requesterId: userId, addresseeId: toUserId },
+          { requesterId: toUserId, addresseeId: userId },
+        ],
+      },
+    });
+    if (existing) {
+      if (existing.status === "blocked")
+        return reply
+          .code(403)
+          .send({ error: "You are blocked or have blocked this user" });
+      if (existing.status === "accepted")
+        return reply.code(409).send({ error: "Already in a Game" });
+      if (existing.status === "pending")
+        return reply
+          .code(409)
+          .send({ error: "Game request already pending" });
+    }
+    // should create a new prisma entry called
+    const created = await prisma.GameRequest.create({
+      data: {
+        requesterId: userId,
+        addresseeId: toUserId,
+        status: "pending",
+      },
+    });
+    // create gameRequest notification
+    await createNotification({
+      userId: toUserId,
+      type: "GameRequest",
+      title: "New Game Request",
+      message: "You received a friend request",
+      actionable: true,
+      metadata: { fromUserId: userId, requestId: created.id },
+    });
+    return reply.code(201).send({
+      message: "Game request sent",
+      data: { requestId: created.id },});
+  }
+  catch (error) {
+    request.log.error(error, "Error sending friend request");
+    return reply.code(500).send({ error: "Internal Server Error" });
+  }
+}
+
 // POST /api/v1/friends/request { userId }
 export const sendFriendRequest = async (request, reply) => {
   const userId = getAuthUserId(request);
@@ -166,8 +279,7 @@ export const sendFriendRequest = async (request, reply) => {
   if (toUserId === userId)
     return reply
       .code(400)
-      .send({ error: "You can't send a request to yourself" });
-
+      .send({ error: "You can't send a request to yourself"});
   try {
     const target = await prisma.user.findUnique({ where: { id: toUserId } });
     if (!target)
@@ -202,7 +314,8 @@ export const sendFriendRequest = async (request, reply) => {
         status: "pending",
       },
     });
-
+    
+    
     // Notify target user
     await createNotification({
       userId: toUserId,
