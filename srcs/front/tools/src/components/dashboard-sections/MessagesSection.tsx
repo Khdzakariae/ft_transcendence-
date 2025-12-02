@@ -11,7 +11,6 @@ import {
   MdSettings,
   MdLock,
   MdLockOpen,
-  MdSportsEsports,
   MdAdminPanelSettings,
   MdVolumeOff,
   MdExitToApp,
@@ -1469,17 +1468,6 @@ export function MessagesSection(): JSX.Element {
                   <MdSettings size={24} />
                 </button>
               )}
-              {!selectedChat.isGroup && !selectedChat.isChannel && (
-                <button
-                  onClick={() => {
-                    alert("Send Pong challenge! (Feature coming soon)");
-                  }}
-                  className="p-2 rounded-lg hover:bg-primary-bg/50 transition-colors text-[#FF6B00]"
-                  title="Challenge to Pong"
-                >
-                  <MdSportsEsports size={24} />
-                </button>
-              )}
             </div>
 
             {/* Messages Area */}
@@ -2258,17 +2246,6 @@ export function MessagesSection(): JSX.Element {
               </div>
 
               <div className="space-y-2">
-                <button
-                  onClick={() => {
-                    alert("Pong challenge feature coming soon!");
-                    setShowUserProfileModal(false);
-                  }}
-                  className="w-full p-3 rounded-xl bg-primary-btn text-primary-bg hover:bg-[#FF6B00] hover:text-white transition-all duration-300 flex items-center justify-center gap-2 font-bold"
-                >
-                  <MdSportsEsports size={20} />
-                  Challenge to Pong
-                </button>
-
                 {selectedUserProfile.isBlocked ? (
                   <button
                     onClick={() => handleUnblockUser(selectedUserProfile.id)}
