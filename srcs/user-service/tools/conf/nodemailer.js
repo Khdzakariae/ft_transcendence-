@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
-import { EMAIL_USER, EMAIL_PASSWORD } from "./env.js";
+import { EMAIL_USER, EMAIL_PASSWORD, FRONTEND_URL } from "./env.js";
 import prisma from "../conf/db.js";
 
 const transporter = nodemailer.createTransport({
@@ -138,8 +138,8 @@ export const sendVerificationEmail = async ({ _id, email }, res) => {
 
 export const sendResetPasswordEmail = async ({ email, resetToken, _id }) => {
   try {
-    const currentUrl = process.env.CURRENT_URL || "http://localhost:3000";
-    const resetLink = `${currentUrl}/api/v1/auth/reset-password?token=${resetToken}`;
+    const frontendUrl = FRONTEND_URL || process.env.FRONTEND_URL || "http://localhost:8080";
+    const resetLink = `${frontendUrl}/reset-password/${_id}/?token=${resetToken}`;
     // Configurez et envoyez l'email
     await transporter.sendMail({
       from: "no-reply@your-app.com",
@@ -150,14 +150,14 @@ export const sendResetPasswordEmail = async ({ email, resetToken, _id }) => {
                 <h2 style="color: #333;">Reset Your Password</h2>
                 <p>We received a request to reset your password. If you made this request, click the button below to reset your password:</p>
                 <div style="text-align: center; margin: 30px 0;">
-                    <a href="${currentUrl}/api/v1/auth/reset-password/${_id}/${resetToken}" 
+                    <a href="${resetLink}" 
                        style="background-color: #007bff; color: white; padding: 12px 30px; 
                               text-decoration: none; border-radius: 5px; display: inline-block;">
                         Reset Password
                     </a>
                 </div>
                 <p>Or copy and paste this link in your browser:</p>
-                <p style="word-break: break-all; color: #666;">${currentUrl}/api/v1/auth/reset-password/${_id}/${resetToken}</p>
+                <p style="word-break: break-all; color: #666;">${resetLink}</p>
                 <p style="color: #666; font-size: 14px;">
                     <strong>Note:</strong> This link will expire in 1 hour. 
                     If you didn't request a password reset, please ignore this email.

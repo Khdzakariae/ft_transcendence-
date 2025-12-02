@@ -561,6 +561,11 @@ export const forgotPassword = async (request, reply) => {
     const hashedToken = await bcrypt.hash(resetToken, 10);
     const expiresAt = new Date(Date.now() + 3600000);
 
+    // Delete any existing reset records for this user before creating a new one
+    await prisma.passwordReset.deleteMany({
+      where: { userId: user.id },
+    });
+
     await prisma.passwordReset.create({
       data: {
         userId: user.id,
@@ -993,32 +998,69 @@ export const changePassword = async (request, reply) => {
 
 export const resetPassword = async (request, reply) => {
   try {
+    const { userId } = request.params;
     const { resetToken, newPassword } = request.body;
 
-    if (!resetToken || !newPassword) {
+    console.log("Reset password request:", { 
+      userId, 
+      hasToken: !!resetToken, 
+      tokenLength: resetToken?.length,
+      hasPassword: !!newPassword 
+    });
+
+    if (!resetToken || !newPassword || !userId) {
       return reply
         .status(400)
-        .send({ error: "Reset token and new password are required." });
+        .send({ error: "Reset token, new password, and user ID are required." });
     }
 
+    // Find the reset record by userId since token is hashed in database
+    // Note: We'll check expiration after finding the record
     const resetRecord = await prisma.passwordReset.findFirst({
-      where: { token: resetToken },
+      where: { 
+        userId: userId,
+      },
+      orderBy: {
+        expiresAt: 'desc' // Get the most recent one
+      },
+    });
+
+    console.log("Reset record found:", { 
+      found: !!resetRecord, 
+      userId: resetRecord?.userId,
+      expiresAt: resetRecord?.expiresAt 
     });
 
     if (!resetRecord) {
+      // Check if there's an expired record
+      const expiredRecord = await prisma.passwordReset.findFirst({
+        where: { userId: userId },
+      });
+      
+      if (expiredRecord) {
+        console.log("Found expired reset record");
+        await prisma.passwordReset.delete({ where: { id: expiredRecord.id } });
+        return reply.status(400).send({ error: "Reset token has expired. Please request a new password reset link." });
+      }
+      
       return reply
         .status(400)
-        .send({ error: "Invalid or expired reset token." });
+        .send({ error: "Invalid reset token. Please request a new password reset link." });
     }
 
-    const isTokenValid = await bcrypt.compare(resetToken, resetRecord.token);
-    if (!isTokenValid) {
-      return reply.status(400).send({ error: "Invalid reset token." });
-    }
-
+    // Check if token has expired (double check)
     if (new Date() > resetRecord.expiresAt) {
       await prisma.passwordReset.delete({ where: { id: resetRecord.id } });
-      return reply.status(400).send({ error: "Reset token has expired." });
+      return reply.status(400).send({ error: "Reset token has expired. Please request a new password reset link." });
+    }
+
+    // Compare the plain token with the hashed token in database
+    console.log("Comparing tokens...");
+    const isTokenValid = await bcrypt.compare(resetToken, resetRecord.token);
+    console.log("Token comparison result:", isTokenValid);
+    
+    if (!isTokenValid) {
+      return reply.status(400).send({ error: "Invalid reset token. Please request a new password reset link." });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -1035,8 +1077,16 @@ export const resetPassword = async (request, reply) => {
     });
   } catch (error) {
     console.error("Reset password error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      userId: request.params?.userId,
+    });
     return reply
       .status(500)
-      .send({ error: "An error occurred while resetting the password." });
+      .send({ 
+        error: "An error occurred while resetting the password.",
+        details: process.env.NODE_ENV === "development" ? error.message : undefined
+      });
   }
 };

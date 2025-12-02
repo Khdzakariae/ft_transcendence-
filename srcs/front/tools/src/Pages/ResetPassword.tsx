@@ -3,7 +3,7 @@ import { AuthInputForms } from "../components/AuthInputForms";
 import Logo from "../assets/ping_pong_logo.png";
 import { SecondaryButton } from "../components/Buttons";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Utils } from "../Utils";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
@@ -156,6 +156,10 @@ export function ResetPasswordEmailPage(): JSX.Element {
 }
 
 export function ResetPasswordPage(): JSX.Element {
+  const { userId } = useParams<{ userId: string }>();
+  const [searchParams] = useSearchParams();
+  // Decode the token in case it was URL encoded
+  const resetToken = searchParams.get("token") ? decodeURIComponent(searchParams.get("token") || "") : "";
   const [is_loading, setIsLoading] = useState(false);
   const [msg, setMsg] = useState("");
   const [btn_msg, setBtnMsg] = useState("Set New Password");
@@ -211,8 +215,18 @@ export function ResetPasswordPage(): JSX.Element {
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // get userId from url
-    const user_email_token = window.location.pathname.split("/").pop() || "";
+
+    // Validate token and userId are present
+    if (!resetToken || !userId) {
+      setMsg("Invalid or missing reset token. Please request a new password reset link.");
+      Utils.LogLevel.DEBUG && console.log("Reset password validation failed:", { 
+        hasToken: !!resetToken, 
+        hasUserId: !!userId,
+        tokenLength: resetToken?.length,
+        userId 
+      });
+      return;
+    }
 
     // Validate password before submitting
     if (!isPasswordValid) {
@@ -234,12 +248,12 @@ export function ResetPasswordPage(): JSX.Element {
 
     try {
       response = await fetch(
-        `http://localhost:3000/api/v1/auth/reset-password/${user_email_token}`,
+        `http://localhost:3000/api/v1/auth/reset-password/${userId}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ newPassword }),
+          body: JSON.stringify({ resetToken, newPassword }),
         },
       );
     } catch (e) {

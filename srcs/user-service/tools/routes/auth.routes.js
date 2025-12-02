@@ -38,7 +38,7 @@ async function authRoutes(fastify, options) {
   fastify.get("/google/callback", callbackGoogle);
 
   fastify.get("/reset-password", forgotPassword);
-  fastify.get("/reset-password/:userId/:uniqueString", resetPassword);
+  fastify.post("/reset-password/:userId", resetPassword);
 
   fastify.post(
     "/enable-2fa",
