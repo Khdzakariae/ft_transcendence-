@@ -300,24 +300,66 @@ export function PongGame({
         }
       }
 
-      // Draw game
+      // Draw game with modern ping-pong style matching dashboard
       
-      ctx.fillStyle = "#0B0033";
+      // Table background matching dashboard primary-bg with subtle variation
+      const tableGradient = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+      tableGradient.addColorStop(0, "#0C185A"); // primary-elements
+      tableGradient.addColorStop(0.5, "#0B0033"); // primary-bg
+      tableGradient.addColorStop(1, "#0C185A"); // primary-elements
+      ctx.fillStyle = tableGradient;
       ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-      // Draw center line
-      ctx.setLineDash([10, 10]);
-      ctx.strokeStyle = "#00FFFF";
+      // Add subtle texture overlay
+      ctx.fillStyle = "rgba(0, 255, 255, 0.03)";
+      for (let i = 0; i < CANVAS_HEIGHT; i += 6) {
+        ctx.fillRect(0, i, CANVAS_WIDTH, 1);
+      }
+
+      // Draw center line (net) with dashboard colors
+      ctx.setLineDash([20, 20]);
+      ctx.strokeStyle = "#00FFFF"; // primary-btn
       ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.4;
       ctx.beginPath();
       ctx.moveTo(CANVAS_WIDTH / 2, 0);
       ctx.lineTo(CANVAS_WIDTH / 2, CANVAS_HEIGHT);
       ctx.stroke();
       ctx.setLineDash([]);
+      ctx.globalAlpha = 1.0;
 
-      // Draw paddles
-      ctx.fillStyle = "#00FFFF";
+      // Draw paddles with modern style matching dashboard colors
+      // Player 1 paddle (left) - primary-btn (#00FFFF)
+      const paddleGradient1 = ctx.createLinearGradient(
+        10,
+        currentState.player1Y,
+        10 + PADDLE_WIDTH,
+        currentState.player1Y + PADDLE_HEIGHT
+      );
+      paddleGradient1.addColorStop(0, "#00FFFF"); // primary-btn exact color
+      paddleGradient1.addColorStop(0.5, "#00E5E5");
+      paddleGradient1.addColorStop(1, "#00CCCC");
+
+      // Player 2 paddle (right) - secondary-btn (#FF6B00)
+      const paddleGradient2 = ctx.createLinearGradient(
+        CANVAS_WIDTH - 10 - PADDLE_WIDTH,
+        currentState.player2Y,
+        CANVAS_WIDTH - 10,
+        currentState.player2Y + PADDLE_HEIGHT
+      );
+      paddleGradient2.addColorStop(0, "#FF6B00"); // secondary-btn exact color
+      paddleGradient2.addColorStop(0.5, "#FF8500");
+      paddleGradient2.addColorStop(1, "#FF9F00");
+
+      // Player 1 paddle with glow matching dashboard
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = "rgba(0, 255, 255, 0.6)";
+      ctx.fillStyle = paddleGradient1;
       ctx.fillRect(10, currentState.player1Y, PADDLE_WIDTH, PADDLE_HEIGHT);
+      
+      // Player 2 paddle with glow matching dashboard
+      ctx.shadowColor = "rgba(255, 107, 0, 0.6)";
+      ctx.fillStyle = paddleGradient2;
       ctx.fillRect(
         CANVAS_WIDTH - 10 - PADDLE_WIDTH,
         currentState.player2Y,
@@ -325,72 +367,135 @@ export function PongGame({
         PADDLE_HEIGHT
       );
 
-      // Draw ball
-      ctx.fillStyle = "#FF6B00";
+      // Paddle highlights for depth
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.fillRect(10, currentState.player1Y, 2, PADDLE_HEIGHT);
+      ctx.fillRect(
+        CANVAS_WIDTH - 10 - 2,
+        currentState.player2Y,
+        2,
+        PADDLE_HEIGHT
+      );
+
+      // Draw ball with modern ping-pong ball style (white with subtle shadow)
+      const ballGradient = ctx.createRadialGradient(
+        currentState.ballX - 3,
+        currentState.ballY - 3,
+        0,
+        currentState.ballX,
+        currentState.ballY,
+        BALL_SIZE
+      );
+      ballGradient.addColorStop(0, "#FFFFFF");
+      ballGradient.addColorStop(0.7, "#F5F5F5");
+      ballGradient.addColorStop(1, "#E0E0E0");
+
+      // Ball shadow
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+      
+      ctx.fillStyle = ballGradient;
       ctx.beginPath();
       ctx.arc(currentState.ballX, currentState.ballY, BALL_SIZE, 0, Math.PI * 2);
       ctx.fill();
+      
+      // Ball highlight (ping-pong ball shine)
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.beginPath();
+      ctx.arc(currentState.ballX - 3, currentState.ballY - 3, 4, 0, Math.PI * 2);
+      ctx.fill();
 
-      // Draw scores
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "48px Oswald";
+      // Draw scores with exact dashboard colors
+      ctx.fillStyle = "#00FFFF"; // primary-btn exact color for player 1
+      ctx.font = "bold 64px Oswald, sans-serif";
       ctx.textAlign = "center";
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = "rgba(0, 255, 255, 0.6)";
       ctx.fillText(
         currentState.player1Score.toString(),
         CANVAS_WIDTH / 4,
-        60
+        70
       );
+      
+      ctx.fillStyle = "#FF6B00"; // secondary-btn exact color for player 2
+      ctx.shadowColor = "rgba(255, 107, 0, 0.6)";
       ctx.fillText(
         currentState.player2Score.toString(),
         (3 * CANVAS_WIDTH) / 4,
-        60
+        70
       );
+      ctx.shadowBlur = 0;
 
-      // Draw player names
-      ctx.font = "20px Kanit";
-      ctx.fillText(playerName, CANVAS_WIDTH / 4, 90);
-      ctx.fillText(opponentName, (3 * CANVAS_WIDTH) / 4, 90);
+      // Draw player names with dashboard styling
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "600 18px Kanit, sans-serif";
+      ctx.textAlign = "center";
+      ctx.globalAlpha = 0.95;
+      ctx.fillText(playerName, CANVAS_WIDTH / 4, 100);
+      ctx.fillText(opponentName, (3 * CANVAS_WIDTH) / 4, 100);
+      ctx.globalAlpha = 1.0;
 
-      // Draw pause overlay
+      // Draw pause overlay with dashboard colors
       if (currentState.isPaused) {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        ctx.fillStyle = "rgba(11, 0, 51, 0.85)"; // primary-bg with opacity
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-        ctx.fillStyle = "#FFFFFF";
-        ctx.font = "36px Oswald";
+        
+        // Paused text with primary-btn color
+        ctx.fillStyle = "#00FFFF"; // primary-btn
+        ctx.font = "bold 48px Oswald, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("PAUSED", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = "rgba(0, 255, 255, 0.6)";
+        ctx.fillText("PAUSED", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 30);
+        ctx.shadowBlur = 0;
+        
         if (currentPauseReason) {
-          ctx.font = "18px Kanit";
+          ctx.fillStyle = "#FFFFFF";
+          ctx.font = "400 16px Kanit, sans-serif";
+          ctx.globalAlpha = 0.9;
           ctx.fillText(
             currentPauseReason,
             CANVAS_WIDTH / 2,
             CANVAS_HEIGHT / 2 + 20
           );
+          ctx.globalAlpha = 1.0;
         }
       }
 
-      // Draw lag warning
+      // Draw lag warning with modern style
       if (lagWarning) {
-        ctx.fillStyle = "#FFFF00";
-        ctx.font = "16px Kanit";
+        ctx.fillStyle = "#FFD700";
+        ctx.font = "600 14px Kanit, sans-serif";
         ctx.textAlign = "center";
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = "rgba(255, 215, 0, 0.5)";
         ctx.fillText(
-          "⚠ High Latency Detected",
+          "⚠ High Latency",
           CANVAS_WIDTH / 2,
           CANVAS_HEIGHT - 20
         );
+        ctx.shadowBlur = 0;
       }
 
-      // Draw connection status
-      if (!isConnected) {
-        ctx.fillStyle = "#FF0000";
-        ctx.font = "16px Kanit";
+      // Draw connection status with modern style
+      if (!currentIsConnected) {
+        ctx.fillStyle = "#FF4444";
+        ctx.font = "600 14px Kanit, sans-serif";
         ctx.textAlign = "center";
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = "rgba(255, 68, 68, 0.5)";
         ctx.fillText(
           "⚠ Disconnected",
           CANVAS_WIDTH / 2,
           CANVAS_HEIGHT - 50
         );
+        ctx.shadowBlur = 0;
       }
 
       animationFrameRef.current = requestAnimationFrame(gameLoop);
@@ -419,7 +524,10 @@ export function PongGame({
           ref={canvasRef}
           width={CANVAS_WIDTH}
           height={CANVAS_HEIGHT}
-          className="border-2 border-primary-btn rounded-lg shadow-2xl"
+          className="border-2 border-primary-btn/30 rounded-lg shadow-2xl"
+          style={{
+            boxShadow: "0 10px 40px rgba(0, 0, 0, 0.5)"
+          }}
         />
         {!isConnected && (
           <div className="absolute top-4 left-4 bg-red-500/80 text-white px-4 py-2 rounded-lg backdrop-blur-sm">

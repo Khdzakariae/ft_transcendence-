@@ -266,17 +266,23 @@ export function GameSection(): JSX.Element {
 
   return (
     <div className="min-h-screen bg-primary-bg flex flex-col items-center justify-start w-full text-white font-primary px-4 sm:px-6 md:px-8 py-8 relative overflow-hidden">
-      {/* Background Effects */}
+      {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-64 h-64 bg-primary-btn/5 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-10 w-80 h-80 bg-secondary-btn/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-primary-btn/5 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
       {/* Main Content */}
       <div className="relative z-10 w-full max-w-6xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-secondary bg-gradient-to-r from-primary-btn via-white to-secondary-btn bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-secondary bg-gradient-to-r from-[#00FFFF] via-white to-[#FF6B00] bg-clip-text text-transparent mb-4 drop-shadow-4xl" style={{
+            backgroundImage: 'linear-gradient(to right, #00FFFF, #FFFFFF, #FF6B00)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
             Pong Game
           </h1>
           <p className="text-white/70 text-lg font-primary">
@@ -288,9 +294,13 @@ export function GameSection(): JSX.Element {
         {currentView === "menu" && (
           <div className="flex flex-col items-center gap-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
-              <div className="bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-8 rounded-2xl border-2 border-primary-btn/30 shadow-2xl hover:border-primary-btn/50 transition-all">
-                <div className="text-center">
-                  <MdPlayArrow className="text-primary-btn mx-auto mb-4" size={64} />
+              <div className="bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-8 rounded-2xl border-2 border-primary-btn/30 shadow-2xl hover:border-primary-btn/50 transition-all group relative overflow-hidden">
+                {/* Decorative gradient border on hover */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary-btn/20 via-secondary-btn/20 to-primary-btn/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-xl"></div>
+                <div className="text-center relative z-10">
+                  <div className="mb-4">
+                    <MdPlayArrow className="text-primary-btn mx-auto group-hover:scale-110 transition-transform duration-300" size={64} />
+                  </div>
                   <h2 className="text-2xl font-bold font-secondary mb-4 text-white">
                     Quick Match
                   </h2>
@@ -304,9 +314,13 @@ export function GameSection(): JSX.Element {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-8 rounded-2xl border-2 border-primary-btn/30 shadow-2xl hover:border-primary-btn/50 transition-all">
-                <div className="text-center">
-                  <MdVisibility className="text-secondary-btn mx-auto mb-4" size={64} />
+              <div className="bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-8 rounded-2xl border-2 border-primary-btn/30 shadow-2xl hover:border-primary-btn/50 transition-all group relative overflow-hidden">
+                {/* Decorative gradient border on hover */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary-btn/20 via-secondary-btn/20 to-primary-btn/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-xl"></div>
+                <div className="text-center relative z-10">
+                  <div className="mb-4">
+                    <MdVisibility className="text-secondary-btn mx-auto group-hover:scale-110 transition-transform duration-300" size={64} />
+                  </div>
                   <h2 className="text-2xl font-bold font-secondary mb-4 text-white">
                     Spectate
                   </h2>

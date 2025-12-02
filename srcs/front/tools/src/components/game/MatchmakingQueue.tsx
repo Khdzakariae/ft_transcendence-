@@ -183,7 +183,7 @@ export function MatchmakingQueue({
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
       <div className="bg-gradient-to-br from-primary-elements/95 to-primary-elements/85 backdrop-blur-xl p-8 rounded-2xl border-2 border-primary-btn/30 shadow-2xl max-w-md w-full mx-4">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white font-secondary flex items-center gap-2">
+          <h2 className="text-2xl font-bold font-secondary flex items-center gap-2 bg-gradient-to-r from-[#00FFFF] via-white to-[#FF6B00] bg-clip-text text-transparent">
             <MdSportsEsports className="text-primary-btn" size={28} />
             Finding Match...
           </h2>
@@ -220,7 +220,7 @@ export function MatchmakingQueue({
 
           <div className="w-full bg-primary-bg/50 rounded-full h-2 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-primary-btn to-secondary-btn transition-all duration-300"
+              className="h-full bg-secondary-btn transition-all duration-300"
               style={{
                 width: `${Math.min(100, (queueTime / 60) * 100)}%`,
               }}

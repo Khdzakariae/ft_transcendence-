@@ -199,7 +199,7 @@ export function SpectatorGame({
           height={CANVAS_HEIGHT}
           className="border-2 border-primary-btn rounded-lg shadow-2xl"
         />
-        <div className="absolute top-4 left-4 bg-primary-btn/80 text-primary-bg px-4 py-2 rounded-lg backdrop-blur-sm font-primary font-semibold">
+        <div className="absolute top-4 left-4 bg-primary-elements/90 backdrop-blur-sm px-4 py-2 rounded-lg border border-primary-btn/30 font-secondary font-bold bg-gradient-to-r from-[#00FFFF] via-white to-[#FF6B00] bg-clip-text text-transparent">
           Spectating
         </div>
       </div>

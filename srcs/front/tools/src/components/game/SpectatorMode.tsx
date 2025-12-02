@@ -102,7 +102,7 @@ export function SpectatorMode({
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-gradient-to-br from-primary-elements/95 to-primary-elements/85 backdrop-blur-xl p-6 rounded-2xl border-2 border-primary-btn/30 shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white font-secondary flex items-center gap-2">
+          <h2 className="text-2xl font-bold font-secondary flex items-center gap-2 bg-gradient-to-r from-[#00FFFF] via-white to-[#FF6B00] bg-clip-text text-transparent">
             <MdVisibility className="text-primary-btn" size={28} />
             Live Games
           </h2>

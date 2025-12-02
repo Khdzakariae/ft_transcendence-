@@ -34,7 +34,7 @@ export function EndGameScreen({
             <h2
               className={`text-4xl font-bold font-secondary mb-2 ${
                 isWinner
-                  ? "bg-gradient-to-r from-primary-btn to-secondary-btn bg-clip-text text-transparent"
+                  ? "bg-gradient-to-r from-[#00FFFF] via-white to-[#FF6B00] bg-clip-text text-transparent"
                   : "text-white/80"
               }`}
             >
