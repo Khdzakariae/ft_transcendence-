@@ -82,17 +82,19 @@ services:
     networks:
       - ft_transcendence
 
-  # game-service:
-  #   build:
-  #     context: ./users_service/
-  #     dockerfile: Dockerfile
-  #   env_file:
-  #     - .env
-  #   ports:
-  #     - "4000:4000"
-  #   volumes:
-  #     - ./users_service/prisma:/usr/src/app/prisma
-  #   restart: "no"
+  game-service:
+    build:
+      context: ./game-service/
+      dockerfile: Dockerfile
+    container_name: game-service-container
+    ports:
+      - "9090:9090"  # WebSocket port
+      - "4003:4003"  # HTTP API port
+    volumes:
+      - game-service_data:/usr/src/app/
+    restart: always
+    networks:
+      - ft_transcendence
   log-service:
     build:
       context: ./log-service/
@@ -142,6 +144,12 @@ volumes:
       type: none
       o: bind
       device: ./chat-service/tools/
+  game-service_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./game-service/tools/
   log-service_data:
     driver: local
     driver_opts:
