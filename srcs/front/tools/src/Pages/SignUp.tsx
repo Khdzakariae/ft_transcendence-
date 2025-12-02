@@ -110,30 +110,42 @@ export function SignUpPage(): JSX.Element {
 
   return (
     <AuthLayout>
+      {/* Back to Landing Page */}
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20">
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors duration-200 group"
+        >
+          <svg
+            className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform duration-200"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+          <span className="text-sm sm:text-base font-medium">Back to Home</span>
+        </button>
+      </div>
+
       {/* Header */}
       <div className="text-center mb-6">
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <img src={Logo} alt="Logo" className="h-12 sm:h-16 md:h-20" />
+          <img src={Logo} alt="Logo" className="h-12 sm:h-16 md:h-20 drop-shadow-lg" />
         </div>
-        <h1 className="text-4xl font-extrabold leading-tight text-white">
+        <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight text-white mb-2">
           Create Your{" "}
           <span className="text-primary-text underline">Account</span>
         </h1>
-        <p className="text-md mt-2 text-gray-300">
+        <p className="text-sm sm:text-md mt-2 text-gray-300">
           Join, track stats, and compete on the leaderboard
         </p>
-      </div>
-
-      {/* Back to login */}
-      <div className="text-center mb-6">
-        <button
-          onClick={() => navigate("/sign-in/")}
-          className="text-md text-gray-300 hover:text-white transition-colors"
-        >
-          ← Back to{" "}
-          <span className="font-semibold text-cyan-300 underline">Login</span>
-        </button>
       </div>
 
       <form onSubmit={onSubmit} className="space-y-5 font-secondary">
@@ -182,28 +194,35 @@ export function SignUpPage(): JSX.Element {
 
         {/* Message / Redirect */}
         {msg && (
-          <p
-            className={`text-center font-fontFamily-secondary ${msg.includes("success") ? "bg-success/20 text-success" : "bg-error/20 text-error"} rounded-lg p-4`}
+          <div
+            className={`text-center font-fontFamily-secondary ${msg.includes("success") ? "bg-success/20 text-success border border-success/30" : "bg-error/20 text-error border border-error/30"} rounded-lg p-4 shadow-lg backdrop-blur-sm`}
           >
-            {msg}
-          </p>
+            <p className="text-sm sm:text-base">{msg}</p>
+          </div>
         )}
       </form>
 
       {/* Already have account */}
-      <div className="mt-4 text-center text-md text-gray-300">
+      <div className="mt-6 text-center text-sm sm:text-md text-gray-300">
         <button
           onClick={() => navigate("/sign-in/")}
-          className="hover:text-white transition-colors"
+          className="hover:text-white transition-colors duration-200"
         >
           Already have an account?{" "}
-          <span className="font-semibold text-cyan-300 underline">Sign In</span>
+          <span className="font-semibold text-cyan-300 hover:text-cyan-200 underline transition-colors duration-200">Sign In</span>
         </button>
       </div>
 
       {/* Social buttons */}
-      <div className="text-center mt-2 font-primary text-gray-300">
-        <span className="text-md">Or Continue with</span>
+      <div className="text-center mb-4 mt-6 text-gray-300">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-600"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-primary-bg/50 backdrop-blur-sm">Or continue with</span>
+          </div>
+        </div>
       </div>
       <AuthProvidersButtons />
     </AuthLayout>
