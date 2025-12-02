@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useDashboardContext } from "../../Pages/Dashboard";
 import { PongGame } from "../game/PongGame";
+import { AIGame } from "../game/AIGame";
 import { MatchmakingQueue } from "../game/MatchmakingQueue";
 import { SpectatorMode } from "../game/SpectatorMode";
 import { SpectatorGame } from "../game/SpectatorGame";
 import { EndGameScreen } from "../game/EndGameScreen";
 import { PrimaryButton, SecondaryButton } from "../Buttons";
-import { MdVisibility, MdPlayArrow } from "react-icons/md";
+import { MdVisibility, MdPlayArrow, MdSmartToy } from "react-icons/md";
 
-type GameView = "menu" | "matchmaking" | "playing" | "spectating" | "endGame";
+type GameView = "menu" | "matchmaking" | "playing" | "playingAI" | "spectating" | "endGame";
 
 interface GameSession {
   gameId: string;
@@ -165,7 +166,7 @@ export function GameSection(): JSX.Element {
 
   // Handle game end
   const handleGameEnd = useCallback(
-    async (winner: string, playerScore: number, opponentScore: number) => {
+    async (winner: string, playerScore: number, opponentScore: number, isAIGame: boolean = false) => {
       setEndGameData({
         winner,
         playerScore,
@@ -173,26 +174,38 @@ export function GameSection(): JSX.Element {
       });
       setCurrentView("endGame");
       
-      // Refresh user data after delays to ensure backend has processed
-      // First refresh after 1.5 seconds (backend should be done by then)
-      setTimeout(async () => {
-        try {
-          console.log("[handleGameEnd] First refresh attempt...");
-          await refreshUserData();
-        } catch (error) {
-          console.error("Error refreshing user data after game end:", error);
-        }
-      }, 1500);
-      
-      // Second refresh after 3 seconds as backup
-      setTimeout(async () => {
-        try {
-          console.log("[handleGameEnd] Second refresh attempt (backup)...");
-          await refreshUserData();
-        } catch (error) {
-          console.error("Error in backup refresh:", error);
-        }
-      }, 3000);
+      // For AI games, we still refresh user data (won't update stats but keeps data fresh)
+      // For online games, refresh after delays to ensure backend has processed
+      if (!isAIGame) {
+        // First refresh after 1.5 seconds (backend should be done by then)
+        setTimeout(async () => {
+          try {
+            console.log("[handleGameEnd] First refresh attempt...");
+            await refreshUserData();
+          } catch (error) {
+            console.error("Error refreshing user data after game end:", error);
+          }
+        }, 1500);
+        
+        // Second refresh after 3 seconds as backup
+        setTimeout(async () => {
+          try {
+            console.log("[handleGameEnd] Second refresh attempt (backup)...");
+            await refreshUserData();
+          } catch (error) {
+            console.error("Error in backup refresh:", error);
+          }
+        }, 3000);
+      } else {
+        // For AI games, just refresh once after a short delay
+        setTimeout(async () => {
+          try {
+            await refreshUserData();
+          } catch (error) {
+            console.error("Error refreshing user data after AI game end:", error);
+          }
+        }, 500);
+      }
     },
     [refreshUserData]
   );
@@ -270,11 +283,29 @@ export function GameSection(): JSX.Element {
     setCurrentView("spectating");
   };
 
+  // Start AI game
+  const startAIGame = () => {
+    setCurrentView("playingAI");
+  };
+
   // Play again
   const handlePlayAgain = async () => {
+    // Check if we need to go back to AI game or matchmaking
+    const endGameDataSnapshot = endGameData;
+    const gameSessionSnapshot = gameSession;
+    
     setEndGameData(null);
     setGameSession(null);
-    setCurrentView("matchmaking");
+    
+    // Determine if it was an AI game by checking if opponent was "AI Opponent"
+    if (endGameDataSnapshot && endGameDataSnapshot.winner && 
+        (endGameDataSnapshot.winner === "AI Opponent" || 
+         (!gameSessionSnapshot && endGameDataSnapshot.opponentScore !== undefined))) {
+      // Likely an AI game if no game session or winner is AI
+      setCurrentView("playingAI");
+    } else {
+      setCurrentView("matchmaking");
+    }
     
     // Refresh user data after exiting end game screen
     setTimeout(async () => {
@@ -344,7 +375,7 @@ export function GameSection(): JSX.Element {
         {/* Menu View */}
         {currentView === "menu" && (
           <div className="flex flex-col items-center gap-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-4xl">
               <div className="bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-8 rounded-2xl border-2 border-primary-btn/30 shadow-2xl hover:border-primary-btn/50 transition-all group relative overflow-hidden">
                 {/* Decorative gradient border on hover */}
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary-btn/20 via-secondary-btn/20 to-primary-btn/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-xl"></div>
@@ -361,6 +392,26 @@ export function GameSection(): JSX.Element {
                   <PrimaryButton
                     func={startMatchmaking}
                     props={{ children: "Find Match" }}
+                  />
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-8 rounded-2xl border-2 border-primary-btn/30 shadow-2xl hover:border-primary-btn/50 transition-all group relative overflow-hidden">
+                {/* Decorative gradient border on hover */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary-btn/20 via-secondary-btn/20 to-primary-btn/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-xl"></div>
+                <div className="text-center relative z-10">
+                  <div className="mb-4">
+                    <MdSmartToy className="text-secondary-btn mx-auto group-hover:scale-110 transition-transform duration-300" size={64} />
+                  </div>
+                  <h2 className="text-2xl font-bold font-secondary mb-4 text-white">
+                    VS AI
+                  </h2>
+                  <p className="text-white/70 mb-6 font-primary">
+                    Practice against AI opponent (Hard Mode)
+                  </p>
+                  <SecondaryButton
+                    func={startAIGame}
+                    props={{ children: "Play VS AI" }}
                   />
                 </div>
               </div>
@@ -437,13 +488,32 @@ export function GameSection(): JSX.Element {
               playerName={user.name || "Player"}
               opponentName={gameSession.opponentName}
               isPlayer1={gameSession.isPlayer1}
-              onGameEnd={handleGameEnd}
+              onGameEnd={(winner, playerScore, opponentScore) => handleGameEnd(winner, playerScore, opponentScore, false)}
               onDisconnect={handleDisconnect}
               socket={socket}
               reconnectAttempts={reconnectAttempts}
             />
             <button
               onClick={handleDisconnect}
+              className="mt-4 px-6 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg transition-colors font-primary"
+            >
+              Leave Game
+            </button>
+          </div>
+        )}
+
+        {/* AI Game View */}
+        {currentView === "playingAI" && user && (
+          <div className="flex flex-col items-center">
+            <AIGame
+              playerName={user.name || "Player"}
+              aiName="AI Opponent"
+              difficulty="hard"
+              onGameEnd={(winner, playerScore, opponentScore) => handleGameEnd(winner, playerScore, opponentScore, true)}
+              onDisconnect={() => setCurrentView("menu")}
+            />
+            <button
+              onClick={() => setCurrentView("menu")}
               className="mt-4 px-6 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg transition-colors font-primary"
             >
               Leave Game
@@ -477,13 +547,13 @@ export function GameSection(): JSX.Element {
         )}
 
         {/* End Game View */}
-        {currentView === "endGame" && endGameData && gameSession && (
+        {currentView === "endGame" && endGameData && (
           <EndGameScreen
             winner={endGameData.winner}
             playerScore={endGameData.playerScore}
             opponentScore={endGameData.opponentScore}
             playerName={user.name || "Player"}
-            opponentName={gameSession.opponentName}
+            opponentName={gameSession?.opponentName || "AI Opponent"}
             onPlayAgain={handlePlayAgain}
             onExit={handleExit}
           />

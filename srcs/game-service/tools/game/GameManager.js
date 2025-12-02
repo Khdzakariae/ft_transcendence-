@@ -8,6 +8,9 @@ const BALL_SIZE = 10;
 const BALL_SPEED = 4;
 const WINNING_SCORE = 11;
 const GAME_UPDATE_INTERVAL = 16; // ~60 FPS
+const GAME_DURATION = 120000; // 2 minutes in milliseconds
+const SPEED_INCREASE_INTERVAL = 10000; // 10 seconds in milliseconds
+const SPEED_MULTIPLIER_INCREMENT = 0.3; // Increase speed by 30% each interval
 
 export class GameManager {
   constructor() {
@@ -282,7 +285,7 @@ export class GameManager {
         
         game.update();
         
-        // Check for game over immediately after update
+        // Check for game over immediately after update (either from score or timer)
         if (game.isGameOver) {
           // Clear interval immediately to prevent further updates
           clearInterval(interval);
@@ -290,6 +293,16 @@ export class GameManager {
           // Broadcast final game state with isGameOver = true
           this.broadcastGameState(gameId);
           // Call endGame immediately (synchronously) - this will set pauseReason
+          // If timer expired, determine winner by score
+          if (game.pauseReason === "Time's Up!") {
+            if (game.player1Score > game.player2Score) {
+              game.winner = game.player1;
+            } else if (game.player2Score > game.player1Score) {
+              game.winner = game.player2;
+            } else {
+              game.winner = null; // Draw
+            }
+          }
           this.endGame(gameId);
           return;
         }
@@ -306,6 +319,8 @@ export class GameManager {
     const game = this.games.get(gameId);
     if (!game) return;
 
+    const timeRemaining = game.getTimeRemaining();
+
     const state = {
       type: "game_state",
       gameId,
@@ -317,6 +332,7 @@ export class GameManager {
       player2Y: game.player2Y,
       player1Score: game.player1Score,
       player2Score: game.player2Score,
+      timeRemaining: timeRemaining,
       isPaused: game.isPaused,
       isGameOver: game.isGameOver,
       pauseReason: game.pauseReason,
@@ -490,11 +506,15 @@ export class GameManager {
       this.gameUpdateIntervals.delete(gameId);
     }
 
-    // Determine winner
+    // Determine winner (check if timer expired first, then check scores)
     let winner = null;
     let winnerName = null;
     if (winnerId) {
       winner = winnerId === game.player1.userId ? game.player1 : game.player2;
+      winnerName = winner.userName;
+    } else if (game.winner) {
+      // Winner already determined (e.g., from timer expiration)
+      winner = game.winner;
       winnerName = winner.userName;
     } else if (game.player1Score >= WINNING_SCORE) {
       winner = game.player1;
@@ -502,6 +522,18 @@ export class GameManager {
     } else if (game.player2Score >= WINNING_SCORE) {
       winner = game.player2;
       winnerName = game.player2.userName;
+    } else if (game.pauseReason === "Time's Up!") {
+      // Timer expired - determine winner by score
+      if (game.player1Score > game.player2Score) {
+        winner = game.player1;
+        winnerName = game.player1.userName;
+      } else if (game.player2Score > game.player1Score) {
+        winner = game.player2;
+        winnerName = game.player2.userName;
+      } else {
+        winner = null;
+        winnerName = "Draw";
+      }
     }
 
     const endGameData = {
@@ -702,9 +734,36 @@ class Game {
     this.isGameOver = false;
     this.pauseReason = null;
     this.disconnectTimeout = null;
+    this.startTime = Date.now();
+    this.speedMultiplier = 1;
+    this.lastSpeedIncrease = 0;
   }
 
   update() {
+    // Update speed multiplier based on elapsed time
+    const elapsed = Date.now() - this.startTime;
+    const intervalsPassed = Math.floor(elapsed / SPEED_INCREASE_INTERVAL);
+    const newMultiplier = 1 + intervalsPassed * SPEED_MULTIPLIER_INCREMENT;
+    
+    if (newMultiplier !== this.speedMultiplier && intervalsPassed > this.lastSpeedIncrease) {
+      this.speedMultiplier = newMultiplier;
+      this.lastSpeedIncrease = intervalsPassed;
+      // Adjust velocities with new multiplier
+      const directionX = this.ballVelocityX > 0 ? 1 : -1;
+      const directionY = this.ballVelocityY > 0 ? 1 : -1;
+      const baseVelX = Math.abs(this.ballVelocityX / (this.speedMultiplier - SPEED_MULTIPLIER_INCREMENT || 1));
+      const baseVelY = Math.abs(this.ballVelocityY / (this.speedMultiplier - SPEED_MULTIPLIER_INCREMENT || 1));
+      this.ballVelocityX = baseVelX * this.speedMultiplier * directionX;
+      this.ballVelocityY = baseVelY * this.speedMultiplier * directionY;
+    }
+
+    // Check if timer has expired
+    if (elapsed >= GAME_DURATION && !this.isGameOver) {
+      this.isGameOver = true;
+      this.pauseReason = "Time's Up!";
+      return;
+    }
+
     // Update ball position
     this.ballX += this.ballVelocityX;
     this.ballY += this.ballVelocityY;
@@ -740,9 +799,9 @@ class Game {
       }
       // Add some spin based on where ball hits paddle
       const hitPos = Math.max(0, Math.min(1, (this.ballY - paddle1Top) / PADDLE_HEIGHT));
-      this.ballVelocityY = (hitPos - 0.5) * BALL_SPEED * 2;
+      this.ballVelocityY = (hitPos - 0.5) * BALL_SPEED * this.speedMultiplier * 2;
       // Clamp velocity to prevent too extreme angles
-      this.ballVelocityY = Math.max(-BALL_SPEED * 1.5, Math.min(BALL_SPEED * 1.5, this.ballVelocityY));
+      this.ballVelocityY = Math.max(-BALL_SPEED * this.speedMultiplier * 1.5, Math.min(BALL_SPEED * this.speedMultiplier * 1.5, this.ballVelocityY));
     }
 
     // Ball collision with right paddle (player2) - improved collision detection
@@ -767,9 +826,9 @@ class Game {
       }
       // Add some spin based on where ball hits paddle
       const hitPos = Math.max(0, Math.min(1, (this.ballY - paddle2Top) / PADDLE_HEIGHT));
-      this.ballVelocityY = (hitPos - 0.5) * BALL_SPEED * 2;
+      this.ballVelocityY = (hitPos - 0.5) * BALL_SPEED * this.speedMultiplier * 2;
       // Clamp velocity to prevent too extreme angles
-      this.ballVelocityY = Math.max(-BALL_SPEED * 1.5, Math.min(BALL_SPEED * 1.5, this.ballVelocityY));
+      this.ballVelocityY = Math.max(-BALL_SPEED * this.speedMultiplier * 1.5, Math.min(BALL_SPEED * this.speedMultiplier * 1.5, this.ballVelocityY));
     }
 
     // Ball out of bounds - score
@@ -797,12 +856,17 @@ class Game {
     this.ballY = CANVAS_HEIGHT / 2;
     // Randomize direction but ensure minimum speed
     const direction = Math.random() > 0.5 ? 1 : -1;
-    this.ballVelocityX = BALL_SPEED * direction;
-    this.ballVelocityY = (Math.random() - 0.5) * BALL_SPEED;
+    this.ballVelocityX = BALL_SPEED * this.speedMultiplier * direction;
+    this.ballVelocityY = (Math.random() - 0.5) * BALL_SPEED * this.speedMultiplier;
     // Ensure ball doesn't get stuck with zero velocity
     if (Math.abs(this.ballVelocityY) < 0.5) {
-      this.ballVelocityY = (Math.random() > 0.5 ? 1 : -1) * BALL_SPEED * 0.5;
+      this.ballVelocityY = (Math.random() > 0.5 ? 1 : -1) * BALL_SPEED * this.speedMultiplier * 0.5;
     }
+  }
+
+  getTimeRemaining() {
+    const elapsed = Date.now() - this.startTime;
+    return Math.max(0, GAME_DURATION - elapsed);
   }
 }
 

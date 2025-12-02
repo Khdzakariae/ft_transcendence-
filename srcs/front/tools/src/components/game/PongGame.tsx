@@ -33,7 +33,9 @@ const PADDLE_WIDTH = 10;
 const PADDLE_HEIGHT = 100;
 const BALL_SIZE = 10;
 const PADDLE_SPEED = 5;
+const BOOSTED_PADDLE_SPEED = 7.5; // 1.5x speed when 1 minute or less remains
 const INITIAL_BALL_SPEED = 4;
+const PADDLE_BOOST_TIME = 60000; // Boost paddle speed when 1 minute or less remains
 
 export function PongGame({
   gameId,
@@ -55,6 +57,7 @@ export function PongGame({
   const gameEndedRef = useRef(false); // Track if onGameEnd has been called
   const [isConnected, setIsConnected] = useState(true);
   const [lagWarning, setLagWarning] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
 
   const initialGameState: GameState = {
     ballX: CANVAS_WIDTH / 2,
@@ -155,6 +158,9 @@ export function PongGame({
             };
             setGameState((prev) => ({ ...prev, ...newState }));
             gameStateRef.current = { ...gameStateRef.current, ...newState };
+            if (data.timeRemaining !== undefined) {
+              setTimeRemaining(data.timeRemaining);
+            }
             if (data.pauseReason) {
               pauseReasonRef.current = data.pauseReason;
             } else {
@@ -166,11 +172,31 @@ export function PongGame({
             
             // If game is over in game_state message, trigger onGameEnd
             // This handles cases where game_over message might be delayed or lost
-            if (data.isGameOver && data.pauseReason === "Game Over" && !gameEndedRef.current) {
+            if (data.isGameOver && (data.pauseReason === "Game Over" || data.pauseReason === "Time's Up!") && !gameEndedRef.current) {
               // Determine winner from scores if not provided
-              const winner = data.winner || 
-                (data.player1Score >= 11 ? "Player 1" : 
-                 data.player2Score >= 11 ? "Player 2" : "Draw");
+              let winner: string;
+              if (data.winner && data.winner !== "Draw") {
+                // Winner name is provided, use it directly
+                winner = data.winner;
+              } else if (data.pauseReason === "Time's Up!") {
+                // Timer expired - determine by score
+                if (data.player1Score > data.player2Score) {
+                  winner = isPlayer1 ? playerName : opponentName;
+                } else if (data.player2Score > data.player1Score) {
+                  winner = isPlayer1 ? opponentName : playerName;
+                } else {
+                  winner = "Draw";
+                }
+              } else {
+                // Game ended by score
+                if (data.player1Score >= 11) {
+                  winner = isPlayer1 ? playerName : opponentName;
+                } else if (data.player2Score >= 11) {
+                  winner = isPlayer1 ? opponentName : playerName;
+                } else {
+                  winner = "Draw";
+                }
+              }
               const playerScore = isPlayer1 ? data.player1Score : data.player2Score;
               const opponentScore = isPlayer1 ? data.player2Score : data.player1Score;
               
@@ -301,13 +327,18 @@ export function PongGame({
         const currentPaddleY = isPlayer1 ? currentState.player1Y : currentState.player2Y;
         let newPaddleY = currentPaddleY;
 
+        // Increase paddle speed when 1 minute or less remains
+        const currentPaddleSpeed = (timeRemaining !== null && timeRemaining <= PADDLE_BOOST_TIME) 
+          ? BOOSTED_PADDLE_SPEED 
+          : PADDLE_SPEED;
+
         if (keysPressed.current.has("up")) {
-          newPaddleY = Math.max(0, currentPaddleY - PADDLE_SPEED);
+          newPaddleY = Math.max(0, currentPaddleY - currentPaddleSpeed);
         }
         if (keysPressed.current.has("down")) {
           newPaddleY = Math.min(
             CANVAS_HEIGHT - PADDLE_HEIGHT,
-            currentPaddleY + PADDLE_SPEED
+            currentPaddleY + currentPaddleSpeed
           );
         }
 
@@ -465,6 +496,21 @@ export function PongGame({
       ctx.fillText(opponentName, (3 * CANVAS_WIDTH) / 4, 100);
       ctx.globalAlpha = 1.0;
 
+      // Draw timer if available
+      if (timeRemaining !== null && timeRemaining > 0) {
+        const minutes = Math.floor(timeRemaining / 60000);
+        const seconds = Math.floor((timeRemaining % 60000) / 1000);
+        const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        ctx.fillStyle = timeRemaining < 10000 ? "#FF4444" : "#FFD700";
+        ctx.font = "bold 32px Oswald, sans-serif";
+        ctx.textAlign = "center";
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = timeRemaining < 10000 ? "rgba(255, 68, 68, 0.8)" : "rgba(255, 215, 0, 0.8)";
+        ctx.fillText(timeString, CANVAS_WIDTH / 2, 40);
+        ctx.shadowBlur = 0;
+      }
+
       // Draw pause overlay with dashboard colors
       if (currentState.isPaused) {
         ctx.fillStyle = "rgba(11, 0, 51, 0.85)"; // primary-bg with opacity
@@ -539,6 +585,7 @@ export function PongGame({
     playerName,
     opponentName,
     sendPaddlePosition,
+    timeRemaining,
   ]);
 
   return (
