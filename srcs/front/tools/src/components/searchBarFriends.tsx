@@ -93,7 +93,8 @@ export function SearchBarFriends({
       const data = await response.json();
       const user = data.data;
 
-      // Transform basic user data to UserDataInter format with defaults
+      // The backend now returns full profile data matching UserDataInter format
+      // Just ensure all required fields are present with defaults
       const userProfile: UserDataInter = {
         id: user.id,
         name: user.name,
@@ -108,10 +109,11 @@ export function SearchBarFriends({
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         twoFactorEnabled: user.twoFactorEnabled || false,
-        achievements: [], // Default empty since getUser doesn't return achievements
-        recentActivities: [],
-        medals: { gold: 0, silver: 0, bronze: 0 },
-        totalAchievements: 0,
+        achievements: user.achievements || [],
+        recentActivities: user.recentActivities || [],
+        medals: user.medals || { gold: 0, silver: 0, bronze: 0 },
+        totalAchievements: user.totalAchievements || 0,
+        Games: user.Games || [],
         bio: user.bio,
       };
 
@@ -248,13 +250,15 @@ export function SearchBarFriends({
           <div className="space-y-4">
             <button
               onClick={() => setSelectedUser(null)}
-              className="text-primary-btn hover:text-primary-text transition-colors flex items-center gap-2"
+              className="mb-4 px-4 py-2 rounded-lg border border-primary-btn/40 bg-primary-btn/10 text-primary-btn hover:bg-primary-btn/20 hover:border-primary-btn/60 transition-all duration-200 flex items-center gap-2 font-semibold"
             >
               ← Back to Search
             </button>
-            <ProfileSection
-              user_data={selectedUser}
-            />
+            <div className="bg-primary-bg rounded-2xl overflow-hidden">
+              <ProfileSection
+                user_data={selectedUser}
+              />
+            </div>
           </div>
         )}
 

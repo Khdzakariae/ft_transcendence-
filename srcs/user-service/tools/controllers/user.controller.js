@@ -113,16 +113,69 @@ export const userInfo = async (request, reply) => {
 export const getUser = async (request, reply) => {
   try {
     const { id } = request.params;
-    const user = await prisma.user.findUnique({ where: { id } });
 
-    if (!user)
+    const userWithProfileData = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        achievements: { include: { achievement: true } },
+        recentActivities: { orderBy: { createdAt: "desc" }, take: 5 },
+        Games: { orderBy: { createdAt: "desc" }, take: 100 }, // Get game records for win count
+      },
+    });
+
+    if (!userWithProfileData) {
       return reply.code(404).send({ message: `User with ID ${id} not found.` });
+    }
+
+    const medals = { gold: 0, silver: 0, bronze: 0 };
+    let unlockedAchievementsCount = 0;
+
+    // Transform achievements to include full achievement details
+    const transformedAchievements = userWithProfileData.achievements?.map((ua) => ({
+      id: ua.achievement.id,
+      name: ua.achievement.name,
+      description: ua.achievement.description,
+      tier: ua.achievement.tier,
+      unlockedAt: ua.unlockedAt,
+      count: ua.count ?? 1,
+    })) || [];
+
+    userWithProfileData.achievements?.forEach((ua) => {
+      const tier = ua.achievement.tier.toLowerCase();
+      const count = ua.count ?? 1;
+      if (medals[tier] !== undefined) {
+        medals[tier] += count;
+        unlockedAchievementsCount += count;
+      }
+    });
+
+    // Get total number of achievements available in the system
+    const totalAchievements = await prisma.achievement.count();
+
+    // Transform recent activities
+    const transformedActivities = userWithProfileData.recentActivities?.map((activity) => ({
+      id: activity.id,
+      type: activity.type,
+      text: activity.text,
+      createdAt: activity.createdAt,
+    })) || [];
+
+    const { password, twoFactorSecret, achievements, recentActivities, ...user } = userWithProfileData;
+
+    const responseData = { 
+      ...user, 
+      achievements: transformedAchievements,
+      recentActivities: transformedActivities,
+      medals, 
+      totalAchievements,
+      Games: userWithProfileData.Games || [], // Include Games array for win count
+    };
 
     return reply
       .code(200)
       .send({
         message: `User with ID ${id} fetched successfully!`,
-        data: user,
+        data: responseData,
       });
   } catch (error) {
     console.error("Error fetching user:", error);
