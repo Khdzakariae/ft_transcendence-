@@ -65,12 +65,12 @@ export function SpectatorGame({
 
         if (data.type === "game_state" && data.gameId === gameId) {
           setGameState({
-            ballX: data.ballX,
-            ballY: data.ballY,
-            player1Y: data.player1Y,
-            player2Y: data.player2Y,
-            player1Score: data.player1Score,
-            player2Score: data.player2Score,
+            ballX: data.ballX ?? CANVAS_WIDTH / 2,
+            ballY: data.ballY ?? CANVAS_HEIGHT / 2,
+            player1Y: data.player1Y ?? CANVAS_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+            player2Y: data.player2Y ?? CANVAS_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+            player1Score: data.player1Score ?? 0,
+            player2Score: data.player2Score ?? 0,
             isPaused: data.isPaused || false,
             isGameOver: data.isGameOver || false,
           });
@@ -78,8 +78,8 @@ export function SpectatorGame({
           setGameState((prev) => ({
             ...prev,
             isGameOver: true,
-            player1Score: data.player1Score,
-            player2Score: data.player2Score,
+            player1Score: data.player1Score ?? prev.player1Score ?? 0,
+            player2Score: data.player2Score ?? prev.player2Score ?? 0,
           }));
         }
       } catch (error) {
@@ -146,9 +146,9 @@ export function SpectatorGame({
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "48px Oswald";
       ctx.textAlign = "center";
-      ctx.fillText(gameState.player1Score.toString(), CANVAS_WIDTH / 4, 60);
+      ctx.fillText((gameState.player1Score ?? 0).toString(), CANVAS_WIDTH / 4, 60);
       ctx.fillText(
-        gameState.player2Score.toString(),
+        (gameState.player2Score ?? 0).toString(),
         (3 * CANVAS_WIDTH) / 4,
         60
       );
