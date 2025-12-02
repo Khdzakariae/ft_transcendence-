@@ -390,7 +390,7 @@ export function DashSection(): JSX.Element {
                   <MdSpeed size={24} className="text-primary-bg" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-white/60">Experience</p>
+                  <p className="text-sm text-white/60">XP</p>
                   <h2 className="text-3xl font-bold font-secondary text-white">
                     {animatedStats.xp}
                   </h2>
