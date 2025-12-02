@@ -332,6 +332,83 @@ export const deleteUser = async (request, reply) => {
 };
 
 // Game result handler - updates XP, achievements, and medals
+// Get match history for a user
+export const getMatchHistory = async (request, reply) => {
+  try {
+    const userId = request.headers["x-user-id"];
+
+    if (!userId) {
+      return reply
+        .code(401)
+        .send({ error: "Unauthorized: User ID not provided by gateway." });
+    }
+
+    const limit = parseInt(request.query.limit) || 10;
+
+    // Get matches where user is either player1 or player2
+    const matches = await prisma.matchHistory.findMany({
+      where: {
+        OR: [
+          { player1Id: userId },
+          { player2Id: userId },
+        ],
+      },
+      include: {
+        player1: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+        player2: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: limit,
+    });
+
+    // Transform matches to include opponent info and determine if user won
+    const matchHistory = matches.map((match) => {
+      const isPlayer1 = match.player1Id === userId;
+      const opponent = isPlayer1 ? match.player2 : match.player1;
+      const playerScore = isPlayer1 ? match.player1Score : match.player2Score;
+      const opponentScore = isPlayer1 ? match.player2Score : match.player1Score;
+      const isWinner = match.winnerId === userId;
+
+      return {
+        id: match.id,
+        gameId: match.gameId,
+        opponentId: opponent.id,
+        opponentName: opponent.name,
+        opponentAvatar: opponent.avatar,
+        playerScore,
+        opponentScore,
+        isWinner,
+        createdAt: match.createdAt,
+      };
+    });
+
+    return reply.code(200).send({
+      success: true,
+      data: matchHistory,
+    });
+  } catch (error) {
+    console.error("Error fetching match history:", error);
+    return reply.code(500).send({
+      error: "Failed to fetch match history.",
+      details: error.message,
+    });
+  }
+};
+
 export const processGameResult = async (request, reply) => {
   try {
     const body =
@@ -421,6 +498,26 @@ export const processGameResult = async (request, reply) => {
     } catch (error) {
       // Game record creation is optional, don't fail if it errors
       console.log("Note: Could not create game record:", error.message);
+    }
+
+    // Save match history with scores and opponent info
+    try {
+      // Determine player1 and player2 (order doesn't matter, but we need to be consistent)
+      // We'll use winner as player1 and loser as player2 for consistency
+      await prisma.matchHistory.create({
+        data: {
+          gameId: gameId || `game-${Date.now()}`,
+          player1Id: winnerId,
+          player2Id: loserId,
+          player1Score: winnerScore,
+          player2Score: loserScore,
+          winnerId: winnerId,
+        },
+      });
+      console.log(`[processGameResult] Saved match history for game ${gameId}`);
+    } catch (error) {
+      // Match history creation is optional, don't fail if it errors
+      console.log("Note: Could not create match history:", error.message);
     }
 
     // Check and unlock achievements for winner

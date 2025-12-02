@@ -9,6 +9,7 @@ import {
   searchUsersByName,
   userInfo,
   processGameResult,
+  getMatchHistory,
 } from "../controllers/user.controller.js";
 
 export default async function userRouter(fastify, opts) {
@@ -18,6 +19,7 @@ export default async function userRouter(fastify, opts) {
   fastify.get("/me", userInfo);
   fastify.get("/search", searchUsersByName);
   fastify.get("/leaderboard", leaderboard);
+  fastify.get("/match-history", getMatchHistory);
   fastify.post("/game-result", processGameResult);
 
   // Parameterized routes come last
