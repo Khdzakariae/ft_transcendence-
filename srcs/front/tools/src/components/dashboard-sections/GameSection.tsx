@@ -126,6 +126,7 @@ export function GameSection(): JSX.Element {
     };
   }, [connectWebSocket]);
 
+
   // Handle match found
   const handleMatchFound = useCallback(
     (gameId: string, opponentId: string, opponentName: string, isPlayer1: boolean) => {
@@ -335,6 +336,43 @@ export function GameSection(): JSX.Element {
       }
     }, 500);
   };
+
+  // Handle ESC key to navigate back
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" || e.key === "Esc") {
+        switch (currentView) {
+          case "matchmaking":
+            cancelMatchmaking();
+            break;
+          case "playing":
+            handleDisconnect();
+            break;
+          case "playingAI":
+            setCurrentView("menu");
+            break;
+          case "spectating":
+            if (spectatorGame) {
+              setSpectatorGame(null);
+            }
+            setCurrentView("menu");
+            break;
+          case "endGame":
+            handleExit();
+            break;
+          default:
+            // Do nothing in menu view
+            break;
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [currentView, spectatorGame, handleDisconnect, cancelMatchmaking, handleExit]);
 
   if (!user) {
   return (
