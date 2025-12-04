@@ -92,6 +92,7 @@ services:
       - "4003:4003"  # HTTP API port
     volumes:
       - game-service_data:/usr/src/app/
+      - prisma_data:/usr/src/app/prisma/
     restart: always
     networks:
       - ft_transcendence

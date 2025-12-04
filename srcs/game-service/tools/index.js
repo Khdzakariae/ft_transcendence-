@@ -4,6 +4,7 @@ import cors from "@fastify/cors";
 import dotenv from "dotenv";
 import { GameManager } from "./game/GameManager.js";
 import gameRouter from "./routes/game.routes.js";
+import userRouter from "./routes/user.routes.js";
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ const gameManager = new GameManager();
 fastify.decorate("gameManager", gameManager);
 
 fastify.register(gameRouter, { prefix: "/api/v1/games" });
+fastify.register(userRouter, { prefix: "/api/v1/user" });
 
 // WebSocket Server
 const wss = new WebSocketServer({ port: WS_PORT, host: HOST });
