@@ -270,8 +270,7 @@ export function SettingsSection(): JSX.Element {
         throw new Error(errorMessage);
       }
 
-      const updateData = await updateResponse.json();
-      Utils.LogLevel.DEBUG && console.log("Profile updated:", updateData);
+      await updateResponse.json();
 
       // Clear password field on success
       setNewPassword("");

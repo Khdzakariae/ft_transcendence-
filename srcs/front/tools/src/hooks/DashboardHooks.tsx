@@ -18,7 +18,7 @@ export function DashboardHooks({
   const navigate = Navigate();
 
   useEffect(() => {
-    Utils.LogLevel.DEBUG && console.log("checking on user: ", user);
+    // User check
   }, [user]);
 
   useEffect(() => {
@@ -60,14 +60,6 @@ export function DashboardHooks({
         Utils.LogLevel.DEBUG &&
           console.error("Error fetching profile data:", user_data.error);
       } else {
-        // Log key fields to verify data is correct
-        Utils.LogLevel.DEBUG && console.log("Profile data fetched:", {
-          xp: user_data.xp,
-          level: user_data.level,
-          wins: user_data.Games?.length || 0,
-          achievements: user_data.achievements?.length || 0,
-          medals: user_data.medals,
-        });
         setUserData(user_data);
       }
     };

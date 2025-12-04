@@ -1,10 +1,10 @@
 import { AuthResponse } from "./interfaces/AuthResponse";
 
 export const LogLevel = {
-  INFO: true,
-  WARN: true,
-  ERROR: true,
-  DEBUG: true,
+  INFO: false as boolean,
+  WARN: false as boolean,
+  ERROR: false as boolean,
+  DEBUG: false as boolean,
 } as const;
 
 /**
@@ -39,7 +39,6 @@ async function checkAuthCookie(): Promise<AuthResponse> {
     }
 
     const data = await response.json();
-    console.log("Auth check response data:", data);
     return data;
   } catch (error) {
     Utils.LogLevel.ERROR && console.error("Auth check error:", error);

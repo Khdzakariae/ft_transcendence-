@@ -46,7 +46,6 @@ export function GameSection(): JSX.Element {
       const ws = new WebSocket("ws://localhost:9090");
 
       ws.onopen = () => {
-        console.log("WebSocket connected");
         setReconnectAttempts(0);
         if (user) {
           ws.send(
@@ -59,12 +58,11 @@ export function GameSection(): JSX.Element {
         }
       };
 
-      ws.onerror = (error) => {
-        console.error("WebSocket error:", error);
+      ws.onerror = () => {
+        // Silently handle WebSocket error
       };
 
       ws.onclose = () => {
-        console.log("WebSocket disconnected");
         // Attempt to reconnect if we're in a game
         setCurrentView((prevView) => {
           if (
@@ -102,7 +100,7 @@ export function GameSection(): JSX.Element {
       setSocket(ws);
       return ws;
     } catch (error) {
-      console.error("Failed to create WebSocket:", error);
+      // Silently handle WebSocket creation error
       return null;
     }
   }, [user, maxReconnectAttempts]);
@@ -181,20 +179,18 @@ export function GameSection(): JSX.Element {
         // First refresh after 1.5 seconds (backend should be done by then)
         setTimeout(async () => {
           try {
-            console.log("[handleGameEnd] First refresh attempt...");
             await refreshUserData();
           } catch (error) {
-            console.error("Error refreshing user data after game end:", error);
+            // Silently handle error
           }
         }, 1500);
         
         // Second refresh after 3 seconds as backup
         setTimeout(async () => {
           try {
-            console.log("[handleGameEnd] Second refresh attempt (backup)...");
             await refreshUserData();
           } catch (error) {
-            console.error("Error in backup refresh:", error);
+            // Silently handle error
           }
         }, 3000);
       } else {
@@ -203,7 +199,7 @@ export function GameSection(): JSX.Element {
           try {
             await refreshUserData();
           } catch (error) {
-            console.error("Error refreshing user data after AI game end:", error);
+            // Silently handle error
           }
         }, 500);
       }
@@ -224,7 +220,7 @@ export function GameSection(): JSX.Element {
           })
         );
       } catch (error) {
-        console.error("Error sending leave_game message:", error);
+        // Silently handle error
       }
     }
     setCurrentView("menu");
@@ -234,9 +230,8 @@ export function GameSection(): JSX.Element {
     setTimeout(async () => {
       try {
         await refreshUserData();
-        console.log("User data refreshed after leaving game");
       } catch (error) {
-        console.error("Error refreshing user data after leaving game:", error);
+        // Silently handle error
       }
     }, 1000);
   }, [socket, gameSession, refreshUserData]);
@@ -312,9 +307,8 @@ export function GameSection(): JSX.Element {
     setTimeout(async () => {
       try {
         await refreshUserData();
-        console.log("User data refreshed after play again");
       } catch (error) {
-        console.error("Error refreshing user data after play again:", error);
+        // Silently handle error
       }
     }, 500);
   };
@@ -330,9 +324,8 @@ export function GameSection(): JSX.Element {
     setTimeout(async () => {
       try {
         await refreshUserData();
-        console.log("User data refreshed after exit");
       } catch (error) {
-        console.error("Error refreshing user data after exit:", error);
+        // Silently handle error
       }
     }, 500);
   };

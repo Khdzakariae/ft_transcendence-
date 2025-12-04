@@ -44,12 +44,6 @@ export function SignInPage(): JSX.Element {
             const now = new Date();
             const minutesSinceCreation = (now.getTime() - accountCreatedAt.getTime()) / (1000 * 60);
             
-            Utils.LogLevel.DEBUG && console.log("First-time user check:", {
-              createdAt: userData?.createdAt,
-              minutesSinceCreation: minutesSinceCreation.toFixed(2),
-              isNewAccount: minutesSinceCreation < 5
-            });
-            
             // Only redirect to profile setup if account was created in last 5 minutes
             // AND profile is incomplete (no avatar or no name)
             if (minutesSinceCreation < 5) {
@@ -60,13 +54,10 @@ export function SignInPage(): JSX.Element {
               
               // If missing avatar OR valid name, redirect to profile setup
               if (!hasAvatar || !hasValidName) {
-                Utils.LogLevel.DEBUG && console.log("New account with incomplete profile, redirecting to setup");
                 navigate("/profile-setup/");
                 return;
               }
             }
-            
-            Utils.LogLevel.DEBUG && console.log("Returning user or profile complete, redirecting to dashboard");
           } else {
             Utils.LogLevel.WARN && console.warn("Failed to fetch user profile, status:", response.status);
           }
@@ -313,12 +304,12 @@ export function SignInPage(): JSX.Element {
       </div>
 
       {/* Header */}
-      <div className="text-center mb-6">
+      <div className="text-center mb-4 sm:mb-6">
         {/* Logo */}
-        <div className="flex justify-center mb-6">
-          <img src={Logo} alt="Logo" className="h-12 sm:h-16 md:h-20 drop-shadow-lg" />
+        <div className="flex justify-center mb-4 sm:mb-6">
+          <img src={Logo} alt="Logo" className="h-10 sm:h-12 md:h-16 lg:h-20 drop-shadow-lg" />
         </div>
-        <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight text-white mb-2">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight text-white mb-2 px-2">
           {show2FA ? (
             <>
               2FA <span className="text-primary-text">Verification</span>
@@ -329,14 +320,14 @@ export function SignInPage(): JSX.Element {
             </>
           )}
         </h1>
-        <p className="text-sm sm:text-base md:text-lg text-gray-300">
+        <p className="text-xs sm:text-sm md:text-base lg:text-lg text-gray-300 px-2">
           {show2FA
             ? "Enter the 6-digit code from your authenticator app"
             : "Glad to have you back!"}
         </p>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-5 font-secondary">
+      <form onSubmit={onSubmit} className="space-y-4 sm:space-y-5 font-secondary w-full">
         {!show2FA ? (
           <>
             <AuthInputForms
@@ -363,7 +354,7 @@ export function SignInPage(): JSX.Element {
                 onChange={handle2FATokenChange}
                 required
                 maxLength={6}
-                className="w-full rounded-lg border border-gray-700 bg-primary-bg py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 text-center text-2xl tracking-widest font-mono"
+                className="w-full rounded-lg border border-gray-700 bg-primary-bg py-3 sm:py-4 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 text-center text-xl sm:text-2xl tracking-widest font-mono min-h-[44px]"
               />
             </div>
             <button
@@ -397,10 +388,10 @@ export function SignInPage(): JSX.Element {
       {!show2FA && (
         <>
           {/* Forgot password */}
-          <div className="text-right font-primary mt-3">
+          <div className="text-right font-primary mt-2 sm:mt-3">
             <button
               onClick={forgotPassword}
-              className="text-sm sm:text-md text-gray-300 hover:text-white transition-colors duration-200"
+              className="text-xs sm:text-sm md:text-base text-gray-300 hover:text-white transition-colors duration-200 min-h-[44px] px-2"
             >
               Forgot password?{" "}
               <span className="font-semibold text-cyan-300 hover:text-cyan-200 underline transition-colors duration-200">
@@ -410,22 +401,22 @@ export function SignInPage(): JSX.Element {
           </div>
 
           {/* Sign in with other providers */}
-          <div className="text-center mb-4 mt-6 text-gray-300">
+          <div className="text-center mb-3 sm:mb-4 mt-4 sm:mt-6 text-gray-300">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-600"></div>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-primary-bg/50 backdrop-blur-sm">Or continue with</span>
+              <div className="relative flex justify-center text-xs sm:text-sm">
+                <span className="px-3 sm:px-4 bg-primary-bg/50 backdrop-blur-sm">Or continue with</span>
               </div>
             </div>
           </div>
           <AuthProvidersButtons />
 
-          <div className="text-center mt-6 font-primary text-gray-300">
+          <div className="text-center mt-4 sm:mt-6 font-primary text-gray-300 px-2">
             <Link
               to="/sign-up/"
-              className="text-sm sm:text-md hover:text-white transition-colors duration-200"
+              className="text-xs sm:text-sm md:text-base hover:text-white transition-colors duration-200 inline-block min-h-[44px] flex items-center justify-center"
             >
               Don't have an account yet?{" "}
               <span className="font-semibold text-cyan-300 hover:text-cyan-200 underline transition-colors duration-200">

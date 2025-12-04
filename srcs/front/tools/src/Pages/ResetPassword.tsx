@@ -44,8 +44,6 @@ export function ResetPasswordEmailPage(): JSX.Element {
       setIsLoading(false);
       return;
     }
-    Utils.LogLevel.DEBUG &&
-      console.log("ResetPassword Response status:", response);
 
     const contentType: string | null = response.headers.get("content-type");
     let res: any = {};
@@ -219,12 +217,6 @@ export function ResetPasswordPage(): JSX.Element {
     // Validate token and userId are present
     if (!resetToken || !userId) {
       setMsg("Invalid or missing reset token. Please request a new password reset link.");
-      Utils.LogLevel.DEBUG && console.log("Reset password validation failed:", { 
-        hasToken: !!resetToken, 
-        hasUserId: !!userId,
-        tokenLength: resetToken?.length,
-        userId 
-      });
       return;
     }
 
@@ -267,8 +259,6 @@ export function ResetPasswordPage(): JSX.Element {
       setIsLoading(false);
       return;
     }
-    Utils.LogLevel.DEBUG &&
-      console.log("ResetPassword Response status:", response);
 
     const contentType: string | null = response.headers.get("content-type");
     let res: any = {};

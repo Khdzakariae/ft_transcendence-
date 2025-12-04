@@ -1229,30 +1229,30 @@ export function MessagesSection(): JSX.Element {
     <div className="bg-primary-bg h-screen w-full text-white font-primary flex overflow-hidden">
       {/* Chat List Sidebar */}
       <div
-        className={`${selectedChat ? "hidden md:flex" : "flex"} flex-col w-full md:w-80 lg:w-96 border-r border-white/10 bg-primary-elements h-full`}
+        className={`${selectedChat ? "hidden md:flex" : "flex"} flex-col w-full md:w-80 lg:w-96 border-r border-white/10 bg-primary-elements h-full overflow-hidden`}
       >
         {/* Header */}
-        <div className="p-4 border-b border-white/10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold">Messages</h2>
-            <div className="flex gap-2">
+        <div className="p-3 sm:p-4 border-b border-white/10 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl sm:text-2xl font-bold">Messages</h2>
+            <div className="flex gap-1.5 sm:gap-2">
               <button
                 onClick={() => {
                   setShowCreateGroupModal(true);
                   setGroupError(null);
                   setCreatingGroup(false);
                 }}
-                className="p-2 rounded-lg bg-primary-btn/20 text-primary-btn hover:bg-primary-btn hover:text-primary-bg transition-all duration-300 hover:scale-110"
+                className="p-1.5 sm:p-2 rounded-lg bg-primary-btn/20 text-primary-btn hover:bg-primary-btn hover:text-primary-bg transition-all duration-300 hover:scale-110 active:scale-95"
                 title="Create Group"
               >
-                <MdGroup size={24} />
+                <MdGroup size={20} className="sm:w-6 sm:h-6" />
               </button>
             <button
               onClick={() => setShowNewChatModal(true)}
-              className="p-2 rounded-lg bg-primary-btn text-primary-bg hover:bg-[#FF6B00] hover:text-white transition-all duration-300 hover:scale-110"
+              className="p-1.5 sm:p-2 rounded-lg bg-primary-btn text-primary-bg hover:bg-[#FF6B00] hover:text-white transition-all duration-300 hover:scale-110 active:scale-95"
               title="New Chat"
             >
-                <MdMessage size={24} />
+                <MdMessage size={20} className="sm:w-6 sm:h-6" />
             </button>
             </div>
           </div>
@@ -1284,12 +1284,12 @@ export function MessagesSection(): JSX.Element {
               </button>
             </div>
           ) : (
-            <div className="space-y-1 p-2">
+            <div className="space-y-1 p-1.5 sm:p-2">
               {chatsWithMessages.map((chat) => (
                 <button
                   key={chat.id}
                   onClick={() => handleSelectChat(chat)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${
+                  className={`w-full flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg transition-all duration-200 group active:scale-[0.98] ${
                     selectedChat?.id === chat.id
                       ? "bg-primary-btn/10 border-l-4 border-l-[#FF6B00] border-r border-t border-b border-primary-btn/30 shadow-lg"
                       : "hover:bg-primary-bg/50 border border-transparent hover:border-l-2 hover:border-l-[#FF6B00]/50"
@@ -1299,15 +1299,15 @@ export function MessagesSection(): JSX.Element {
                     {getChatAvatar(chat) && (
                       <LazyLoadingImage
                         dimension={{
-                          width: "w-12",
-                          height: "h-12",
+                          width: "w-10 sm:w-12",
+                          height: "h-10 sm:h-12",
                         }}
                         loading={loaded}
                       >
                         <img
                           src={getChatAvatar(chat)}
                           alt="chat avatar"
-                          className={`w-12 h-12 rounded-full object-cover ${loaded ? "opacity-100" : "opacity-0"}`}
+                          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover ${loaded ? "opacity-100" : "opacity-0"}`}
                           loading="lazy"
                           onLoad={() => setLoaded(true)}
                         />
@@ -1317,39 +1317,39 @@ export function MessagesSection(): JSX.Element {
                       </LazyLoadingImage>
                     )}
                     {getUnreadCount(chat) > 0 && (
-                      <div className="absolute top-0 right-0 w-3 h-3 bg-orange-500 rounded-full border-2 border-primary-elements animate-pulse"></div>
+                      <div className="absolute top-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-orange-500 rounded-full border-2 border-primary-elements animate-pulse"></div>
                     )}
                     {(chat.isGroup || chat.isChannel) && (
-                      <div className={`absolute bottom-0 right-0 w-6 h-6 bg-primary-elements rounded-full flex items-center justify-center border-2 border-primary-elements ${getUnreadCount(chat) > 0 ? 'bottom-3 right-3' : ''}`}>
+                      <div className={`absolute bottom-0 right-0 w-5 h-5 sm:w-6 sm:h-6 bg-primary-elements rounded-full flex items-center justify-center border-2 border-primary-elements ${getUnreadCount(chat) > 0 ? 'bottom-2.5 right-2.5 sm:bottom-3 sm:right-3' : ''}`}>
                         {chat.isChannel ? (
-                          <MdGroup size={14} className="text-secondary-btn" />
+                          <MdGroup size={12} className="sm:w-3.5 sm:h-3.5 text-secondary-btn" />
                         ) : (
-                          <MdGroup size={14} className="text-primary-btn" />
+                          <MdGroup size={12} className="sm:w-3.5 sm:h-3.5 text-primary-btn" />
                         )}
                       </div>
                     )}
                     {chat.isPasswordProtected && (
-                      <div className="absolute top-0 right-0 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-primary-elements">
-                        <MdLock size={12} className="text-primary-bg" />
+                      <div className="absolute top-0 right-0 w-4 h-4 sm:w-5 sm:h-5 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-primary-elements">
+                        <MdLock size={10} className="sm:w-3 sm:h-3 text-primary-bg" />
                       </div>
                     )}
                   </div>
-                  <div className="flex-1 text-left overflow-hidden">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-semibold truncate flex items-center gap-1">
+                  <div className="flex-1 text-left overflow-hidden min-w-0">
+                    <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+                      <p className="font-semibold truncate flex items-center gap-1 text-sm sm:text-base">
                         {getChatDisplayName(chat)}
                         {chat.isChannel && (
-                          <span className="text-xs text-secondary-btn">(Channel)</span>
+                          <span className="text-[10px] sm:text-xs text-secondary-btn">(Channel)</span>
                         )}
                       </p>
                       {chat.lastMessageAt && (
-                        <span className="text-xs font-medium text-[#FF6B00]/70">
+                        <span className="text-[10px] sm:text-xs font-medium text-[#FF6B00]/70 flex-shrink-0">
                           {formatTimestamp(chat.lastMessageAt)}
                         </span>
                       )}
                     </div>
                     {chat.lastMessage && (
-                      <p className="text-sm truncate text-white/60">
+                      <p className="text-xs sm:text-sm truncate text-white/60">
                         {user && chat.lastMessage.senderId === user.id && (
                           <span className="text-[#FF6B00] font-medium">You: </span>
                         )}
@@ -1357,7 +1357,7 @@ export function MessagesSection(): JSX.Element {
                       </p>
                     )}
                     {(chat.isGroup || chat.isChannel) && chat.participants && (
-                      <p className="text-xs text-white/40">
+                      <p className="text-[10px] sm:text-xs text-white/40">
                         {chat.participants.length} members
                       </p>
                     )}
@@ -1376,12 +1376,12 @@ export function MessagesSection(): JSX.Element {
         {selectedChat ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 border-b border-white/10 bg-primary-elements flex items-center gap-3">
+            <div className="p-3 sm:p-4 border-b border-white/10 bg-primary-elements flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <button
                 onClick={() => setSelectedChat(null)}
-                className="md:hidden p-2 rounded-lg hover:bg-primary-bg/50 transition-colors"
+                className="md:hidden p-1.5 sm:p-2 rounded-lg hover:bg-primary-bg/50 active:scale-95 transition-all"
               >
-                <MdArrowBack size={24} />
+                <MdArrowBack size={20} className="sm:w-6 sm:h-6" />
               </button>
               <div
                 className="relative cursor-pointer"
@@ -1583,13 +1583,13 @@ export function MessagesSection(): JSX.Element {
             </div>
 
             {/* Message Input */}
-            <div className="p-4 border-t border-white/10 bg-primary-elements flex-shrink-0">
+            <div className="p-2 sm:p-4 border-t border-white/10 bg-primary-elements flex-shrink-0">
               {sendError && (
-                <div className="mb-2 p-2 rounded-lg bg-rose-500/20 border border-rose-400/50 text-rose-200 text-sm">
+                <div className="mb-2 p-2 rounded-lg bg-rose-500/20 border border-rose-400/50 text-rose-200 text-xs sm:text-sm">
                   {sendError}
                 </div>
               )}
-              <form onSubmit={sendMessage} className="flex gap-2">
+              <form onSubmit={sendMessage} className="flex gap-1.5 sm:gap-2">
                 <input
                   ref={messageInputRef}
                   type="text"
@@ -1608,15 +1608,15 @@ export function MessagesSection(): JSX.Element {
                   }}
                   placeholder="Type a message..."
                   disabled={sendingMessage}
-                  className="flex-1 rounded-xl border border-white/10 bg-primary-bg px-4 py-3 text-white placeholder:text-white/40 focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/50 disabled:opacity-50 transition-all duration-200"
+                  className="flex-1 rounded-lg sm:rounded-xl border border-white/10 bg-primary-bg px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base text-white placeholder:text-white/40 focus:border-[#FF6B00] focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/50 disabled:opacity-50 transition-all duration-200"
                 />
                 <button
                   type="submit"
                   disabled={!newMessage.trim() || sendingMessage}
-                  className="px-4 py-3 rounded-xl bg-primary-btn text-primary-bg hover:bg-[#FF6B00] hover:text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 hover:scale-105 hover:shadow-lg hover:shadow-[#FF6B00]/30"
+                  className="px-3 py-2 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl bg-primary-btn text-primary-bg hover:bg-[#FF6B00] hover:text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 sm:gap-2 hover:scale-105 active:scale-95 hover:shadow-lg hover:shadow-[#FF6B00]/30 text-xs sm:text-sm"
                 >
-                  <MdSend size={20} />
-                  {sendingMessage ? "Sending..." : "Send"}
+                  <MdSend size={18} className="sm:w-5 sm:h-5" />
+                  <span className="hidden sm:inline">{sendingMessage ? "Sending..." : "Send"}</span>
                 </button>
               </form>
             </div>
@@ -1640,8 +1640,8 @@ export function MessagesSection(): JSX.Element {
 
       {/* New Chat Modal */}
       {showNewChatModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-primary-elements rounded-2xl border border-white/10 w-full max-w-md max-h-[80vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-primary-elements rounded-xl sm:rounded-2xl border border-white/10 w-full max-w-md max-h-[90vh] sm:max-h-[80vh] flex flex-col my-auto">
             <div className="p-4 border-b border-white/10 flex items-center justify-between">
               <h3 className="text-xl font-bold">Start New Chat</h3>
               <button
@@ -1712,8 +1712,8 @@ export function MessagesSection(): JSX.Element {
 
       {/* Create Group Modal */}
       {showCreateGroupModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-primary-elements rounded-2xl border border-white/10 w-full max-w-md max-h-[80vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-primary-elements rounded-xl sm:rounded-2xl border border-white/10 w-full max-w-md max-h-[90vh] sm:max-h-[80vh] flex flex-col my-auto">
             <div className="p-4 border-b border-white/10 flex items-center justify-between">
               <h3 className="text-xl font-bold">Create Group Chat</h3>
               <button
@@ -1886,8 +1886,8 @@ export function MessagesSection(): JSX.Element {
 
       {/* Group Settings Modal */}
       {showGroupSettingsModal && selectedChat && (selectedChat.isGroup || selectedChat.isChannel) && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-primary-elements rounded-2xl border border-white/10 w-full max-w-md max-h-[80vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-primary-elements rounded-xl sm:rounded-2xl border border-white/10 w-full max-w-md max-h-[90vh] sm:max-h-[80vh] flex flex-col my-auto">
             <div className="p-4 border-b border-white/10 flex items-center justify-between">
               <h3 className="text-xl font-bold">
                 {selectedChat.isChannel ? "Channel" : "Group"} Settings
@@ -2077,8 +2077,8 @@ export function MessagesSection(): JSX.Element {
 
       {/* Add Members Modal */}
       {showAddMembersModal && selectedChat && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-primary-elements rounded-2xl border border-white/10 w-full max-w-md max-h-[80vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-primary-elements rounded-xl sm:rounded-2xl border border-white/10 w-full max-w-md max-h-[90vh] sm:max-h-[80vh] flex flex-col my-auto">
             <div className="p-4 border-b border-white/10 flex items-center justify-between">
               <h3 className="text-xl font-bold">Add Members</h3>
               <button
@@ -2207,8 +2207,8 @@ export function MessagesSection(): JSX.Element {
 
       {/* User Profile Modal */}
       {showUserProfileModal && selectedUserProfile && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-primary-elements rounded-2xl border border-white/10 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-primary-elements rounded-xl sm:rounded-2xl border border-white/10 w-full max-w-md my-auto">
             <div className="p-4 border-b border-white/10 flex items-center justify-between">
               <h3 className="text-xl font-bold">User Profile</h3>
               <button

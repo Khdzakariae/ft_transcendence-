@@ -19,7 +19,7 @@ export function AuthLayout({ children }: AuthLayoutProps): JSX.Element {
       <div className="absolute inset-0 bg-black/60 z-0"></div>
 
       {/* Content Wrapper: Centers the main text and form */}
-      <div className="auth-elements-container font-primary relative z-10">
+      <div className="auth-elements-container font-primary relative z-10 mx-2 sm:mx-4 md:mx-auto">
         {children}
       </div>
     </div>

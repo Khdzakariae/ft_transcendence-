@@ -95,14 +95,6 @@ export function ProfileSection({ user_data: propUserData }: ProfileSectionProps 
   useEffect(() => {
     if (!user_data) return;
     
-    // Debug log to verify data
-    console.log("[ProfileSection] User data received:", {
-      xp: user_data.xp,
-      level: user_data.level,
-      wins: user_data.Games?.length || 0,
-      achievements: user_data.achievements?.length || 0,
-    });
-    
     const progress = Math.min(100, Math.round((xpForCurrentLevel / xpNeededForLevel) * 100));
     const t = setTimeout(() => setXpProgress(progress), 100);
     return () => clearTimeout(t);
@@ -119,16 +111,16 @@ export function ProfileSection({ user_data: propUserData }: ProfileSectionProps 
   }
 
   return (
-    <div className="min-h-screen bg-primary-bg flex flex-col items-center justify-start w-full text-white font-primary px-4 sm:px-6 md:px-8 py-8 relative overflow-hidden">
+    <div className="min-h-screen bg-primary-bg flex flex-col items-center justify-start w-full text-white font-primary px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 relative overflow-hidden">
       {/* Subtle Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-32 h-32 bg-primary-btn/5 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-10 w-40 h-40 bg-secondary-btn/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
 
-      <div className="relative w-full max-w-5xl space-y-6">
+      <div className="relative w-full max-w-5xl space-y-4 sm:space-y-6">
         {/* Profile Header Card */}
-        <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8 bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-6 sm:p-8 rounded-2xl border-2 border-white/10 shadow-2xl overflow-hidden group">
+        <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 md:gap-8 bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl border-2 border-white/10 shadow-2xl overflow-hidden group">
           {/* Decorative Glow */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-btn/10 to-secondary-btn/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
           
@@ -158,30 +150,30 @@ export function ProfileSection({ user_data: propUserData }: ProfileSectionProps 
           </div>
 
           {/* Info Section */}
-          <div className="flex flex-col items-center sm:items-start justify-center flex-1 z-10 text-center sm:text-left">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold font-secondary bg-gradient-to-r from-cyan-400 via-white to-orange-400 bg-clip-text text-transparent break-words">
+          <div className="flex flex-col items-center sm:items-start justify-center flex-1 z-10 text-center sm:text-left w-full">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold font-secondary bg-gradient-to-r from-cyan-400 via-white to-orange-400 bg-clip-text text-transparent break-words w-full">
               {user_data.name}
             </h1>
             
             {user_data.verified && (
-              <div className="flex items-center gap-2 mt-3 px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary-btn/20 to-secondary-btn/20 border border-primary-btn/30">
-                <MdOutlineVerified className="text-primary-btn" size={20} />
-                <span className="text-sm font-semibold text-white/90">Verified Player</span>
+              <div className="flex items-center gap-2 mt-2 sm:mt-3 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-gradient-to-r from-primary-btn/20 to-secondary-btn/20 border border-primary-btn/30">
+                <MdOutlineVerified className="text-primary-btn" size={18} />
+                <span className="text-xs sm:text-sm font-semibold text-white/90">Verified Player</span>
               </div>
             )}
             
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-4">
-              <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary-btn/40 bg-gradient-to-br from-primary-btn/10 to-primary-btn/5 text-white/80 text-sm font-medium backdrop-blur-sm transition-all duration-300 hover:scale-105">
-                <span className="text-base">📅</span>
-                Joined {user_data.createdAt.substring(0, user_data.createdAt.indexOf("T"))}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 mt-3 sm:mt-4 w-full">
+              <span className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-primary-btn/40 bg-gradient-to-br from-primary-btn/10 to-primary-btn/5 text-white/80 text-xs sm:text-sm font-medium backdrop-blur-sm transition-all duration-300 hover:scale-105 active:scale-95">
+                <span className="text-sm sm:text-base">📅</span>
+                <span className="whitespace-nowrap">Joined {user_data.createdAt.substring(0, user_data.createdAt.indexOf("T"))}</span>
               </span>
-              <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-amber-400/60 bg-gradient-to-br from-amber-500/20 to-amber-500/10 text-amber-300 text-sm font-bold backdrop-blur-sm transition-all duration-300 hover:scale-105">
-                <span className="text-base">⚡</span>
+              <span className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-amber-400/60 bg-gradient-to-br from-amber-500/20 to-amber-500/10 text-amber-300 text-xs sm:text-sm font-bold backdrop-blur-sm transition-all duration-300 hover:scale-105 active:scale-95">
+                <span className="text-sm sm:text-base">⚡</span>
                 Level {user_data.level ?? 1}
               </span>
               {totalWins > 0 && (
-                <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-green-400/60 bg-gradient-to-br from-green-500/20 to-green-500/10 text-green-300 text-sm font-bold backdrop-blur-sm transition-all duration-300 hover:scale-105">
-                  <span className="text-base">🎮</span>
+                <span className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-green-400/60 bg-gradient-to-br from-green-500/20 to-green-500/10 text-green-300 text-xs sm:text-sm font-bold backdrop-blur-sm transition-all duration-300 hover:scale-105 active:scale-95">
+                  <span className="text-sm sm:text-base">🎮</span>
                   {totalWins} {totalWins === 1 ? "Win" : "Wins"}
                 </span>
               )}
@@ -189,9 +181,9 @@ export function ProfileSection({ user_data: propUserData }: ProfileSectionProps 
           </div>
         </div>
         {/* Stats Cards - XP and Achievements */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           {/* XP Progress Card */}
-          <div className="relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-6 rounded-2xl border-2 border-white/10 shadow-xl overflow-hidden group">
+          <div className="relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl border-2 border-white/10 shadow-xl overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-secondary-btn/10 to-primary-btn/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             
             <div className="relative z-10">
@@ -317,8 +309,8 @@ export function ProfileSection({ user_data: propUserData }: ProfileSectionProps 
           </div>
         </div>
 
-        {/* Medals Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Medals Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {/* Gold Medal Card */}
           <div className="relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-6 rounded-2xl border-2 border-amber-400/30 shadow-xl overflow-hidden group transition-all duration-300 hover:scale-[1.02] hover:border-amber-400/50">
             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -455,7 +447,7 @@ export function ProfileSection({ user_data: propUserData }: ProfileSectionProps 
               </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {achievements.map((achievement, index) => {
                 const tier = achievement.tier || "";
                 const tierColor = getTierColor(tier);

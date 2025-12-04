@@ -2,12 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global responsive improvements */
+@layer base {
+  * {
+    @apply box-border;
+  }
+  
+  html {
+    @apply overflow-x-hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  body {
+    @apply overflow-x-hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Improve touch targets on mobile */
+  button, a, input, select, textarea {
+    @apply min-h-[44px] sm:min-h-0;
+  }
+  
+  /* Prevent horizontal scroll on mobile */
+  img, video, canvas {
+    @apply max-w-full h-auto;
+  }
+}
+
 /* add tokens */
 .auth-elements-container {
-  @apply w-full max-w-xl sm:max-w-2xl md:max-w-3xl
+  @apply w-full max-w-xs sm:max-w-xl md:max-w-2xl lg:max-w-3xl
 			bg-primary-elements
 			backdrop-blur-md
-			p-6 sm:p-10
+			p-4 sm:p-6 md:p-8 lg:p-10
 			shadow-lg
 			shadow-[0_0_15px_#00FFFF55]
 			rounded-lg
@@ -23,7 +51,7 @@
 			flex flex-col items-center justify-center 
 			relative overflow-hidden
 			bg-cover bg-center 
-			p-8;
+			p-4 sm:p-6 md:p-8;
 }
 
 .current-section {

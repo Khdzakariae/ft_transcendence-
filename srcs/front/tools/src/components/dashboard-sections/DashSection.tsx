@@ -165,71 +165,71 @@ export function DashSection(): JSX.Element {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 px-4 sm:px-6 md:px-8 py-8 max-w-7xl mx-auto">
+      <div className="relative z-10 px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 max-w-7xl mx-auto">
         {/* Welcome Header */}
-        <div className="mb-8">
+        <div className="mb-4 sm:mb-6 md:mb-8">
           <div className="text-center sm:text-left">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-secondary bg-gradient-to-r from-cyan-400 via-white to-orange-400 bg-clip-text text-transparent mb-2">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold font-secondary bg-gradient-to-r from-cyan-400 via-white to-orange-400 bg-clip-text text-transparent mb-2 break-words">
               Welcome back, {user.name}!
             </h1>
-            <p className="text-white/70 text-lg sm:text-xl">
+            <p className="text-white/70 text-sm sm:text-base md:text-lg lg:text-xl">
               Ready to dominate the table? 🏓
             </p>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <button
             onClick={() => navigate("/dashboard/game")}
-            className="group relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-6 rounded-2xl border-2 border-primary-btn/30 shadow-2xl hover:border-primary-btn/60 transition-all duration-300 hover:scale-105 overflow-hidden"
+            className="group relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl border-2 border-primary-btn/30 shadow-2xl hover:border-primary-btn/60 transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden"
           >
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary-btn/20 via-secondary-btn/20 to-primary-btn/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-xl"></div>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-btn to-secondary-btn flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <MdPlayArrow size={32} className="text-primary-bg" />
+            <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary-btn/20 via-secondary-btn/20 to-primary-btn/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-xl"></div>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary-btn to-secondary-btn flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                <MdPlayArrow size={24} className="sm:w-8 sm:h-8 md:w-8 md:h-8 text-primary-bg" />
               </div>
-              <div className="flex-1 text-left">
-                <h3 className="text-xl font-bold font-secondary text-white mb-1">
+              <div className="flex-1 text-left min-w-0">
+                <h3 className="text-base sm:text-lg md:text-xl font-bold font-secondary text-white mb-1 truncate">
                   Quick Match
                 </h3>
-                <p className="text-sm text-white/60">Start playing now</p>
+                <p className="text-xs sm:text-sm text-white/60">Start playing now</p>
               </div>
             </div>
           </button>
 
           <button
             onClick={() => navigate("/dashboard/profile")}
-            className="group relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-6 rounded-2xl border-2 border-secondary-btn/30 shadow-2xl hover:border-secondary-btn/60 transition-all duration-300 hover:scale-105 overflow-hidden"
+            className="group relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl border-2 border-secondary-btn/30 shadow-2xl hover:border-secondary-btn/60 transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden"
           >
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-secondary-btn/20 via-primary-btn/20 to-secondary-btn/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-xl"></div>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-secondary-btn to-primary-btn flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <MdTrendingUp size={32} className="text-primary-bg" />
+            <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-secondary-btn/20 via-primary-btn/20 to-secondary-btn/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-xl"></div>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-lg sm:rounded-xl bg-gradient-to-br from-secondary-btn to-primary-btn flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                <MdTrendingUp size={24} className="sm:w-8 sm:h-8 md:w-8 md:h-8 text-primary-bg" />
               </div>
-              <div className="flex-1 text-left">
-                <h3 className="text-xl font-bold font-secondary text-white mb-1">
+              <div className="flex-1 text-left min-w-0">
+                <h3 className="text-base sm:text-lg md:text-xl font-bold font-secondary text-white mb-1 truncate">
                   View Profile
                 </h3>
-                <p className="text-sm text-white/60">Check your stats</p>
+                <p className="text-xs sm:text-sm text-white/60">Check your stats</p>
               </div>
             </div>
           </button>
 
           <button
             onClick={() => navigate("/dashboard/messages")}
-            className="group relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-6 rounded-2xl border-2 border-primary-btn/30 shadow-2xl hover:border-primary-btn/60 transition-all duration-300 hover:scale-105 overflow-hidden"
+            className="group relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl border-2 border-primary-btn/30 shadow-2xl hover:border-primary-btn/60 transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden"
           >
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary-btn/20 via-secondary-btn/20 to-primary-btn/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-xl"></div>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-btn to-secondary-btn flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <MdPeople size={32} className="text-primary-bg" />
+            <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary-btn/20 via-secondary-btn/20 to-primary-btn/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-xl"></div>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary-btn to-secondary-btn flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                <MdPeople size={24} className="sm:w-8 sm:h-8 md:w-8 md:h-8 text-primary-bg" />
               </div>
-              <div className="flex-1 text-left">
-                <h3 className="text-xl font-bold font-secondary text-white mb-1">
+              <div className="flex-1 text-left min-w-0">
+                <h3 className="text-base sm:text-lg md:text-xl font-bold font-secondary text-white mb-1 truncate">
                   Messages
                 </h3>
-                <p className="text-sm text-white/60">Chat with friends</p>
+                <p className="text-xs sm:text-sm text-white/60">Chat with friends</p>
               </div>
             </div>
           </button>
@@ -344,18 +344,18 @@ export function DashSection(): JSX.Element {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           {/* Wins Card */}
-          <div className="group relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-6 rounded-2xl border-2 border-green-400/30 shadow-xl overflow-hidden hover:border-green-400/60 transition-all duration-300 hover:scale-105">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="group relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl border-2 border-green-400/30 shadow-xl overflow-hidden hover:border-green-400/60 transition-all duration-300 hover:scale-105 active:scale-95">
+            <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <div className="relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
-                  <MdEmojiEvents size={24} className="text-white" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                  <MdEmojiEvents size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-white/60">Total Wins</p>
-                  <h2 className="text-3xl font-bold font-secondary text-white">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm text-white/60 truncate">Total Wins</p>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-secondary text-white truncate">
                     {animatedStats.wins}
                   </h2>
                 </div>
@@ -364,16 +364,16 @@ export function DashSection(): JSX.Element {
           </div>
 
           {/* Level Card */}
-          <div className="group relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-6 rounded-2xl border-2 border-amber-400/30 shadow-xl overflow-hidden hover:border-amber-400/60 transition-all duration-300 hover:scale-105">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="group relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl border-2 border-amber-400/30 shadow-xl overflow-hidden hover:border-amber-400/60 transition-all duration-300 hover:scale-105 active:scale-95">
+            <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <div className="relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg">
-                  <MdStar size={24} className="text-white" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                  <MdStar size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-white/60">Current Level</p>
-                  <h2 className="text-3xl font-bold font-secondary text-white">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm text-white/60 truncate">Current Level</p>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-secondary text-white truncate">
                     {animatedStats.level}
                   </h2>
                 </div>
@@ -382,16 +382,16 @@ export function DashSection(): JSX.Element {
           </div>
 
           {/* XP Card */}
-          <div className="group relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-6 rounded-2xl border-2 border-primary-btn/30 shadow-xl overflow-hidden hover:border-primary-btn/60 transition-all duration-300 hover:scale-105">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary-btn/10 to-secondary-btn/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="group relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl border-2 border-primary-btn/30 shadow-xl overflow-hidden hover:border-primary-btn/60 transition-all duration-300 hover:scale-105 active:scale-95">
+            <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-gradient-to-br from-primary-btn/10 to-secondary-btn/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <div className="relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-btn to-secondary-btn flex items-center justify-center shadow-lg">
-                  <MdSpeed size={24} className="text-primary-bg" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary-btn to-secondary-btn flex items-center justify-center shadow-lg flex-shrink-0">
+                  <MdSpeed size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-primary-bg" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-white/60">XP</p>
-                  <h2 className="text-3xl font-bold font-secondary text-white">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm text-white/60 truncate">XP</p>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-secondary text-white truncate">
                     {animatedStats.xp}
                   </h2>
                 </div>
@@ -400,28 +400,28 @@ export function DashSection(): JSX.Element {
           </div>
 
           {/* Medals Card */}
-          <div className="group relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-6 rounded-2xl border-2 border-amber-400/30 shadow-xl overflow-hidden hover:border-amber-400/60 transition-all duration-300 hover:scale-105">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-500/10 to-yellow-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="group relative bg-gradient-to-br from-primary-elements/90 to-primary-elements/70 backdrop-blur-xl p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl border-2 border-amber-400/30 shadow-xl overflow-hidden hover:border-amber-400/60 transition-all duration-300 hover:scale-105 active:scale-95 col-span-2 sm:col-span-1">
+            <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-gradient-to-br from-amber-500/10 to-yellow-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center shadow-lg">
-                  <MdWhatshot size={24} className="text-white" />
+              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                  <MdWhatshot size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-white/60">Total Medals</p>
-                  <h2 className="text-3xl font-bold font-secondary text-white">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm text-white/60 truncate">Total Medals</p>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-secondary text-white truncate">
                     {medals.gold + medals.silver + medals.bronze}
                   </h2>
                 </div>
               </div>
-              <div className="flex gap-2 text-xs">
-                <span className="flex-1 text-center px-2 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30">
+              <div className="flex gap-1.5 sm:gap-2 text-xs">
+                <span className="flex-1 text-center px-1.5 sm:px-2 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30 text-xs">
                   🥇 {medals.gold}
                 </span>
-                <span className="flex-1 text-center px-2 py-1 rounded bg-gray-500/20 text-gray-300 border border-gray-400/30">
+                <span className="flex-1 text-center px-1.5 sm:px-2 py-1 rounded bg-gray-500/20 text-gray-300 border border-gray-400/30 text-xs">
                   🥈 {medals.silver}
                 </span>
-                <span className="flex-1 text-center px-2 py-1 rounded bg-orange-500/20 text-orange-300 border border-orange-400/30">
+                <span className="flex-1 text-center px-1.5 sm:px-2 py-1 rounded bg-orange-500/20 text-orange-300 border border-orange-400/30 text-xs">
                   🥉 {medals.bronze}
                 </span>
               </div>

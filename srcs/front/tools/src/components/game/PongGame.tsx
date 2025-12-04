@@ -589,37 +589,41 @@ export function PongGame({
   ]);
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="relative">
-        <canvas
-          ref={canvasRef}
-          width={CANVAS_WIDTH}
-          height={CANVAS_HEIGHT}
-          className="border-2 border-primary-btn/30 rounded-lg shadow-2xl"
-          style={{
-            boxShadow: "0 10px 40px rgba(0, 0, 0, 0.5)"
-          }}
-        />
-        {!isConnected && (
-          <div className="absolute top-4 left-4 bg-red-500/80 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
-            Reconnecting... ({reconnectAttempts} attempts)
-          </div>
-        )}
+    <div className="flex flex-col items-center gap-3 sm:gap-4 w-full px-2 sm:px-4 py-4 sm:py-6">
+      <div className="relative w-full max-w-full flex justify-center">
+        <div className="relative w-full max-w-[800px] aspect-[4/3]">
+          <canvas
+            ref={canvasRef}
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT}
+            className="border-2 border-primary-btn/30 rounded-lg shadow-2xl w-full h-full object-contain"
+            style={{
+              boxShadow: "0 10px 40px rgba(0, 0, 0, 0.5)",
+              maxWidth: "100%",
+              height: "auto"
+            }}
+          />
+          {!isConnected && (
+            <div className="absolute top-2 left-2 sm:top-4 sm:left-4 bg-red-500/80 text-white px-2 py-1 sm:px-4 sm:py-2 rounded-lg backdrop-blur-sm text-xs sm:text-sm">
+              Reconnecting... ({reconnectAttempts} attempts)
+            </div>
+          )}
+        </div>
       </div>
-      <div className="text-white text-sm font-primary">
+      <div className="text-white text-xs sm:text-sm font-primary w-full max-w-2xl px-2">
         <p className="text-center">
           <span className="text-primary-btn font-bold">Controls:</span> Use{" "}
-          <kbd className="px-2 py-1 bg-primary-elements rounded border border-primary-btn">
+          <kbd className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-primary-elements rounded border border-primary-btn text-xs sm:text-sm">
             ↑
           </kbd>{" "}
-          <kbd className="px-2 py-1 bg-primary-elements rounded border border-primary-btn">
+          <kbd className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-primary-elements rounded border border-primary-btn text-xs sm:text-sm">
             ↓
           </kbd>{" "}
           or{" "}
-          <kbd className="px-2 py-1 bg-primary-elements rounded border border-primary-btn">
+          <kbd className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-primary-elements rounded border border-primary-btn text-xs sm:text-sm">
             W
           </kbd>{" "}
-          <kbd className="px-2 py-1 bg-primary-elements rounded border border-primary-btn">
+          <kbd className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-primary-elements rounded border border-primary-btn text-xs sm:text-sm">
             S
           </kbd>{" "}
           to move your paddle

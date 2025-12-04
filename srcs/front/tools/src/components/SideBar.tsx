@@ -6,7 +6,7 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { LiaUserFriendsSolid } from "react-icons/lia";
 import { IoChatbubblesOutline } from "react-icons/io5";
 import { TbLogout2 } from "react-icons/tb";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserDataInter, UserInter } from "../interfaces/UserInterfaces";
 import { LazyLoadingImage } from "./LazyLoadingImage";
@@ -24,6 +24,7 @@ export function SideBar({
   hasUnreadMessages?: boolean;
 }): JSX.Element {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loading_avatar, setLoadingAvatar] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
@@ -67,13 +68,52 @@ export function SideBar({
     }
   };
 
+  // Close mobile menu when navigating
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setIsMobileMenuOpen(false);
+  };
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
   return (
-    <div
-      id="side-bar"
-      className={`flex flex-col h-screen sticky top-0 border-r-2 border-white/10 bg-gradient-to-b from-primary-bg via-primary-bg to-primary-elements text-center text-white py-4 transition-all duration-300 ease-in-out overflow-hidden ${
-        isSidebarExpanded ? "w-64" : "w-24"
-      }`}
-    >
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-primary-elements/90 backdrop-blur-sm border border-white/10 text-white hover:bg-primary-elements transition-all duration-300 shadow-lg"
+        aria-label="Toggle menu"
+      >
+        <RxHamburgerMenu className="w-6 h-6" />
+      </button>
+
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div
+        id="side-bar"
+        className={`flex flex-col h-screen fixed md:sticky top-0 border-r-2 border-white/10 bg-gradient-to-b from-primary-bg via-primary-bg to-primary-elements text-center text-white py-4 transition-all duration-300 ease-in-out overflow-hidden z-40 ${
+          isSidebarExpanded ? "w-64" : "w-24"
+        } ${
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
       {/* Top Section - Avatar, Name, Hamburger */}
       <div className="flex-shrink-0 space-y-3">
         {/* User Avatar at Top */}
@@ -119,8 +159,8 @@ export function SideBar({
           </div>
         )}
 
-        {/* Hamburger Menu */}
-        <div className="px-3">
+        {/* Hamburger Menu - Desktop Only */}
+        <div className="px-3 hidden md:block">
           <button
             onClick={() => {
               setIsSidebarExpanded(!isSidebarExpanded);
@@ -142,7 +182,7 @@ export function SideBar({
               ? "bg-gradient-to-r from-primary-btn to-secondary-btn border-2 border-primary-btn/40" 
               : "border-2 border-transparent hover:border-white/20 hover:bg-primary-elements/50"
           } ${isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"}`}
-          onClick={() => navigate("/dashboard")}
+          onClick={() => handleNavigation("/dashboard")}
         >
           <div className={`flex items-center justify-center transition-all duration-300 ${
             section === "dashboard"
@@ -166,7 +206,7 @@ export function SideBar({
               ? "bg-gradient-to-r from-primary-btn to-secondary-btn border-2 border-primary-btn/40" 
               : "border-2 border-transparent hover:border-white/20 hover:bg-primary-elements/50"
           } ${isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"}`}
-          onClick={() => navigate("/dashboard/game")}
+          onClick={() => handleNavigation("/dashboard/game")}
         >
           <div className={`flex items-center justify-center transition-all duration-300 ${
             section === "game"
@@ -190,7 +230,7 @@ export function SideBar({
               ? "bg-gradient-to-r from-primary-btn to-secondary-btn border-2 border-primary-btn/40" 
               : "border-2 border-transparent hover:border-white/20 hover:bg-primary-elements/50"
           } ${isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"}`}
-          onClick={() => navigate("/dashboard/profile")}
+          onClick={() => handleNavigation("/dashboard/profile")}
         >
           <div className={`flex items-center justify-center transition-all duration-300 ${
             section === "profile"
@@ -214,7 +254,7 @@ export function SideBar({
               ? "bg-gradient-to-r from-primary-btn to-secondary-btn border-2 border-primary-btn/40" 
               : "border-2 border-transparent hover:border-white/20 hover:bg-primary-elements/50"
           } ${isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"}`}
-          onClick={() => navigate("/dashboard/settings")}
+          onClick={() => handleNavigation("/dashboard/settings")}
         >
           <div className={`flex items-center justify-center transition-all duration-300 ${
             section === "settings"
@@ -238,7 +278,7 @@ export function SideBar({
               ? "bg-gradient-to-r from-primary-btn to-secondary-btn border-2 border-primary-btn/40" 
               : "border-2 border-transparent hover:border-white/20 hover:bg-primary-elements/50"
           } ${isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"}`}
-          onClick={() => navigate("/dashboard/friends")}
+          onClick={() => handleNavigation("/dashboard/friends")}
         >
           <div className={`flex items-center justify-center transition-all duration-300 ${
             section === "friends"
@@ -262,7 +302,7 @@ export function SideBar({
               ? "bg-gradient-to-r from-primary-btn to-secondary-btn border-2 border-primary-btn/40" 
               : "border-2 border-transparent hover:border-white/20 hover:bg-primary-elements/50"
           } ${isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"}`}
-          onClick={() => navigate("/dashboard/messages")}
+          onClick={() => handleNavigation("/dashboard/messages")}
         >
           <div className={`relative flex items-center justify-center transition-all duration-300 ${
             section === "messages"
@@ -289,7 +329,7 @@ export function SideBar({
               ? "bg-gradient-to-r from-primary-btn to-secondary-btn border-2 border-primary-btn/40" 
               : "border-2 border-transparent hover:border-white/20 hover:bg-primary-elements/50"
           } ${isSidebarExpanded ? "gap-3 px-3 py-2" : "justify-center px-3 py-2"}`}
-          onClick={() => navigate("/dashboard/notifications")}
+          onClick={() => handleNavigation("/dashboard/notifications")}
         >
           <div className={`relative flex items-center justify-center transition-all duration-300 ${
             section === "notifications"
@@ -331,6 +371,7 @@ export function SideBar({
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

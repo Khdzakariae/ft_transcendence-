@@ -87,7 +87,7 @@ export function Dashboard(): JSX.Element {
         
         setHasUnreadMessages(hasUnread);
       } catch (error) {
-        console.error("Error checking unread messages:", error);
+        // Silently handle error
       }
     };
 
@@ -103,7 +103,6 @@ export function Dashboard(): JSX.Element {
   // Function to refresh user data
   const refreshUserData = async () => {
     try {
-      console.log("[refreshUserData] Fetching updated user data...");
       const response = await fetch("http://localhost:3000/api/v1/user/me", {
         method: "GET",
         credentials: "include",
@@ -113,22 +112,11 @@ export function Dashboard(): JSX.Element {
         const data = await response.json();
         const updatedUserData = data.data as UserDataInter;
         if (updatedUserData && !updatedUserData.error) {
-          console.log("[refreshUserData] User data updated:", {
-            xp: updatedUserData.xp,
-            level: updatedUserData.level,
-            wins: updatedUserData.Games?.length || 0,
-            achievements: updatedUserData.achievements?.length || 0,
-            medals: updatedUserData.medals,
-          });
           setUserData(updatedUserData);
-        } else {
-          console.warn("[refreshUserData] Invalid user data received:", updatedUserData);
         }
-      } else {
-        console.error(`[refreshUserData] Failed to fetch user data: ${response.status}`);
       }
     } catch (error) {
-      console.error("[refreshUserData] Error refreshing user data:", error);
+      // Silently handle error
     }
   };
 
@@ -144,7 +132,7 @@ export function Dashboard(): JSX.Element {
 
   return (
     <DashboardContext.Provider value={contextValue}>
-      <div className="flex flex-row text-white">
+      <div className="flex flex-col md:flex-row text-white min-h-screen overflow-x-hidden">
         <SideBar
           active_user={user as UserInter}
           user_data={user_data as UserDataInter}
@@ -152,7 +140,9 @@ export function Dashboard(): JSX.Element {
           hasUnreadMessages={hasUnreadMessages}
         />
         {/* Render child routes */}
-        <Outlet />
+        <div className="flex-1 w-full min-h-screen pt-16 md:pt-0 overflow-x-hidden">
+          <Outlet />
+        </div>
       </div>
     </DashboardContext.Provider>
   );

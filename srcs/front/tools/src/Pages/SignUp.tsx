@@ -49,8 +49,6 @@ export function SignUpPage(): JSX.Element {
       return;
     }
 
-    Utils.LogLevel.DEBUG &&
-      console.log("SignUp res:", { firstName, lastName, email, password });
     try {
       setIsLoading(true);
       setCreationMsg("Creating...");
@@ -71,7 +69,6 @@ export function SignUpPage(): JSX.Element {
       setIsLoading(false);
       return;
     }
-    Utils.LogLevel.DEBUG && console.log("SignUp Response status:", response);
 
     const contentType: string | null = response.headers.get("content-type");
     let res: any = {};

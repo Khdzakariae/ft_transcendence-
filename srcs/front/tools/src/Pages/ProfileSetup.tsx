@@ -63,12 +63,6 @@ export function ProfileSetupPage(): JSX.Element {
           const data = await response.json();
           const userData = data.data;
           
-          Utils.LogLevel.DEBUG && console.log("Profile setup - checking if profile already complete:", {
-            hasAvatar: !!userData?.avatar,
-            hasName: !!userData?.name,
-            name: userData?.name
-          });
-          
           // If user already has avatar and name set, redirect to dashboard
           // This prevents users from accessing this page again after completion
           const hasValidName = userData?.name && 
@@ -77,7 +71,6 @@ export function ProfileSetupPage(): JSX.Element {
           const hasAvatar = !!userData?.avatar;
           
           if (hasAvatar && hasValidName) {
-            Utils.LogLevel.DEBUG && console.log("Profile already complete, redirecting to dashboard");
             navigate("/dashboard", { replace: true });
             return;
           }
@@ -89,14 +82,11 @@ export function ProfileSetupPage(): JSX.Element {
               // This is an OAuth provider avatar, save it separately
               setOauthAvatar(userData.avatar);
               setSelectedAvatar(userData.avatar);
-              Utils.LogLevel.DEBUG && console.log("Using existing OAuth avatar from provider:", userData.avatar);
             } else {
               // User previously selected one of our avatars
               setSelectedAvatar(userData.avatar);
             }
           }
-          
-          Utils.LogLevel.DEBUG && console.log("Profile incomplete, staying on setup page");
         }
       } catch (error) {
         Utils.LogLevel.ERROR && console.error("Profile setup check error:", error);
@@ -191,8 +181,6 @@ export function ProfileSetupPage(): JSX.Element {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || errorData.message || "Failed to update profile");
       }
-
-      Utils.LogLevel.DEBUG && console.log("Profile setup completed successfully");
 
       // Redirect to dashboard
       navigate("/dashboard", { replace: true });
