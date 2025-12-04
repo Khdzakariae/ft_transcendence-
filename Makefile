@@ -19,6 +19,9 @@ fclean: clean
 	rm -rf ./dbfolder
 	docker system prune -a -f
 
+setupEnv:
+	@sh ./env_setup.sh
+
 restart: clean build
 
 .PHONY: kill build down clean restart
