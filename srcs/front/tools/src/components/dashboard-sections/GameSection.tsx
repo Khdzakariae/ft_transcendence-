@@ -43,7 +43,11 @@ export function GameSection(): JSX.Element {
   // WebSocket connection management
   const connectWebSocket = useCallback(() => {
     try {
-      const ws = new WebSocket("ws://localhost:9090");
+      // Use dynamic hostname to support network access
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const hostname = window.location.hostname;
+      const wsUrl = `${protocol}//${hostname}:9090`;
+      const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
         setReconnectAttempts(0);

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { AuthResponse } from "../interfaces/AuthResponse";
+import { API_BASE_URL } from "../config";
 
 export interface FriendRequest {
   requestId: string;
@@ -53,7 +54,7 @@ export function useNotifications(
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/v1/friends/requests",
+        `${API_BASE_URL}/api/v1/friends/requests`,
         {
           method: "GET",
           credentials: "include",

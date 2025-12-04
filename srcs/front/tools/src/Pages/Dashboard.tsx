@@ -6,6 +6,7 @@ import { SideBar } from "../components/SideBar";
 import { DashboardHooks } from "../hooks/DashboardHooks";
 import { UserDataInter } from "../interfaces/UserInterfaces";
 import { useNotifications } from "../hooks/useNotifications";
+import { API_BASE_URL } from "../config";
 
 // Create a context to share dashboard data with child routes
 interface DashboardContextType {
@@ -73,7 +74,7 @@ export function Dashboard(): JSX.Element {
 
     const checkUnreadMessages = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/v1/chats", {
+        const res = await fetch(`${API_BASE_URL}/api/v1/chats`, {
           credentials: "include",
         });
         if (!res.ok) return;
@@ -103,7 +104,7 @@ export function Dashboard(): JSX.Element {
   // Function to refresh user data
   const refreshUserData = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/v1/user/me", {
+      const response = await fetch(`${API_BASE_URL}/api/v1/user/me`, {
         method: "GET",
         credentials: "include",
       });
@@ -132,15 +133,15 @@ export function Dashboard(): JSX.Element {
 
   return (
     <DashboardContext.Provider value={contextValue}>
-      <div className="flex flex-col md:flex-row text-white min-h-screen overflow-x-hidden">
+      <div className="flex flex-col md:flex-row text-white h-screen overflow-hidden">
         <SideBar
           active_user={user as UserInter}
           user_data={user_data as UserDataInter}
           hasUnreadNotifications={hasUnreadNotifications}
           hasUnreadMessages={hasUnreadMessages}
         />
-        {/* Render child routes */}
-        <div className="flex-1 w-full min-h-screen pt-16 md:pt-0 overflow-x-hidden">
+        {/* Render child routes - scrollable content area */}
+        <div className="flex-1 w-full h-screen pt-16 md:pt-0 overflow-y-auto overflow-x-hidden">
           <Outlet />
         </div>
       </div>

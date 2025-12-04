@@ -79,6 +79,8 @@ module.exports = {
     historyApiFallback: true,
     compress: true,
     port: 8080, // You can choose any port
+    host: '0.0.0.0', // Allow access from local network
     open: true, //
+    allowedHosts: 'all', // Allow all hosts (useful for network access)
   },
 };

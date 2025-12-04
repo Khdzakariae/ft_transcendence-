@@ -1,4 +1,5 @@
 import { AuthResponse } from "./interfaces/AuthResponse";
+import { API_BASE_URL } from "./config";
 
 export const LogLevel = {
   INFO: false as boolean,
@@ -24,7 +25,7 @@ function trimIfEndsWith(str: string, c: string): string {
 async function checkAuthCookie(): Promise<AuthResponse> {
   try {
     const response = await fetch(
-      "http://localhost:3000/api/v1/auth/checkAuthCookie",
+      `${API_BASE_URL}/api/v1/auth/checkAuthCookie`,
       {
         method: "GET",
         credentials: "include", // Important: include cookies

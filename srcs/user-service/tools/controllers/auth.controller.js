@@ -18,6 +18,47 @@ import QRCode from "qrcode";
 import axios from "axios";
 import qs from "qs";
 
+// Helper function to get cookie options based on request protocol
+// For HTTP (local network), secure must be false
+// For HTTPS (production), secure should be true
+const getCookieOptions = (request) => {
+  // Check if request is over HTTPS
+  // In Fastify, check multiple sources for protocol detection
+  const forwardedProto = request.headers['x-forwarded-proto'];
+  const protocol = forwardedProto || 
+                   (request.socket?.encrypted ? 'https' : 'http') ||
+                   'http'; // Default to http for local network
+  
+  // Only use HTTPS if explicitly detected or in production with HTTPS
+  const isSecure = protocol === 'https' || 
+                   (process.env.NODE_ENV === 'production' && forwardedProto === 'https');
+  
+  // For HTTP (local network), we MUST use secure: false and sameSite: "lax"
+  // For HTTPS, we can use secure: true and sameSite: "none" for cross-site
+  const options = {
+    httpOnly: true,
+    secure: isSecure, // false for HTTP, true for HTTPS
+    sameSite: isSecure ? "none" : "lax", // "none" requires secure, "lax" works with HTTP
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+  };
+  
+  // Log cookie options for debugging (only in development)
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Cookie options:', {
+      protocol,
+      forwardedProto,
+      isSecure,
+      secure: options.secure,
+      sameSite: options.sameSite,
+      origin: request.headers.origin || request.headers.host,
+      url: request.url
+    });
+  }
+  
+  return options;
+};
+
 export const signUp = async (request, reply) => {
   try {
     let body;
@@ -164,13 +205,7 @@ export const callbackGoogle = async (request, reply) => {
 
     // Set cookie + redirect
     reply
-      .setCookie("auth", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7,
-      })
+      .setCookie("auth", token, getCookieOptions(request))
       .redirect(`${process.env.FRONTEND_URL}/dashboard`);
   } catch (err) {
     console.error("Google OAuth error:", err.response?.data || err.message);
@@ -247,13 +282,7 @@ export const callback42 = async (request, reply) => {
       { expiresIn: process.env.JWT_EXPIRATION || "7d" },
     );
     reply
-      .setCookie("auth", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7,
-      })
+      .setCookie("auth", token, getCookieOptions(request))
       .redirect(`${process.env.FRONTEND_URL}/dashboard`);
   } catch (err) {
     console.error("42 OAuth error:", err.response?.data || err.message);
@@ -467,17 +496,8 @@ export const signIn = async (request, reply) => {
       },
     );
 
-    const isProd = process.env.NODE_ENV === "production";
-    const crossSite = true;
-
     reply
-      .setCookie("auth", token, {
-        httpOnly: true,
-        secure: crossSite ? true : isProd,
-        sameSite: crossSite ? "none" : "lax",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7,
-      })
+      .setCookie("auth", token, getCookieOptions(request))
       .code(200)
       .send({
         ok: true,
@@ -511,12 +531,7 @@ export const signOut = async (request, reply) => {
     }
 
     reply
-      .clearCookie("auth", {
-        path: "/",
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-      })
+      .clearCookie("auth", getCookieOptions(request))
       .status(200)
       .send({
         message: "Sign out successful.",

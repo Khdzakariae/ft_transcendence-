@@ -6,6 +6,7 @@ import { PrimaryButton } from "../components/Buttons";
 import { AuthLayout } from "../components/AuthLayout";
 import { AuthInputForms } from "../components/AuthInputForms";
 import { AuthProvidersButtons } from "../components/Buttons";
+import { API_BASE_URL } from "../config";
 
 export function SignUpPage(): JSX.Element {
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ export function SignUpPage(): JSX.Element {
     try {
       setIsLoading(true);
       setCreationMsg("Creating...");
-      response = await fetch("http://localhost:3000/api/v1/auth/sign-up", {
+      response = await fetch(`${API_BASE_URL}/api/v1/auth/sign-up`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Utils } from "../Utils";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { API_BASE_URL } from "../config";
 
 export function ResetPasswordEmailPage(): JSX.Element {
   const [is_loading, setIsLoading] = useState(false);
@@ -25,7 +26,7 @@ export function ResetPasswordEmailPage(): JSX.Element {
 
     try {
       response = await fetch(
-        "http://localhost:3000/api/v1/auth/forgot-password",
+        `${API_BASE_URL}/api/v1/auth/forgot-password`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -240,7 +241,7 @@ export function ResetPasswordPage(): JSX.Element {
 
     try {
       response = await fetch(
-        `http://localhost:3000/api/v1/auth/reset-password/${userId}`,
+        `${API_BASE_URL}/api/v1/auth/reset-password/${userId}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -21,7 +21,14 @@ fastify.register(cookie, {
 // });
 
 fastify.register(cors, {
-  origin: ["http://localhost:8080", "http://localhost:3000"],
+  origin: (origin, cb) => {
+    // Allow requests from localhost or any IP address on ports 8080 or 3000
+    if (!origin || origin.includes(':8080') || origin.includes(':3000')) {
+      cb(null, true);
+      return;
+    }
+    cb(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: [

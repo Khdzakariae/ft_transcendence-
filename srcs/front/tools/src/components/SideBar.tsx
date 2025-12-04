@@ -11,6 +11,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { UserDataInter, UserInter } from "../interfaces/UserInterfaces";
 import { LazyLoadingImage } from "./LazyLoadingImage";
 import { IoIosNotificationsOutline } from "react-icons/io";
+import { API_BASE_URL } from "../config";
 
 export function SideBar({
   active_user,
@@ -51,7 +52,7 @@ export function SideBar({
     setIsLoggingOut(true);
     try {
       const response = await fetch(
-        "http://localhost:3000/api/v1/auth/sign-out",
+        `${API_BASE_URL}/api/v1/auth/sign-out`,
         {
           method: "POST",
           credentials: "include",

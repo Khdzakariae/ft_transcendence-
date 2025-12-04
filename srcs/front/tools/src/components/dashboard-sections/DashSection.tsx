@@ -12,6 +12,7 @@ import {
   MdWhatshot,
 } from "react-icons/md";
 import { useDashboardContext } from "../../Pages/Dashboard";
+import { API_BASE_URL } from "../../config";
 
 interface MatchHistory {
   id: string;
@@ -41,7 +42,7 @@ export function DashSection(): JSX.Element {
       try {
         // Fetch match history from user service
         const response = await fetch(
-          `http://localhost:3000/api/v1/user/match-history?limit=5`,
+          `${API_BASE_URL}/api/v1/user/match-history?limit=5`,
           {
             method: "GET",
             credentials: "include",

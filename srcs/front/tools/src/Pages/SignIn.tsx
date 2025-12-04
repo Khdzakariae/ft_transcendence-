@@ -6,6 +6,7 @@ import { AuthProvidersButtons, PrimaryButton } from "../components/Buttons";
 import { useState } from "react";
 import { Utils } from "../Utils";
 import { useEffect } from "react";
+import { API_BASE_URL } from "../config";
 
 export function SignInPage(): JSX.Element {
   let response = null;
@@ -29,7 +30,7 @@ export function SignInPage(): JSX.Element {
       timer = setTimeout(async () => {
         // Check if this is a first-time user who just registered
         try {
-          const response = await fetch("http://localhost:3000/api/v1/user/me", {
+          const response = await fetch(`${API_BASE_URL}/api/v1/user/me`, {
             method: "GET",
             credentials: "include",
           });
@@ -103,7 +104,7 @@ export function SignInPage(): JSX.Element {
       setCreationMsg("Signing In...");
       
       // First, sign in to get authentication cookie
-      response = await fetch("http://localhost:3000/api/v1/auth/sign-in", {
+      response = await fetch(`${API_BASE_URL}/api/v1/auth/sign-in`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -137,7 +138,7 @@ export function SignInPage(): JSX.Element {
         try {
           // Get user info to check 2FA status
           const userResponse = await fetch(
-            "http://localhost:3000/api/v1/user/me",
+            `${API_BASE_URL}/api/v1/user/me`,
             {
               method: "GET",
               headers: { "Content-Type": "application/json" },
@@ -158,7 +159,7 @@ export function SignInPage(): JSX.Element {
               setIsLoading(false);
               setMsg("");
               // Clear the auth cookie since we need to verify 2FA first
-              await fetch("http://localhost:3000/api/v1/auth/sign-out", {
+              await fetch(`${API_BASE_URL}/api/v1/auth/sign-out`, {
                 method: "POST",
                 credentials: "include",
               });
@@ -206,7 +207,7 @@ export function SignInPage(): JSX.Element {
 
       // Verify the 2FA token
       const verifyResponse = await fetch(
-        "http://localhost:3000/api/v1/auth/verify-login-2fa",
+        `${API_BASE_URL}/api/v1/auth/verify-login-2fa`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -220,7 +221,7 @@ export function SignInPage(): JSX.Element {
       if (verifyResponse.status === 200 && verifyData.verified) {
         // 2FA verified, now complete the sign-in
         const signInResponse = await fetch(
-          "http://localhost:3000/api/v1/auth/sign-in",
+          `${API_BASE_URL}/api/v1/auth/sign-in`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

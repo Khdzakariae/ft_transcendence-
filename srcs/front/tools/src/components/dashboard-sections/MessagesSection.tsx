@@ -18,6 +18,7 @@ import {
 } from "react-icons/md";
 import { LazyLoadingImage } from "../LazyLoadingImage";
 import { useDashboardContext } from "../../Pages/Dashboard";
+import { API_BASE_URL } from "../../config";
 
 // ============== INTERFACES ==============
 interface ChatParticipant {
@@ -81,22 +82,42 @@ interface Friend {
 // ============== API HELPERS ==============
 const api = {
   getChats: async () => {
-    const res = await fetch("http://localhost:3000/api/v1/chats", {
-      credentials: "include",
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data || [];
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/chats`, {
+        credentials: "include",
+      });
+      if (!res.ok) return [];
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("Expected JSON but got:", contentType);
+        return [];
+      }
+      const json = await res.json();
+      return json.data || [];
+    } catch (error) {
+      console.error("Error fetching chats:", error);
+      return [];
+    }
   },
 
   getMessages: async (chatId: string, limit = 500) => {
-    const res = await fetch(
-      `http://localhost:3000/api/v1/chats/${chatId}/messages?limit=${limit}`,
-      { credentials: "include" }
-    );
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data || [];
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/api/v1/chats/${chatId}/messages?limit=${limit}`,
+        { credentials: "include" }
+      );
+      if (!res.ok) return [];
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("Expected JSON but got:", contentType);
+        return [];
+      }
+      const json = await res.json();
+      return json.data || [];
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      return [];
+    }
   },
 
   sendMessage: async (
@@ -104,124 +125,243 @@ const api = {
     content: string,
     type: "text" | "image" | "file" = "text"
   ) => {
-    const res = await fetch(
-      `http://localhost:3000/api/v1/chats/${chatId}/messages`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ content, type }),
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/api/v1/chats/${chatId}/messages`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ content, type }),
+        }
+      );
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Expected JSON but got:", contentType, text.substring(0, 100));
+        throw new Error("Invalid response format");
       }
-    );
-    return res.json();
+      return res.json();
+    } catch (error) {
+      console.error("Error sending message:", error);
+      throw error;
+    }
   },
 
   createChat: async (userId: string) => {
-    const res = await fetch("http://localhost:3000/api/v1/chats", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ userId }),
-    });
-    return res.json();
-  },
-
-  createGroup: async (name: string, participantIds: string[]) => {
-    const res = await fetch("http://localhost:3000/api/v1/chats", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ isGroup: true, name, participantIds }),
-    });
-    return res.json();
-  },
-
-  updateChat: async (chatId: string, updates: { name?: string; avatar?: string }) => {
-    const res = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(updates),
-    });
-    return res.json();
-  },
-
-  addParticipants: async (chatId: string, userIds: string[]) => {
-    const res = await fetch(
-      `http://localhost:3000/api/v1/chats/${chatId}/participants`,
-      {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/chats`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ userIds }),
+        body: JSON.stringify({ userId }),
+      });
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Expected JSON but got:", contentType, text.substring(0, 100));
+        throw new Error("Invalid response format");
       }
-    );
-    return res.json();
+      return res.json();
+    } catch (error) {
+      console.error("Error creating chat:", error);
+      throw error;
+    }
+  },
+
+  createGroup: async (name: string, participantIds: string[]) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/chats`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ isGroup: true, name, participantIds }),
+      });
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Expected JSON but got:", contentType, text.substring(0, 100));
+        throw new Error("Invalid response format");
+      }
+      return res.json();
+    } catch (error) {
+      console.error("Error creating group:", error);
+      throw error;
+    }
+  },
+
+  updateChat: async (chatId: string, updates: { name?: string; avatar?: string }) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/chats/${chatId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(updates),
+      });
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Expected JSON but got:", contentType, text.substring(0, 100));
+        throw new Error("Invalid response format");
+      }
+      return res.json();
+    } catch (error) {
+      console.error("Error updating chat:", error);
+      throw error;
+    }
+  },
+
+  addParticipants: async (chatId: string, userIds: string[]) => {
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/api/v1/chats/${chatId}/participants`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ userIds }),
+        }
+      );
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Expected JSON but got:", contentType, text.substring(0, 100));
+        throw new Error("Invalid response format");
+      }
+      return res.json();
+    } catch (error) {
+      console.error("Error adding participants:", error);
+      throw error;
+    }
   },
 
   removeParticipant: async (chatId: string, userId: string) => {
-    const res = await fetch(
-      `http://localhost:3000/api/v1/chats/${chatId}/participants/${userId}`,
-      {
-        method: "DELETE",
-        credentials: "include",
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/api/v1/chats/${chatId}/participants/${userId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Expected JSON but got:", contentType, text.substring(0, 100));
+        throw new Error("Invalid response format");
       }
-    );
-    return res.json();
+      return res.json();
+    } catch (error) {
+      console.error("Error removing participant:", error);
+      throw error;
+    }
   },
 
   deleteChat: async (chatId: string) => {
-    const res = await fetch(`http://localhost:3000/api/v1/chats/${chatId}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/chats/${chatId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Expected JSON but got:", contentType, text.substring(0, 100));
+        throw new Error("Invalid response format");
+      }
+      return res.json();
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+      throw error;
+    }
   },
 
   searchUsers: async (searchTerm: string) => {
-    const res = await fetch(
-      `http://localhost:3000/api/v1/user/search?name=${encodeURIComponent(searchTerm)}`,
-      { credentials: "include" }
-    );
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data || [];
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/api/v1/user/search?name=${encodeURIComponent(searchTerm)}`,
+        { credentials: "include" }
+      );
+      if (!res.ok) return [];
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("Expected JSON but got:", contentType);
+        return [];
+      }
+      const json = await res.json();
+      return json.data || [];
+    } catch (error) {
+      console.error("Error searching users:", error);
+      return [];
+    }
   },
 
   getFriends: async () => {
-    const res = await fetch("http://localhost:3000/api/v1/friends", {
-      credentials: "include",
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data || [];
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/friends`, {
+        credentials: "include",
+      });
+      if (!res.ok) return [];
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("Expected JSON but got:", contentType);
+        return [];
+      }
+      const json = await res.json();
+      return json.data || [];
+    } catch (error) {
+      console.error("Error fetching friends:", error);
+      return [];
+    }
   },
 
   blockUser: async (userId: string) => {
-    const res = await fetch("http://localhost:3000/api/v1/friends/block", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ userId }),
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/friends/block`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userId }),
+      });
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Expected JSON but got:", contentType, text.substring(0, 100));
+        throw new Error("Invalid response format");
+      }
+      return res.json();
+    } catch (error) {
+      console.error("Error blocking user:", error);
+      throw error;
+    }
   },
 
   unblockUser: async (userId: string) => {
-    const res = await fetch(
-      `http://localhost:3000/api/v1/friends/block/${userId}`,
-      {
-        method: "DELETE",
-        credentials: "include",
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/api/v1/friends/block/${userId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Expected JSON but got:", contentType, text.substring(0, 100));
+        throw new Error("Invalid response format");
       }
-    );
-    return res.json();
+      return res.json();
+    } catch (error) {
+      console.error("Error unblocking user:", error);
+      throw error;
+    }
   },
 
   markAsRead: async (chatId: string) => {
     try {
       const res = await fetch(
-        `http://localhost:3000/api/v1/chats/${chatId}/read`,
+        `${API_BASE_URL}/api/v1/chats/${chatId}/read`,
         {
           method: "POST",
           credentials: "include",

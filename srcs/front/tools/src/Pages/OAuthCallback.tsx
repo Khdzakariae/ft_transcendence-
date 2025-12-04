@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Utils } from "../Utils";
+import { API_BASE_URL } from "../config";
 
 export function OAuthCallbackPage(): JSX.Element {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ export function OAuthCallbackPage(): JSX.Element {
       try {
         // Check if user is authenticated and get user info
         const userResponse = await fetch(
-          "http://localhost:3000/api/v1/user/me",
+          `${API_BASE_URL}/api/v1/user/me`,
           {
             method: "GET",
             headers: { "Content-Type": "application/json" },

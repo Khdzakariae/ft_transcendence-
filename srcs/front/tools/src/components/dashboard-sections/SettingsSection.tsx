@@ -13,6 +13,7 @@ import {
 import { Utils } from "../../Utils";
 import { LazyLoadingImage } from "../LazyLoadingImage";
 import { useDashboardContext } from "../../Pages/Dashboard";
+import { API_BASE_URL } from "../../config";
 
 // Ping-pong themed avatar options
 const AVATAR_OPTIONS = [
@@ -247,7 +248,7 @@ export function SettingsSection(): JSX.Element {
 
       // Update profile using the existing API endpoint
       const updateResponse = await fetch(
-        `http://localhost:3000/api/v1/user/${user.id}`,
+        `${API_BASE_URL}/api/v1/user/${user.id}`,
         {
           method: "PUT",
           credentials: "include",
@@ -303,7 +304,7 @@ export function SettingsSection(): JSX.Element {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/v1/auth/enable-2fa",
+        `${API_BASE_URL}/api/v1/auth/enable-2fa`,
         {
           method: "POST",
           credentials: "include",
@@ -366,7 +367,7 @@ export function SettingsSection(): JSX.Element {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/v1/auth/verify-2fa",
+        `${API_BASE_URL}/api/v1/auth/verify-2fa`,
         {
           method: "POST",
           credentials: "include",
@@ -407,7 +408,7 @@ export function SettingsSection(): JSX.Element {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/v1/auth/disable-2fa",
+        `${API_BASE_URL}/api/v1/auth/disable-2fa`,
         {
           method: "POST",
           credentials: "include",
@@ -470,7 +471,7 @@ export function SettingsSection(): JSX.Element {
   );
 
   return (
-    <div className="bg-primary-bg min-h-screen w-full text-white font-primary relative overflow-hidden">
+    <div className="bg-primary-bg w-full text-white font-primary relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-32 h-32 bg-primary-btn/5 rounded-full blur-3xl animate-pulse"></div>

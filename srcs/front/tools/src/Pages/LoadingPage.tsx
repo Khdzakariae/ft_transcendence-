@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Utils } from "../Utils";
 import { AuthResponse } from "../interfaces/AuthResponse";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
 interface LoadingPageProps {
   children: React.ReactNode;
@@ -28,7 +29,7 @@ export function LoadingPage({
             // User came from OAuth, check if 2FA is needed
             try {
               const userResponse = await fetch(
-                "http://localhost:3000/api/v1/user/me",
+                `${API_BASE_URL}/api/v1/user/me`,
                 {
                   method: "GET",
                   headers: { "Content-Type": "application/json" },

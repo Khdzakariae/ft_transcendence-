@@ -3,6 +3,7 @@ import { Utils } from "../Utils";
 import { AuthResponse } from "../interfaces/AuthResponse";
 import { useNavigate as Navigate } from "react-router-dom";
 import { UserDataInter } from "../interfaces/UserInterfaces";
+import { API_BASE_URL } from "../config";
 
 export function DashboardHooks({
   user,
@@ -46,7 +47,7 @@ export function DashboardHooks({
     let response: any;
     const fetchProfile = async () => {
       try {
-        response = await fetch("http://localhost:3000/api/v1/user/me", {
+        response = await fetch(`${API_BASE_URL}/api/v1/user/me`, {
           method: "GET",
           credentials: "include",
         });

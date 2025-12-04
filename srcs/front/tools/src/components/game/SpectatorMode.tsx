@@ -30,7 +30,11 @@ export function SpectatorMode({
     // Fetch live games
     const fetchLiveGames = async () => {
       try {
-        const res = await fetch("http://localhost:4003/api/v1/games/live", {
+        // Use dynamic hostname for game service (port 4003)
+        const protocol = window.location.protocol;
+        const hostname = window.location.hostname;
+        const gameServiceUrl = `${protocol}//${hostname}:4003`;
+        const res = await fetch(`${gameServiceUrl}/api/v1/games/live`, {
           credentials: "include",
         });
         if (res.ok) {

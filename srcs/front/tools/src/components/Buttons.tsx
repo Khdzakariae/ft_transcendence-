@@ -85,7 +85,11 @@ export function AuthProvidersButtons() {
   const auth_login = (auth_provider: "google" | "42intra") => {
     // Store attempt info before redirect
     sessionStorage.setItem("auth_provider", auth_provider);
-    window.location.href = `http://localhost:3000/api/v1/auth/${auth_provider}`;
+    // Use dynamic API URL for network access
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    const apiUrl = `${protocol}//${hostname}:3000`;
+    window.location.href = `${apiUrl}/api/v1/auth/${auth_provider}`;
   };
 
   return (

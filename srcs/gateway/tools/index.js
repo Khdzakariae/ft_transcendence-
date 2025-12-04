@@ -17,7 +17,14 @@ gateway.register(cookie, {
 });
 
 gateway.register(cors, {
-  origin: ["http://localhost:8080"],
+  origin: (origin, cb) => {
+    // Allow requests from localhost or any IP address on port 8080
+    if (!origin || origin.includes(':8080')) {
+      cb(null, true);
+      return;
+    }
+    cb(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: [
@@ -69,6 +76,14 @@ gateway.register(fastifyHttpProxy, {
   upstream: "http://user-service-container:4000",
   prefix: "/api/v1/auth",
   rewritePrefix: "/api/v1/auth",
+  // Ensure cookies are properly forwarded
+  rewriteHeaders: (headers, req) => {
+    // Preserve cookie headers
+    if (req.headers.cookie) {
+      headers.cookie = req.headers.cookie;
+    }
+    return headers;
+  },
 });
 
 gateway.register(fastifyHttpProxy, {

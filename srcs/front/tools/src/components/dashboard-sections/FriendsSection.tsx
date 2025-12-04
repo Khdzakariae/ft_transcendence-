@@ -3,6 +3,7 @@ import { SearchBarFriends } from "../searchBarFriends";
 import { MdDelete, MdPerson, MdGroup, MdPersonAdd, MdCheckCircle, MdSearch, MdClose, MdBlock } from "react-icons/md";
 import { LazyLoadingImage } from "../LazyLoadingImage";
 import { useDashboardContext } from "../../Pages/Dashboard";
+import { API_BASE_URL } from "../../config";
 
 interface Friend {
   id: string;
@@ -54,7 +55,7 @@ export function FriendsSection(): JSX.Element {
     setError(null);
 
     try {
-      const response = await fetch("http://localhost:3000/api/v1/friends", {
+      const response = await fetch(`${API_BASE_URL}/api/v1/friends`, {
         method: "GET",
         credentials: "include",
         signal: abortSignal,
@@ -109,7 +110,7 @@ export function FriendsSection(): JSX.Element {
 
   const fetchBlockedUsers = useCallback(async (abortSignal?: AbortSignal) => {
     try {
-      const response = await fetch("http://localhost:3000/api/v1/friends/block", {
+      const response = await fetch(`${API_BASE_URL}/api/v1/friends/block`, {
         method: "GET",
         credentials: "include",
         signal: abortSignal,
@@ -154,7 +155,7 @@ export function FriendsSection(): JSX.Element {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/v1/friends/${friendId}`,
+        `${API_BASE_URL}/api/v1/friends/${friendId}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -197,7 +198,7 @@ export function FriendsSection(): JSX.Element {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/v1/friends/block",
+        `${API_BASE_URL}/api/v1/friends/block`,
         {
           method: "POST",
           credentials: "include",
@@ -230,7 +231,7 @@ export function FriendsSection(): JSX.Element {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/v1/friends/block/${userId}`,
+        `${API_BASE_URL}/api/v1/friends/block/${userId}`,
         {
           method: "DELETE",
           credentials: "include",

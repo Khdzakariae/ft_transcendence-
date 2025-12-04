@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MdCheck, MdClose } from "react-icons/md";
 import { LazyLoadingImage } from "../LazyLoadingImage";
 import { useDashboardContext } from "../../Pages/Dashboard";
+import { API_BASE_URL } from "../../config";
 
 export function NotificationsSection(): JSX.Element {
   const { user, friendRequests, markNotificationAsRead, fetchFriendRequests } =
@@ -17,7 +18,7 @@ export function NotificationsSection(): JSX.Element {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/v1/friends/${requestId}/accept`,
+        `${API_BASE_URL}/api/v1/friends/${requestId}/accept`,
         {
           method: "PUT",
           credentials: "include",
@@ -48,7 +49,7 @@ export function NotificationsSection(): JSX.Element {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/v1/friends/${requestId}/decline`,
+        `${API_BASE_URL}/api/v1/friends/${requestId}/decline`,
         {
           method: "PUT",
           credentials: "include",

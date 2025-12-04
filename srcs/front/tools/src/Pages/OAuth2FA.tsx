@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { PrimaryButton } from "../components/Buttons";
 import { useState, useEffect } from "react";
 import { Utils } from "../Utils";
+import { API_BASE_URL } from "../config";
 
 export function OAuth2FAPage(): JSX.Element {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ export function OAuth2FAPage(): JSX.Element {
     const checkAuthAnd2FA = async () => {
       try {
         const userResponse = await fetch(
-          "http://localhost:3000/api/v1/user/me",
+          `${API_BASE_URL}/api/v1/user/me`,
           {
             method: "GET",
             headers: { "Content-Type": "application/json" },
@@ -103,7 +104,7 @@ export function OAuth2FAPage(): JSX.Element {
 
       // Verify the 2FA token
       const verifyResponse = await fetch(
-        "http://localhost:3000/api/v1/auth/verify-login-2fa",
+        `${API_BASE_URL}/api/v1/auth/verify-login-2fa`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -147,7 +148,7 @@ export function OAuth2FAPage(): JSX.Element {
   const handleBackToSignIn = () => {
     // Clean up sessionStorage and sign out, then redirect to sign in
     sessionStorage.removeItem("auth_provider");
-    fetch("http://localhost:3000/api/v1/auth/sign-out", {
+    fetch(`${API_BASE_URL}/api/v1/auth/sign-out`, {
       method: "POST",
       credentials: "include",
     }).finally(() => {

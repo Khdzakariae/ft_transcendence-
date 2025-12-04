@@ -3,6 +3,7 @@ import { MdSearch, MdPersonAdd } from "react-icons/md";
 import { UserDataInter } from "../interfaces/UserInterfaces";
 import { ProfileSection } from "./dashboard-sections/ProfileSection";
 import { LazyLoadingImage } from "./LazyLoadingImage";
+import { API_BASE_URL } from "../config";
 
 interface SearchedUser {
   id: string;
@@ -40,7 +41,7 @@ export function SearchBarFriends({
 
         try {
           const response = await fetch(
-            `http://localhost:3000/api/v1/user/search?name=${encodeURIComponent(searchTerm)}`,
+            `${API_BASE_URL}/api/v1/user/search?name=${encodeURIComponent(searchTerm)}`,
             {
               method: "GET",
               credentials: "include",
@@ -79,7 +80,7 @@ export function SearchBarFriends({
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/v1/user/${userId}`,
+        `${API_BASE_URL}/api/v1/user/${userId}`,
         {
           method: "GET",
           credentials: "include",
@@ -132,7 +133,7 @@ export function SearchBarFriends({
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/v1/friends/request",
+        `${API_BASE_URL}/api/v1/friends/request`,
         {
           method: "POST",
           credentials: "include",
