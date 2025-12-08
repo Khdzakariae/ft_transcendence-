@@ -674,6 +674,3 @@ For support and questions:
 2. Create a new issue with detailed description
 3. Include error logs and environment details
 
----
-
-**Built with ❤️ by [Your Name]**
